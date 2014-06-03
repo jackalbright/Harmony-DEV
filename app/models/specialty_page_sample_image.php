@@ -1,0 +1,25 @@
+<?php
+class SpecialtyPageSampleImage extends AppModel {
+
+	var $name = 'SpecialtyPageSampleImage';
+	var $primaryKey = 'specialty_page_image_id';
+
+
+	//The Associations below have been created with all possible keys, those that are not needed can be removed
+	var $belongsTo = array(
+			'SpecialtyPage' => array('className' => 'SpecialtyPage',
+								'foreignKey' => 'specialty_page_id',
+								'conditions' => '',
+								'fields' => '',
+								'order' => ''
+			),
+			#'Product' => array('className' => 'Product',
+			#					'foreignKey' => 'product_type_id',
+			#					'conditions' => '',
+			#					'fields' => '',
+			#					'order' => ''
+			#)
+	);
+
+}
+?>

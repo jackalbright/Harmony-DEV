@@ -1,0 +1,39 @@
+<div class="">
+		<div>
+		<? 
+		$tassels_found = array();
+
+		$img_tassels = $image->listTassels();
+		if(count($img_tassels)) {
+		?>
+		<?php
+			foreach ($img_tassels as $record) {
+				$tassel_code = preg_replace("/ /", "-", $record->name);
+				$tassels_found[$tassel_code] = true;
+				?>
+				<div class="left padded center" style="float: left;">
+				<a href="Javascript:void(0);" onClick="build_choose('tassel', '<?= $record->id ?>');"><img src="/tassels/thumbs/<?= $tassel_code ?>.gif"/></a><br/>
+				<a href="Javascript:void(0);" onClick="build_choose('tassel', '<?= $record->id ?>');"><?= ucwords($record->name); ?></a>
+				</div>
+				<?
+			}
+		}
+
+			foreach ($tassels as $record) {
+				$tassel_code = preg_replace("/ /", "-", $record->color_name);
+				if (!empty($tassels_found[$tassel_code])) { continue; }
+				?>
+				<div class="left padded center" style="float: left;">
+
+				<a href="Javascript:void(0);" onClick="build_choose('tassel', '<?= $record->tassel_id ?>');">
+				<img src="/tassels/thumbs/<?= $tassel_code ?>.gif"/></a><br/>
+				<a href="Javascript:void(0);" onClick="build_choose('tassel', '<?= $record->tassel_id ?>');"><?= ucwords($record->color_name); ?></a>
+
+				</div>
+				<?
+			}
+			?>
+
+		</div>
+</div>
+

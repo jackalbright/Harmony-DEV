@@ -1,0 +1,26 @@
+<div>
+
+<p>
+
+If you are a reseller, please call us to set up a wholesale account for you. With a wholesale account, you are able to order a minimum of one dozen identical items with your total order of $100 or more.  Our toll-free number is: 888.293.1109. For a free product consultation call 610.869.4234.</p>
+<p class="alert">
+Please note:  Surcharges may apply to high value or rare stamps used on products.  
+</p>
+
+<form id="form" method="GET">
+<div class="bold">View wholesale pricing for:</div>
+<select name="prod" onChange="$('form').submit();">
+	<option value="">All Products</option>
+	<? foreach($all_products as $p) { ?>
+	<option <?= (!empty($_REQUEST['prod']) && $_REQUEST['prod'] == $p['Product']['code']) ? "selected='selected'" : "" ?> value="<?= $p['Product']['code'] ?>"><?= !empty($p['Product']['short_name']) ? $hd->pluralize($p['Product']['short_name']) : $hd->pluralize($p['Product']['name']) ?></option>
+	<? } ?>
+</select>
+<a href="/products/wholesale_pricing?prod=">All products</a>
+</form>
+
+<?= $this->element("products/wholesale_pricing"); ?>
+
+
+
+
+</div>

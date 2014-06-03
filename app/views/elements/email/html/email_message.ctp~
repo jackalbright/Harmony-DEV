@@ -1,0 +1,3 @@
+<?= $this->data['EmailMessage']['custom_message'] ?>
+
+<?= $this->element("email_templates/".$emailTemplate['EmailTemplate']['name']); ?>

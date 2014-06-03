@@ -1,0 +1,107 @@
+<?php
+class OrderItem extends AppModel {
+
+	var $name = 'OrderItem';
+	var $useTable = 'order_item';
+	var $primaryKey = 'order_item_id';
+
+	//The Associations below have been created with all possible keys, those that are not needed can be removed
+	var $belongsTo = array(
+			'Purchase' => array('className' => 'Purchase',
+								'foreignKey' => 'Purchase_id',
+								'conditions' => '',
+								'fields' => '',
+								'order' => ''
+			),
+			'Product' => array('className' => 'Product',
+								'foreignKey' => 'product_type_id',
+								'conditions' => '',
+								'fields' => '',
+								'order' => ''
+			)
+	);
+
+	var $hasOne = array(
+		'ItemPart'=>array('className'=>'ItemPart',
+			'foreignKey'=>'order_item_id',
+		)
+	);
+
+	function getItemNumber($orderItem)
+	{
+		$item = !empty($orderItem['OrderItem']) ? $orderItem['OrderItem'] : $orderItem;
+		$part = $orderItem['ItemPart'];
+		$productModel = $this->get_model("Product");
+		$galleryImageModel = $this->get_model("GalleryImage");
+		$customImageModel = $this->get_model("CustomImage");
+
+		$customImage = !empty($part['imageID']) ? $customImageModel->read(null, $part['imageID']) : null;
+		$galleryImage = !empty($part['catalogNumber']) ? $galleryImageModel->find(" GalleryImage.catalog_number = '{$part['catalogNumber']}'") : null;
+
+		$product = $productModel->read(null, $item['product_type_id']);
+		if(empty($product)) { return null; }
+
+		$repro = (strtolower($item['reproduction']) == 'yes');
+		$itemNumber = $repro ? "R-" : "";
+
+		$itemNumber .= $product['Product']['code'];
+
+		if(!empty($galleryImage)) { $itemNumber .= '-'.$galleryImage['GalleryImage']['catalog_number']; }
+		if(!empty($customImage)) { $itemNumber .= '-CustomImage'; }
+
+		if(!empty($part['charm_ID']))
+		{
+			$itemNumber .= '-'.$part['charm_ID'];
+		}
+
+		if(!empty($part['tassel_ID']))
+		{
+			$itemNumber .= '-'.$part['tassel_ID'];
+		}
+
+		# XXX needs to match what MYOBItem says...
+		# If discrepency, may cause errors (esp w/pricing, etc) - but maybe ok!
+
+
+		return $itemNumber;
+	}
+
+	function getItemDescription($orderItem)
+	{
+		$item = !empty($orderItem['OrderItem']) ? $orderItem['OrderItem'] : $orderItem;
+		$part = $orderItem['ItemPart'];
+		$productModel = $this->get_model("Product");
+		$charmModel = $this->get_model("Charm");
+		$tasselModel = $this->get_model("Tassel");
+		$galleryImageModel = $this->get_model("GalleryImage");
+		$customImageModel = $this->get_model("CustomImage");
+
+		$product = $productModel->read(null, $item['product_type_id']);
+		if(empty($product)) { return null; }
+
+		$customImage = !empty($part['imageID']) ? $customImageModel->read(null, $part['imageID']) : null;
+		$galleryImage = !empty($part['catalogNumber']) ? $galleryImageModel->find(" GalleryImage.catalog_number = '{$part['catalogNumber']}'") : null;
+		$repro = strtolower($item['reproduction']) == 'yes' ? " (repro) " : "";
+
+		$itemDescription = $product['Product']['name']; # Could be stock item
+		if(!empty($customImage)) { $itemDescription = "Custom $itemDescription"; }
+		if(!empty($galleryImage)) { $itemDescription = $galleryImage['GalleryImage']['stamp_name'] . "$repro $itemDescription"; }
+
+		if(!empty($part['charm_ID']))
+		{
+			$charm = $charmModel->read(null, $part['charm_ID']);
+			$itemDescription = $itemDescription . " " . $charm['Charm']['name'];
+		}
+
+		if(!empty($part['tassel_ID']))
+		{
+			$tassel = $tasselModel->read(null, $part['tassel_ID']);
+			$itemDescription = $itemDescription . " " . ucwords($tassel['Tassel']['color_name']);
+		}
+
+
+		return $itemDescription;
+	}
+
+}
+?>

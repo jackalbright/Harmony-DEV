@@ -1,0 +1,153 @@
+<?
+	#if(!empty($product) && empty($product['Product']) && !empty($product['code']))
+	#{
+	#	$product = array('Product'=>$product);
+	#}
+?>
+<div style="margin-top: 0px;">
+
+<? if(empty($prod) && !empty($product)) { $prod = !empty($product['Product']['code']) ? $product['Product']['code'] : null; } ?>
+
+<?
+if(empty($prod)) { $prod = ''; }
+$image_id = !empty($build['CustomImage']) ? $build['CustomImage']['Image_ID'] : null;
+$catalog_number = !empty($build['GalleryImage']) ? $build['GalleryImage']['catalog_number'] : null;
+
+$preview_url = "/products/get_started/build?existing_prod=$prod&catalog_number=$catalog_number&image_id=$image_id";
+$custom_url = "/products/get_started/custom_add?";
+$gallery_url = empty($custom_only_product) ?  "/products/get_started/gallery?" : "/products/get_started/gallery?clear_product=1";
+
+?>
+
+<script>
+function choose_product(prod)
+{
+var preview_url = "<?= $preview_url ?>";
+var custom_url = "<?= $custom_url ?>";
+var gallery_url = "<?= $gallery_url ?>";
+
+var preview_img = $('preview_link_img');
+var preview_button = $('preview_link_button');
+
+var custom_img = $('custom_link_img');
+var custom_button = $('custom_link_button');
+
+var gallery_img = $('gallery_link_img');
+var gallery_button = $('gallery_link_button');
+
+if(preview_img)
+{
+	preview_img.href = preview_url+"&prod="+prod;
+	preview_button.href = preview_url+"&prod="+prod;
+}
+
+if(custom_img)
+{
+	custom_img.href = custom_url+"&prod="+prod;
+	custom_button.href = custom_url+"&prod="+prod;
+}
+
+//alert("custom="+custom_img.href);
+
+if(gallery_img)
+{
+	gallery_img.href = gallery_url+"&prod="+prod;
+	gallery_button.href = gallery_url+"&prod="+prod;
+}
+
+
+}
+</script>
+
+
+<div align="left">
+	<table style="" cellpadding=0 align="left">
+	<tr>
+		<? $existing = false; $upload = false; ?>
+		<? if(false && !empty($product) && ((!empty($build['GalleryImage']) && preg_match("/(real|repro)/", $product['Product']['image_type'])) || (!empty($build['CustomImage']) && preg_match("/custom/", $product['Product']['image_type'])))) {  $existing = true; ?>
+
+		<td align="center" valign="top">
+			<?
+			?>
+			<div style="width: 100px; height: 100p x; border: solid #ccc 1px; ">
+				<?= $this->element("build/preview", array('scale'=>'-100x100','no_title'=>true,'no_view_larger'=>true,'build_continue'=>true,'live'=>1)); ?>
+			</div>
+			<div style="height: 50px; width: 150px; font-weight: bold;">
+				<a id="custom_link_button" href="/build/customize">I want to continue<br/>building this product</a>
+			</div>
+		</td>
+		<? } ?>
+
+		<? if(empty($product) || preg_match("/custom/", $product['Product']['image_type'])) { $upload = true; ?>
+		<? if(false && $existing) { ?>
+		<td style="width: 30px; font-weight: bold; text-align: center; vertical-align: top; padding: 10px; padding-top: 45px;">
+			OR
+		</td>
+		<? } ?>
+
+		<td align="center" valign="top">
+			<? if(empty($custom_images)) { ?>
+				<?= $this->element("custom_images/upload"); ?>
+			<? } else { ?>
+
+			<div style="width: 100px; height: 100px; border: solid #ccc 1px; ">
+				<a id="custom_link_img" href="<?=$custom_url?>prod=<?= $prod ?>"><img border=0 src="/images/upload_image.jpg" alt="Upload Your Image" height="100"></a>
+			</div>
+			<div style="height: 50px; width: 150px; font-weight: bold;">
+				<a id="custom_link_button" href="<?= $custom_url ?>prod=<?= $prod ?>">I want to use<br/>my own image</a>
+			<? } ?>
+			</div>
+			<a href="/custom_images?login=1">Login</a> to view your saved images
+		</td>
+		<? } ?>
+
+
+		<? if(empty($product) || preg_match("/(real|repro)/", $product['Product']['image_type'])) { ?>
+		<? if($existing || $upload) { ?>
+		<td style="width: 30px; font-weight: bold; text-align: center; vertical-align: top; padding: 10px; padding-top: 45px;">
+			OR
+		</td>
+		<? } ?>
+
+		<td align="center" valign="top">
+			<div style="width: 100px; height: 100px; border: solid #ccc 1px; ">
+				<a id="gallery_link_img" href="<?=$gallery_url ?>"><img border=0 src="/images/choose_stamp.jpg" alt="Use One of Our Images" height="100"></a>
+			</div>
+			<div style="height: 50px; width: 150px; font-weight: bold;">
+				<a id="gallery_link_button" href="<?= $gallery_url ?>">I want to browse stamp images for ideas</a>
+			</div>
+		</td>
+		<? } ?>
+		<td style="width: 30px; font-weight: bold; text-align: center; vertical-align: top; padding: 10px; padding-top: 45px;">
+			OR
+		</td>
+		<td align="center" valign="top">
+			<div style="width: 100px; height: 100px; border: solid #ccc 1px; ">
+				<a class="black" rel="shadowbox;height=650;width=500;type=html" href="/completed_art_images/add/<?= !empty($build['Product']['code']) ? $build['Product']['code'] : "" ?>">
+					<img src="/images/icons/email.jpg" height="100">
+				</a>
+			</div>
+			<div style="height: 50px; width: 150px; font-weight: bold;">
+				<a class="black" rel="shadowbox;height=650;width=500;type=html" href="/completed_art_images/add/<?= !empty($build['Product']['code']) ? $build['Product']['code'] : "" ?>">I want to submit my completed design</a>
+			</div>
+		</td>
+		<td>
+			<div class="">
+					<div align=left>
+						<? if(!empty($snippets['upload_tips'])) { ?>
+						<div style="color: #666;" class=""><h4>Upload Tips</h4></div>
+
+							<?= $snippets['upload_tips']; ?>
+						<? } ?>
+
+					</div>
+			</div>
+		</td>
+	</tr>
+	</table>
+
+</div>
+<div class="clear"></div>
+
+
+</div>

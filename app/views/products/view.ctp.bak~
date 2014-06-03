@@ -1,0 +1,56 @@
+<div class="product product_view">
+<?= $hd->product_element("products/view_intro", $product['Product']['prod'], array('product'=>$product)); ?>
+
+<div>
+	<?= $this->element("products/pricing_grid", $this->viewVars); ?>
+</div>
+
+<div>
+<table width="100%">
+<tr>
+	<td valign="top" align=center>
+	<br/>
+	<br/>
+	<?= $hd->product_element("products/view_intro_create", $product['Product']['prod'], array('product'=>$product,'position'=>'bottom')); ?>
+	</td>
+	<td valign="top">
+			<a name="details" href="#top">Top</a>
+			<h3>More <? $product['Product']['is_stock_item'] ? "" : "custom " ?><?= $product['Product']['short_name'] ? $product['Product']['short_name'] : $product['Product']['name'] ?> information:</h3>
+
+			<? if ($product['Product']['secondary_desc']) { 
+				$desc_items = preg_split("/(\n|<br\s*\/?>)/", $product['Product']['secondary_desc']);
+			?>
+			<ul>
+				<? foreach($desc_items as $desc_item) { if ($desc_item != "") { 
+					# Strip off tags if <ul> or <li> or ending.
+					$desc_item = preg_replace("/(<\/?(ul|li)[^>]*>)/i", "", $desc_item);
+					if (!preg_match("/\w/", $desc_item)) { continue; }
+				
+				?>
+				<li><?= $desc_item ?>
+				<? } } ?>
+			</ul>
+			<br/>
+			<br/>
+			<? } ?>
+	
+			<ul>
+			<li> Please allow 7-10 business days for production when ordering over <?= number_format($product['Product']['max_per_10_days']); ?> <?= $product_plural_name ?>.
+			<? 
+				if (!$product['Product']['is_stock_item']) { 
+			?>
+			<li> Full-color printing is provided at no extra charge.
+			<li> Free personalization
+			<li> Materials and workmanship are guaranteed
+			<li> Email proofs are provided at your request. A paper proof is available for $5.  An optional pre-production sample is available for $40 and includes overnight shipping.
+			<? 
+				} 
+			?>
+			<li> Your <?= !$product['Product']['is_stock_item'] ? "personalized" : ""; ?> <?= strtolower($hd->pluralize(($product['Product']['short_name'] ? $product['Product']['short_name'] : $product['Product']['name']), true)); ?> are made in USA
+			</ul>
+	</td>
+</tr>
+</table>
+</div>
+
+</div>

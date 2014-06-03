@@ -1,0 +1,18 @@
+#leftbar_column
+{
+	width: 185px;
+	padding-right: 10px;
+	vertical-align: top;
+}
+
+#rightbar_column
+{
+	width: 240px;
+	padding-left: 20px;
+	vertical-align: top;
+}
+
+#main_column
+{
+}
+

@@ -1,0 +1,46 @@
+<div class="" align="right">
+<?
+if(!empty($checkout_step)) {
+?>
+<table class="" cellpadding=3 cellspacing=0>
+<tr>
+	<td valign="bottom" align="right">
+	<table class="hidden checkout_progress" cellpadding=0 cellspacing=0><tr>
+	<td class="checkout_step_first checkout_step <?= $checkout_step >= 1 ? "checkout_step_complete" : "" ?>">
+		<div class="checkout_step_num">1.</div>
+		Address
+	</td>
+	<td class="checkout_step <?= $checkout_step >= 2 ? "checkout_step_complete" : "" ?>">
+		<div class="checkout_step_num">2.</div>
+		Shipping 
+	</td>
+	<td class="checkout_step <?= $checkout_step >= 3 ? "checkout_step_complete" : "" ?>">
+		<div class="checkout_step_num">3.</div>
+		Payment
+	</td>
+	<td class="checkout_step <?= $checkout_step >= 4 ? "checkout_step_complete" : "" ?>">
+		<div class="checkout_step_num">4.</div>
+		Review
+	</td>
+	</tr></table>
+	</td>
+	</tr>
+	<tr>
+
+	<td colspan=1 class="" align="right" valign="bottom">
+			<a href="Javascript:void(0)" onClick="popup('/info/privacy.php',1000,600);">Privacy Policy</a> | 
+			<a href="Javascript:void(0)" onClick="popup('/info/guarantee.php',1000,600);">Guarantee/Returns</a> |
+			<a href="Javascript:void(0)" onClick="popup('/info/security.php',1000,600);">Security Info</a>
+
+			<div class="hidden">
+          		<a target="_blank" href="https://www.scanalert.com/RatingVerify?ref=www.harmonydesigns.com"><img height="30" border="0" src="https://images.scanalert.com/meter/www.harmonydesigns.com/12.gif" alt="HACKER SAFE certified sites prevent over 99.9% of hacker crime." oncontextmenu="alert('Copying Prohibited by Law - HACKER SAFE is a Trademark of ScanAlert'); return false;" /></a>
+
+			<img height="30" src="/images/credit_card_logos.gif">
+			</div>
+		
+	</td>
+</tr>
+
+</table>
+<? } ?>
+</div>

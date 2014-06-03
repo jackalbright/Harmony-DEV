@@ -1,0 +1,30 @@
+<div class="">
+	<table>
+	<tr>
+	<td valign="middle">
+	<?php echo $form->create('CustomImage',array('id'=>'CustomImageForm', 'type'=>'file','url'=>'/custom_images/iframe_add','onSubmit'=>'hideFlash();')); ?>
+
+	<div class="fileinputs">
+		<input type="file" id="file" name="data[CustomImage][file]" onChange="hideFlash(); parent.showPleaseWait(); $('CustomImageForm').submit();" style=""/>
+		<input type="text" class="fakefile"/>
+		<input type="image" src="/images/buttons/Upload-Image.gif" align="middle"/>
+	</div>
+	</td>
+	<td valign="middle">
+				<b>OR</b>
+				<a target="_top" href="/custom_images">Use a saved image</a>
+	</td>
+	<td valign="middle">
+				<b>OR</b>
+				<a target="_top" href="/gallery/browse"><img src="/images/buttons/Browse-Our-Images-grey.gif" align="middle"/></a>
+	</td>
+	</table>
+
+	</form>
+
+	<? if(!empty($this->data)) { ?>
+	<script>
+		Event.observe(window,'load', function() { parent.loadCustomProductImages(); });
+	</script>
+	<? } ?>
+</div>

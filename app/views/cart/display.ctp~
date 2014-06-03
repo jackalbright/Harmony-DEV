@@ -1,0 +1,67 @@
+<div class="cart">
+
+<? #print_r($cart_items); ?>
+<? $subtotal = 0; 
+if (!isset($zipCode)) { $zipCode = ""; }
+if (!isset($shippingOptions)) { $shippingOptions = array(); }
+
+?>
+
+<form id="cartForm" action="/cart/update.php" method="POST">
+	<? if($session->read("reorder")) { ?>
+	<div style="background-color: #FFFF9C; border: solid 1px #436077; width: 500px; padding: 10px;">
+		To change your reordered items, click on 'Modify this item'.<br/>
+		<br/>
+		<a href="/purchases">Return to order history</a>
+		<br/>
+		<br/>
+	</div>
+	<? } ?>
+
+	<table class="" width="100%" border=0>
+	<tr>
+		<td valign=bottom align="left">
+			<?= $this->element("cart/progress"); ?>
+		</td>
+		<td align="right" valign='bottom' style="width: 300px;">
+			<table width="100%">
+			<tr>
+				<td align="right" valign="bottom" style="padding: 10px;">
+          				<a target="_blank" href="https://www.scanalert.com/RatingVerify?ref=www.harmonydesigns.com"><img height="30" border="0" src="https://images.scanalert.com/meter/www.harmonydesigns.com/12.gif" alt="HACKER SAFE certified sites prevent over 99.9% of hacker crime." oncontextmenu="alert('Copying Prohibited by Law - HACKER SAFE is a Trademark of ScanAlert'); return false;" /></a>
+				</td>
+				<td align="right" valign="bottom" style="">
+					<script type="text/javascript" src="https://sealserver.trustwave.com/seal.js?style=normal"></script>
+				</td>
+			</tr>
+			<tr>
+				<td align="right" valign="top">
+					<a href="/products"><img src="/images/buttons/Continue-Shopping-grey.gif"/></a>
+				</td>
+				<td align="right" valign="top">
+					<a href="/checkout" onClick="showPleaseWait(); track_complete('cart','display','<?= $tracking_entry_id ?>');"><img src="/images/buttons/Checkout.gif"/></a>
+				</td>
+			</tr>
+			</table>
+		</td>
+	</tr>
+	<tr>
+	<td colspan="2">
+
+	<?= $this->element("cart/cart",array()); ?>
+
+	</td>
+	</tr>
+	<tr>
+		<td>
+			&nbsp;
+		</td>
+		<td align="right">
+			<a href="/products"><img src="/images/buttons/Continue-Shopping-grey.gif"/></a>
+			<!--<input type="image" name="action" value="changeQuantity" src="/images/buttons/Update-Qty-grey.gif"/>-->
+			<a href="/checkout" onClick="track_complete('cart','display','<?= $tracking_entry_id ?>');"><img src="/images/buttons/Checkout.gif"/></a>
+		</td>
+	</tr>
+	</table>
+</form>
+</div>
+

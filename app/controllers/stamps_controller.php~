@@ -1,0 +1,194 @@
+<?php
+class StampsController extends AppController {
+
+	var $name = 'Stamps';
+	var $helpers = array('Html', 'Form');
+	var $uses = array('Stamp','Ribbon','Border','Tassel','Charm','RecQuote','GalleryCategory');
+
+	var $paginate = array(
+		'order'=>'Stamp.catalog_number ASC'
+	);
+
+	function index() {
+		$this->Stamp->recursive = 0;
+		$this->set('stamps', $this->paginate());
+	}
+
+	function view($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid Stamp', true));
+			$this->redirect(array('action' => 'index'));
+		}
+		$this->set('stamp', $this->Stamp->read(null, $id));
+	}
+
+	function admin_index() {
+		$this->Stamp->recursive = 0;
+		Configure::write('debug', 2);
+
+		$cond = array();
+
+		if(!empty($this->data['Stamp']['keyword']))
+		{
+			$kw = $this->data['Stamp']['keyword'];
+			$cond[] = " Stamp.stamp_name LIKE '%$kw%' OR Stamp.catalog_number LIKE '%$kw%' OR Stamp.keywords LIKE '%$kw%' OR Stamp.long_description LIKE '%$kw%' OR Stamp.short_description LIKE '%$kw%' ";
+		}
+		$this->set('stamps', $this->paginate('Stamp',$cond));
+	}
+
+	function admin_view($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid Stamp', true));
+			$this->redirect(array('action' => 'index'));
+		}
+		$this->set('stamp', $this->Stamp->read(null, $id));
+	}
+
+	function admin_add() {
+		$this->setAction("admin_edit");
+	}
+
+	function admin_edit($id = null) {
+		$this->Stamp->recursive = 2;
+
+		if (!empty($this->data)) {
+				# Image upload option...
+
+				$path = "/../../stamps/";
+				$abspath = WWW_ROOT.$path;
+				$prefix = Inflector::underscore($this->data['Stamp']['catalog_number']);
+				$ext = 'gif';
+
+				#$this->Image->force_type = $ext;
+
+				if ($this->Image->didSupplyUpload('file'))
+				{
+					error_log("FILED");
+					$return = $this->Image->saveUpload('file', $path, $prefix); # Done separately from actual db
+					if ($return && is_array($return))
+					{
+						$this->Session->setFlash("Sorry, we are unable to save your image: " .  join("<br/>\n", $return) );
+						return;
+					}
+	
+	
+					# Save thumbnail 
+					if($filename = $return)
+					{
+						error_log("GOT IMAGE FILE=$filename");
+						# Resize.
+						list($imgw,$imgh) = getimagesize("$abspath/$filename");
+						$w = $h = null;
+						if($imgh >= ($imgw*1.5))
+						{
+							$h = 200;
+						} else {
+							$w = 180;
+						}
+						error_log("RESIZE $w x $h $abspath/$filename");
+						$this->Image->convert("$abspath/$filename", "$abspath/tmp-$filename", "-resize {$w}x{$h}");
+						rename("$abspath/tmp-$filename", "$abspath/$filename");
+
+						# Force gif
+						if(!preg_match("/[.]gif$/", $filename))
+						{
+							$new_filename = preg_replace("/[.]\w+$/", ".gif", $filename);
+							$this->Image->convert("$abspath/$filename", "$abspath/$new_filename");
+							error_log("RENAMING $abspath/$filename TO $abspath/$new_filename");
+							$filename = $new_filename;
+						}
+						
+						$this->data['Stamp']['image_location'] = "/stamps/$filename";
+						error_log("SAVING TO $path/$filename");
+
+						$this->Image->convert("$abspath/$filename", "$abspath/../thumbnails/$filename", "-resize x60");
+						$this->data['Stamp']['thumbnail_location'] = "/thumbnails/$filename";
+					}
+				}
+			if ($this->Stamp->saveAll($this->data)) {
+
+				$this->Session->setFlash(__('The Stamp has been saved', true));
+				#$this->redirect(array('action' => 'index'));
+
+				$this->data = $this->Stamp->read(); # Read again, get ID.
+
+			} else {
+				$this->Session->setFlash(__('The Stamp could not be saved. Please, try again.', true));
+			}
+		}
+		if (!empty($id) && empty($this->data)) {
+			$this->data = $this->Stamp->read(null, $id);
+		}
+
+		
+		$categories_by_pid = array();
+		$categories = $this->GalleryCategory->find('all');
+
+		foreach($categories as $cat)
+		{
+			$pid = $cat['GalleryCategory']['parent_node'];
+			if(empty($pid)) { $pid = ""; }
+			if(empty($categories_by_pid[$pid])) { $categories_by_pid[$pid] = array(); }
+			$categories_by_pid[$pid][] = $cat;
+		}
+
+		$this->set("categories", $categories_by_pid);
+		$this->set("ribbons", $this->Ribbon->find('list'));
+		$this->set("charms", $this->Charm->find('list'));
+		$this->set("tassels", $this->Tassel->find('list'));
+		$this->set("borders", $this->Border->find('list'));
+	}
+
+	function admin_delete_quote($id = null, $qid = null)
+	{
+		Configure::write('debug',0);
+		$this->RecQuote->deleteAll(array('stamp_id'=>$id,'Quote_ID'=>$qid),false);
+
+		$this->Stamp->recursive = 2;
+		
+		$this->data = $this->Stamp->read(null, $id);
+		$this->set("stamp_id", $id);
+
+		$this->action = "admin_quotes";
+	}
+
+	function admin_add_quote($id = null, $qid = null)
+	{
+		Configure::write('debug',0);
+		$this->RecQuote->save(array('RecQuote'=>array('stamp_id'=>$id, 'Quote_ID'=>$qid)));
+
+		$this->Stamp->recursive = 3;
+		$this->data = $this->Stamp->read(null, $id);
+		$this->set("stamp_id", $id);
+
+		$this->action = "admin_quotes";
+	}
+
+	function admin_search_quote($id = null)
+	{
+		Configure::write('debug',0);
+
+		if(!empty($this->data['Quote']['keywords']))
+		{
+			$kw = $this->data['Quote']['keywords'];
+			$quotes = $this->Quote->find('all', array('conditions'=>" title LIKE '%$kw%' OR text LIKE '%$kw%' OR attribution LIKE '%$kw%' "));
+			$this->set("quotes", $quotes);
+		}
+		$this->set("stamp_id", $id);
+	}
+
+	function admin_delete($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for Stamp', true));
+			$this->redirect(array('action' => 'index'));
+		}
+		if ($this->Stamp->del($id)) {
+			$this->Session->setFlash(__('Stamp deleted', true));
+			$this->redirect(array('action' => 'index'));
+		}
+		$this->Session->setFlash(__('The Stamp could not be deleted. Please, try again.', true));
+		$this->redirect(array('action' => 'index'));
+	}
+
+}
+?>

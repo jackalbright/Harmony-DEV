@@ -1,0 +1,4 @@
+#product_table .itemDisplay { text-align: center; vertical-align: top; width: 200px; padding: 0.5em 0 0.5em 0; }
+#product_table .itemDisplay a { text-decoration: none; }
+#product_table .itemList { background-color: #FFE; text-align: center; margin: 0 auto 1em auto; border: #E0E0E0 1px solid; padding: 2px; }
+

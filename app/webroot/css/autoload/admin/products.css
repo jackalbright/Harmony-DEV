@@ -1,0 +1,29 @@
+#ProductPageTitle textarea, #ProductBodyTitle textarea
+{
+	/*display: block;*/
+	width: 100%;
+	margin: 0px;
+}
+
+
+.productPricings .text input
+{
+	width: 65px;
+}
+
+.productPricings td
+{
+	margin: 0px;
+	padding: 0px;
+}
+
+.productPricings fieldset div
+{
+	margin: 0px;
+}
+
+.productPricings fieldset table
+{
+	margin: 0px;
+	padding: 0px;
+}

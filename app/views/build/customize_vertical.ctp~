@@ -1,0 +1,70 @@
+<? $prod = $build['Product']['code']; ?>
+<? $this->element("steps/steps",array('step'=>'options')); ?>
+<? $template = !empty($build['template']) ? $build['template'] : null; ?>
+<div id="build">
+
+	<form id="build_form" name="build_form" method="POST" action="/cart/add_consolidated"/>
+	<input type="hidden" name="data[cart_item_id]" value="<?= !empty($build['cart_item_id']) ? $build['cart_item_id'] : "" ?>"/>
+	<input type="hidden" name="data[productCode]" value="<?= $build['Product']['code'] ?>"/>
+	<input type="hidden" name="data[options][customImageID]" value="<?= !empty($build['CustomImage']) ? $build['CustomImage']['Image_ID'] : "" ?>"/>
+	<input type="hidden" name="data[options][imageCrop]" value="<?= !empty($build['crop'][$template]) ? join(",", $build['crop'][$template]) : "" ?>"/>
+	<input type="hidden" name="data[options][catalogNumber]" value="<?= !empty($build['GalleryImage']) ? $build['GalleryImage']['catalog_number'] : "" ?>"/>
+
+	<table align="center">
+	<tr>
+		<td>
+			<div class="" align="right">
+				<a class="bold" href="/details/<?= $build['Product']['prod'] ?>.php">More <?= strtolower($build['Product']['name']) ?> info</a>
+			</div>
+		</td>
+	</tr>
+	<tr>
+	<td>
+	<table align="center" cellspacing=0 cellpadding=0 style="border: solid 1px #AAA; border-collapse: collapse;" >
+	<tr>
+		<td colspan=1 valign="top" align="center" style="height: 150px;">
+			<div class="padded">
+				<? if(!empty($build['CustomImage']) && !in_array($build['Product']['code'], array('PR','PB'))) { # New adjust. Don't let them adjust for presidents rulers (since so small). ?>
+				<? if(empty($this->params['isAjax']) && empty($build['Product']['is_stock_item'])) { ?>
+					<?= $this->element("build/options/adjust"); ?>
+				<? } ?>
+			<div id="pleasewaitbelow" style="background-color: #7777CC; width: 150px; margin: 10px; padding: 5px; " class="bold" align="center">
+						Please wait while your preview loads below...
+						<br/>
+						<br/>
+						<img src="/images/icons/loading.gif"/>
+						<br/>
+						<br/>
+			</div>
+					<?= $this->requestAction("/build/preview_adjust/vertical",array('return')); ?>
+				<? } else { # Stamp images. ?>
+					<?= $this->element("build/preview",array('live'=>1,'crop'=>1,'vertical'=>true)); ?>
+				<? } ?>
+				<!--
+				<div align="center" style="font-weight: bold; padding: 0px 10px 20px 10px; color: #F15922;"> Need a different layout?<br/>Call 888.293.1109 </div>
+				-->
+
+				<input type="hidden" name="vertical_preview" value="1"/>
+			</div>
+		</td>
+		<td width="250" rowspan="2" colspan=1 align="left" class="left_border grey_border" valign="top">
+			<?= $this->element("build/sidebar"); ?>
+		</td>
+	</tr>
+	<tr>
+		<td valign="top">
+			<?= $this->element("build/options"); ?>
+		</td>
+	</table>
+	</td>
+	</tr>
+	</table>
+
+	</form>
+
+	<script>
+		hidePleaseWait();
+	</script>
+
+
+</div>

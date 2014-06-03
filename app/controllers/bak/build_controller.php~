@@ -1,0 +1,1426 @@
+<?php
+include(dirname(__FILE__)."/../../includes/NSimageClass.inc");
+include(dirname(__FILE__)."/../../includes/classDefinitions.inc");
+
+
+class BuildController extends AppController {
+
+	var $name = 'Build';
+	var $helpers = array('Html', 'Form','Ajax');
+	var $uses = array("Product", "ProductPart", "GalleryImage", "CustomImage", "CustomizationOption", "ProductRecommendedQuote", "ImageRecommendedQuote",'Quote','Tassel','Charm','Border','Frame','Ribbon','CartItem','StampSurcharge','OrderItem');
+	var $options = array();
+	var $real_only_product = false;
+
+	function beforeFilter()
+	{
+
+		switch($this->action)
+		{
+			case 'admin_add':
+			case 'admin_edit':
+			case 'add':
+			case 'edit':
+		}
+
+		$this->styles[] = "/stylesheets/build.css";
+		$this->scripts[] = "/javascript/build.js";
+
+		if (isset($_REQUEST['clear']))
+		{
+			$this->Session->write("Build.options", array());
+		}
+
+
+		# XXX TODO LETS YOU SPECIFY PRODUCT/IMAGE FROM PARAMETERS...
+		#
+		#
+		#
+		#
+		if (!empty($_REQUEST['catalogNumber']))
+		{
+			$catalog_number = $_REQUEST['catalogNumber'];
+			$stamp = $this->GalleryImage->find("catalog_number = '".$_REQUEST['catalogNumber']."'");
+			$this->Session->delete("Build.imageID");
+			$this->Session->delete("Build.CustomImage");
+
+			$this->Session->write("Build.GalleryImage", $stamp['GalleryImage']);
+			$this->Session->write("Build.catalog_number", $_REQUEST['catalogNumber']);
+
+
+		}
+
+		if (!empty($_REQUEST['image_id'])) 
+		{
+			$imageID = $_REQUEST['image_id'];
+			$custom_image = $this->CustomImage->read(null, $imageID);
+			$this->Session->write("Build.imageID", $_REQUEST['image_id']);
+			$this->Session->write("Build.CustomImage", $custom_image['CustomImage']);
+
+			$this->Session->delete("Build.catalog_number"); # Don't need to use anymore.
+			$this->Session->delete("Build.GalleryImage"); # Don't need to use anymore.
+
+
+
+		}
+
+		if(!empty($_REQUEST['prod']))
+		{
+			$prod = $_REQUEST['prod'];
+			$this->Session->write("Build.prod", $prod);
+			$product = $this->Product->find("code = '$prod'");
+			$this->Session->write("Build.Product", $product['Product']);
+		}
+
+		if(!empty($_REQUEST['productCode']))
+		{
+			$prod = $_REQUEST['productCode'];
+			$this->Session->write("Build.prod", $prod);
+			$product = $this->Product->find("code = '$prod'");
+			$this->Session->write("Build.Product", $product['Product']);
+		}
+
+		parent::beforeFilter(); # Where we define this->build (want above code to go first!)
+
+
+		if(empty($this->build['options']))
+		{
+			$this->build['options'] = array();
+		}
+
+		$is_stamp = !empty($this->build['GalleryImage']);
+
+		$this->real_only_product = false;
+
+		if (!empty($this->build['Product']))
+		{
+			$product_type_id = $this->build['Product']['product_type_id'];
+			$prod = $this->build['Product']['prod'];
+			$options = $this->ProductPart->findAll("product_type_id = '$product_type_id'");
+			$image_type = $this->build['Product']['image_type'];
+			$this->real_only_product = (preg_match("/real/", $this->real_only_product) && !preg_match("/repro/", $this->real_only_product));
+
+			$step_options = array();
+			foreach($options as $option)
+			{
+				$step_name = $option['Part']['part_code'];
+				#$step_file = dirname(__FILE__)."/../../product/build/{$step_name}.php";
+				$step_file = dirname(__FILE__)."/../views/elements/build/steps/{$step_name}.ctp";
+				$product_step_file = dirname(__FILE__)."/../views/elements/build/steps/{$step_name}_{$prod}.ctp";
+				if (!file_exists($step_file) && !file_exists($product_step_file)) { continue; }
+
+				if ($option['Part']['is_step'])
+				{
+					$step_options[] = $option;
+				} # Else if is_step is false, skip!
+
+
+
+				if ($option['Part']['part_code'] == 'image' && $is_stamp)
+				{
+					$option['Part']['part_name'] = 'Stamp Type';
+					$step_options[] = $option;
+				}
+			}
+			$this->options = $step_options;
+			$this->set('options', $this->options);
+
+
+
+			if (empty($this->build['quantity']))
+			{
+				$this->build['quantity'] =  $this->build['Product']['minimum'];
+			}
+			$catalog_number = $this->Session->read("Build.GalleryImage.catalog_number");
+			$this->GalleryImage->recursive = 2;
+			$stamp_surcharge = $catalog_number ? $this->StampSurcharge->find("Catalog_number = '$catalog_number'") : null;
+			$parts = $this->load_build_parts();
+			$this->build['quantity_price'] =  $this->Product->get_effective_base_price($this->build['Product']['code'], $this->build['quantity'], $this->Session->read("Auth.Customer"), $this->real_only_product?$stamp_surcharge:null, $parts);
+			$this->Session->write("Build.quantity", $this->build['quantity']);
+			$this->Session->write("Build.quantity_price", $this->build['quantity_price']);
+		}
+
+		# Load generic stuff here....
+		$this->set("counter", 0);
+
+		#print_r($this->build);
+
+
+		# load image
+		if (!empty($this->build['CustomImage']))
+		{
+			$imageID = $this->build['CustomImage']['Image_ID'];
+			$image_object = new CustomImageObject();
+	 		if ( strpos($imageID, 't') !== false ) {
+	                       	$image_object->initFromArray($imageID);
+	                } else {
+	                       	$image_object->initFromDB($imageID, $this->database);
+	                }
+			$this->set("image", $image_object);
+			##error_log("IMG1=".print_r($this->viewVars['image'],true));
+		}
+
+		if (!empty($this->build['GalleryImage']))
+		{
+			$catalogNumber = $this->build['GalleryImage']['catalog_number'];
+			$stamp_object = new StampObject();
+			$stamp_object->initFromDB($this->build['GalleryImage']['catalog_number'], $this->database);
+
+			$this->set("stamp", (object)$this->build['GalleryImage']);
+			$stamp_surcharge = ($catalogNumber) ? $this->StampSurcharge->find("Catalog_number = '$catalogNumber'") : null;
+			$this->set("stamp_surcharge", $stamp_surcharge);
+			$this->set("image", $stamp_object);
+			##error_log("IMG2=".print_r($this->viewVars['image'],true));
+		}
+
+		#print_r($this->build);
+
+
+		#if (!isset($this->viewVars['image']))
+		#{
+			#$this->redirect("/gallery");
+		#}
+
+		$this->option_list = array();
+		$this->steps_incomplete = array();
+		foreach($this->options as $option)
+		{
+			$option_name = $option['Part']['part_code'];
+			$this->option_list[] = $option_name;
+		}
+		$this->option_list[] = 'comments';
+		foreach($this->option_list as $option_name)
+		{
+			#echo "O=$option_name";
+			if(empty($this->build['options'][$option_name]))
+			{
+				$this->steps_incomplete[$option_name] = $option_name;
+			}
+		}
+		$this->set("option_list", $this->option_list);
+
+		if (!$this->build['Product'])
+		{
+			$this->redirect("/products/select");
+		}
+
+
+
+
+
+		$this->load_item();
+
+		$product_name = "";
+
+		if(!empty($this->build['Product']))
+		{
+			$this->set("this_product", (object)$this->build['Product']);
+
+			$this->set("rightbar_disabled", true);
+			$product_name =  $this->build['Product']['name'];
+			$this->set("product_name", $product_name);
+		}
+		$image_name = "";
+		if (isset($this->build['CustomImage']['Title']))
+		{
+			$image_name = $this->build['CustomImage']['Title'];
+		} else if (isset($this->build['GalleryImage']['stamp_name'])) { 
+			$image_name = $this->build['GalleryImage']['stamp_name'];
+		}
+		$this->set("image_name", $image_name);
+
+		$this->set("body_title", "Create your ".($image_name ? "&quot;$image_name&quot; " : "").$this->pluralize(ucwords($product_name)));
+
+		$this->Session->write("Build", $this->build);
+
+		#$this->set("rightbar_template", "build/rightbar");
+
+		$parent_product_id = $this->build['Product']['parent_product_type_id'];
+		$parent_product = !empty($parent_product_id) ? $this->Product->read(null, $parent_product_id) : null;
+		$this->set("product", $this->build['Product']);
+		$this->set("parent_product", $parent_product);
+	}
+
+	function beforeRender()
+	{
+		parent::beforeRender();
+
+		# XXX TODO FIGURE OUT WHICH STEP THIS IS SO CAN GENERATE # FOR IT...
+
+		# GENERATE steps lists....
+
+		switch($this->action)
+		{
+			case 'admin_add':
+			case 'admin_edit':
+			case 'add':
+			case 'edit':
+				break;
+		}
+
+		$this->set("current_build_step", 3);
+		$this->set("status_bar_template", "build/progress");
+
+		# ALWAYS RETRIEVE DATA AVAILABLE FOR CUSTOMIZATION.....
+
+		# Quote
+		#print_r($this->build['options']['quote']);
+		if(isset($this->build['options']['quote']['quoteID']))
+		{
+			$this->build['options']['quote']['quoteID_data'] = 
+				$this->Quote->read(null, $this->build['options']['quote']['quoteID']);
+		}
+
+		#echo "QIDD=".print_r($this->build['options']['quote']['quoteID_data'],true);
+
+		# Ribbon
+
+		if(isset($this->build['options']['ribbon']['ribbonID']))
+		{
+			$this->build['options']['ribbon']['ribbonID_data'] = 
+				$this->Ribbon->read(null, $this->build['options']['ribbon']['ribbonID']);
+		}
+
+		# Border
+		if(isset($this->build['options']['border']['customBorder'])) {
+			$this->build['options']['border']['borderID_data'] = 
+				$this->Border->read(null, $this->build['options']['border']['customBorder']);
+		} else if(!empty($this->build['options']['border']['borderID'])) {
+			$this->build['options']['border']['borderID_data'] = 
+				$this->Border->read(null, $this->build['options']['border']['borderID']);
+		}
+
+		# Frame
+		if(!empty($this->build['options']['frame']['frameID'])) {
+			$this->build['options']['frame']['frameID_data'] = 
+				$this->Frame->read(null, $this->build['options']['frame']['frameID']);
+		}
+		
+		# Handles
+		if(!empty($this->build['options']['frame']['frameID'])) {
+			$this->build['options']['frame']['frameID_data'] = 
+				$this->Frame->read(null, $this->build['options']['frame']['frameID']);
+		}
+		
+		# Tassel
+		if(!empty($this->build['options']['tassel']['customTassel'])) {
+			$this->build['options']['tassel']['tasselID_data'] = 
+				$this->Tassel->read(null, $this->build['options']['tassel']['customTassel']);
+		} else if(!empty($this->build['options']['tassel']['tasselID'])) {
+			$this->build['options']['tassel']['tasselID_data'] = 
+				$this->Tassel->read(null, $this->build['options']['tassel']['tasselID']);
+		}
+		
+		# Charm
+		if(!empty($this->build['options']['charm']['customCharm'])) {
+			$this->build['options']['charm']['charmID_data'] = 
+				$this->Charm->read(null, $this->build['options']['charm']['customCharm']);
+		} else if(!empty($this->build['options']['charm']['charmID'])) {
+			$this->build['options']['charm']['charmID_data'] = 
+				$this->Charm->read(null, $this->build['options']['charm']['charmID']);
+		}
+
+		$this->set("build", $this->build);
+
+	}
+
+	function cart()
+	{
+		if (!$this->build['Product'])
+		{
+			$this->redirect("/products/select");
+		}
+		$step_count = count($this->options)+2;
+		$step_num = count($this->options)+1;
+
+		$step_template_path = dirname(__FILE__)."/../../product/build/cart.php";
+		$this->set("step_template_path", $step_template_path);
+		$this->action = "step";
+		$this->set("current_step", "cart");
+
+		if (!empty($this->params['form']['next_step']))
+		{
+			$this->redirect("/build/step/".$this->params['form']['next_step']);
+		}
+
+		#$this->set("body_title", "Step $step_num of $step_count: Add a Comment");
+		$this->set("counter", $step_num);
+		if (!empty($this->data))
+		{
+			#FORM REDIRECTS....
+			# Process???
+			# XXX TODO WE NEED TO MODIFY CART ADD SO IT PROCESSES BUILD VARIABLE PROPERLY....
+		}
+		$this->body_title = "Add to Cart";
+		# Display page to add to cart.
+		#$this->set("min_quantity", $this->build['Product']['minimum']);
+		$minimum = $this->build['Product']['minimum'];
+		$quantity = isset($this->build['quantity']) ? $this->build['quantity'] : $minimum;
+		$minimum = $this->build["Product"]['minimum'];
+		#print_r($this->build);
+		$reproduction = !empty($this->build['stampReproduction']) ? $this->build['stampReproduction'] : null;
+		if ($quantity < $minimum) { $quantity = $minimum; }
+		$this->set("quantity", $quantity);
+		$this->set("stampReproduction", $reproduction);
+		$this->set("minimum", $minimum);
+	}
+
+	function step($step = null)
+	{
+		#error_log("STEP=$step");
+		#error_log("FORM=".print_r($this->params['form'],true));
+		#print_r($this->build);
+		if (!$step && !empty($this->params['form']['next_step']))
+		{
+			$step = $this->params['form']['next_step'];
+		}
+		if (!$step)
+		{
+			$step = $this->options[0]['Part']['part_code'];
+			#$this->redirect("/build/step/$step");
+		}
+
+		if (!$this->build['Product'])
+		{
+			$this->redirect("/products/select");
+		}
+
+
+
+		$this->set("current_step", $step);
+		$this->set("options", $this->options);
+		$this->set("counter", array_search($step, $this->option_list));
+		$next_step = "";
+
+		$steps = array();
+		#print_r($this->steps_incomplete);
+		for($i = 0; $i < count($this->option_list); $i++)
+		{
+			$option_name = $this->option_list[$i];
+			$step_incomplete = !empty($this->steps_incomplete[$option_name]);
+			if($step_incomplete && $step != $option_name)
+			{
+				$next_step = $option_name;
+				break;
+			}
+			if ($option_name == $step && $i+1 < count($this->option_list))
+			{
+				$next_step = $this->option_list[$i+1];
+			}
+		}
+		#error_log("NS=$next_step".  print_r($this->params,true));
+		if (!empty($this->params['form']))#!empty($this->data))
+		{
+			if (!empty($this->params['form']['next_step']))
+			{
+				$next_step = $this->params['form']['next_step'];
+			}
+			#error_log("FORM=".print_r($this->params['form'],true));
+			 # Call to function specific to this step.... OR call generic code (in case simple enough)
+			 # May want to do validation, retrieval of other data for cart info, etc...
+			 
+			 # XXX TODO PROCESS DATA, SAVE TO SESSION....
+			 $this->Session->write("Build.options.$step", $this->params['form']);
+
+			 # Now delete 'incomplete' for this step...
+			 unset($this->steps_incomplete[$step]);
+
+			 #error_log("inc=".print_r($this->steps_incomplete,true));
+			 $parts = $this->load_build_parts();
+			 $catalogNumber = $this->Session->read("Build.GalleryImage.catalog_number");
+			 $stamp_surcharge = !empty($catalogNumber) ? $this->StampSurcharge->find("Catalog_number = '$catalogNumber'") : null;
+			 $unit_price = $this->Product->get_effective_base_price($this->build['Product']['code'], $this->build['quantity'], $this->get_customer(), $stamp_surcharge, $parts);
+			 $this->Session->write("Build.quantity_price", $unit_price);
+
+			 # If we succeeded, redirect to next step...
+			 if (!$next_step)
+			 {
+			 	$this->redirect(array('action'=>'cart')); # Otherwise, no more steps...
+			 }
+			 #if ($next_step)
+			 else {
+			 	$this->redirect(array('action'=>'step',$next_step));
+			 #} else { # No next step, either at comments or leaving....
+			 #	$this->redirect(array('action'=>'cart')); # Otherwise, no more steps...
+			 }
+		} 
+		$path = dirname(__FILE__)."/../../product/build/$step.php";
+		$prodname = $this->build['Product']['prod'];
+		$product_path = dirname(__FILE__)."/../../product/build/{$prodname}_{$step}.php";
+		$this->load_variables_step($step);
+		$this->set("step_template_path", $path);
+		$this->set("product_step_template_path", $product_path);
+		$this->set("database", $this->database);
+
+
+		$this->set("build", $this->build);
+		# REALLY ALL WE NEED...
+
+		#print_r($this->viewVars['currentItem']);
+	}
+
+	function load_variables_step($step)
+	{
+
+		$method = "load_variables_$step";
+		$prodname = $this->build['Product']['prod'];
+		$product_method = "load_variables_{$prodname}_{$step}";
+		# Just in case we need bookmark_charm() to process bookmark specific stuff...
+		if (method_exists($this, $product_method))
+		{
+			$this->$product_method();
+		}
+		else if (method_exists($this, $method))
+		{
+			$this->$method();
+		}
+
+		$this->set("script_template", "build");
+
+	}
+
+	function load_item()
+	{
+		$currentItem = new LegacyCartItem();
+		$stampReproduction = "No";
+		$itemReproduction = "No";
+
+		$this->build['isNewItem'] = (empty($this->build['cart_item_id']) && empty($this->build['cartID']));
+
+		# NOT SURE IF THIS LOADS VARIABLESA ABOVE PROPERLY SINCE WE REDIRECT......
+		# XXX TODO
+
+		# TWO OBJECTS: $currentItem, and $this->build....
+		# $currentItem is created from $this->build ....
+
+		#print_r($this->build['options']);
+
+		if (isset($_REQUEST['cartID']))
+		{
+			# LOAD FROM CART.....
+
+			$cartID = $_REQUEST['cartID'];
+			#$cart = $this->Session->read("shoppingCart");
+			$currentItem = $this->Session->read("shoppingCart.$cartID");
+
+			#print_r($currentItem);
+
+			$this->build = $this->cart_item_to_build($currentItem, $cartID);
+			$this->Session->write("Build", $this->build);
+			$this->redirect("/build/step");
+		} 
+		else if (isset($_REQUEST['cart_item_id'])) 
+		{ 
+			$cart_item_id = $_REQUEST['cart_item_id'];
+			$cart_item = $this->CartItem->read(null, $cart_item_id);
+			$code = $cart_item['CartItem']['productCode'];
+
+			$this->build = $this->cart_item_to_build($cart_item, $cart_item_id);
+
+			# Load currentItem for old step pages....
+
+			/*
+			$product = $this->Product->find("code = '$code' ");
+			$quantity = $cart_item['CartItem']['quantity'];
+			$parts = unserialize($cart_item['CartItem']['parts']);
+			$catalogNumber = !empty($parts['catalogNumber']) ? $parts['catalogNumber'] : null;
+			$gallery_image = $catalogNumber ? $this->GalleryImage->find("catalog_number = '$catalogNumber'") : null;
+			$Image_ID = !empty($parts['Image_ID']) ? $parts['Image_ID'] : null;
+			$custom_image = $Image_ID ? $this->CustomImage->find("Image_ID = '$Image_ID'") : null;
+			print_r($cart_item['CartItem']);
+			$this->build['quantity'] = $quantity;
+			$this->build['options'] = $parts;
+			if ($gallery_image) { $this->build['GalleryImage'] = $gallery_image; }
+			if ($custom_image) { $this->build['CustomImage'] = $custom_image; }
+			$this->build['quantity'] = $quantity;
+			*/
+
+			# XXX REDO BASED ON CITB
+
+			# XXX TODO RELOAD.... CustomImage, Product and GalleryImage, and quantity
+			$this->Session->write("Build", $this->build);
+			# I think this ignores the catalogNumber and productCode put in....
+
+			$this->redirect("/build/step");
+
+		}
+		elseif (isset($_REQUEST['reorder']))
+		{
+			#$this->build = $this->load_reorder($_REQUEST['itemID']);
+			$order_item = $this->OrderItem->read(null, $_REQUEST['itemID']);
+			$this->build = $this->cart_item_to_build($order_item, null);
+			$this->Session->write("Build", $this->build);
+			$this->redirect("/build/step");
+			 #XXX TODO SOMEDAY ....
+			#$itemID = $_REQUEST['itemID'];
+			#$result = mysql_query ("SELECT item_parts.*, order_item.* FROM item_parts, order_item WHERE item_parts.order_item_id=$itemID and order_item.order_item_id=$itemID", $this->database);
+			#$cartID = null;
+			#$parts_data = mysql_fetch_object($result);
+#
+#			#$currentItem = new CartItem();
+#			$item = $this->reload_order($parts_data);
+#			$this->build['options'] = $item;
+#
+#			# XXX TODO add product, image, etc...
+		} 
+		else 
+		{
+			#$cartID = null;
+			#$this->build['cartID'] = null;
+			#$isNewItem = true;
+			# Above is JUNK! may have already loaded from before!
+
+			$currentItem = $this->load_cart_item($this->build['options']);
+			# Convert nested hash to object. (for old code)
+		}
+
+		$this->set("isNewItem", !empty($this->build['isNewItem']) ? true : false);
+		$this->set("currentItem", $currentItem);
+		$this->set("stampReproduction", !empty($this->build['stampReproduction']) ? true : false);
+		$this->set("itemReproduction", !empty($this->build['itemReproduction']) ? true : false);
+		$this->set("productCode", !empty($this->build['Product']) ? $this->build['Product']['code'] : null);
+
+		$hasSurcharge = false;
+		$surchargePossible = false;
+		$surcharge = 0;
+
+		if (!empty($this->build['catalog_number']))
+		{
+			$catalogNumber = $this->build['catalog_number'];
+			$result = mysql_query ("Select surcharge from stamp_surcharge where catalog_number = '$catalogNumber'", $this->database);
+		        if ( mysql_num_rows ($result) > 0 ) {
+				$hasSurcharge = true;
+				$surchargePossible = true;
+				while ($temp = mysql_fetch_object ($result)){ $surcharge = $temp->surcharge; }
+				if (!(preg_match("/real/", $this->build['Product']['image_type']) && $hasSurcharge && $itemReproduction !="Yes")) { $surcharge = 0; }
+			}
+		}
+
+		$this->set("surchargePossible", $surchargePossible);
+		$this->set("hasSurcharge", $hasSurcharge);
+		$this->set("surcharge", $surcharge);
+
+	}
+
+	function load_cart_item($options) # Convert nested hash (session's 'Build.options') to object (legacy)
+	{
+		$currentItem = new LegacyCartItem();
+		#$currentItem = new Object();
+		#$currentItem->parts = new Object();
+
+		#We need an object for damned legacy code in steps.
+
+		#echo "OPT=".print_r($options,true);
+
+		# Try loading the rest from build.
+		foreach($options as $stepkey => $stepdata)
+		{
+			#echo "SK=$stepkey, ";
+			if ($stepkey == 'comments')
+			{
+				$currentItem->comments = $stepdata['itemComments'];
+				#$currentItem['comments'] = $stepdata['itemComments'];
+			} else if (is_array($stepdata)) {
+				foreach($stepdata as $stepdatakey => $stepdatavalue)
+				{
+					$partkey = $stepdatakey;
+					if (preg_match("/^custom(.*)/", $stepdatakey, $matches) && $stepdatavalue != "")
+					{
+						#$idkey = strtolower($matches[1])."ID";
+						#$currentItem->parts->$idkey = 'Custom';
+						# Do nothing any more, messes custom quote up....
+					}
+					$currentItem->parts->$partkey = $stepdatavalue; # Load for form use....
+					#$currentItem['parts'][$partkey] = $stepdatavalue;
+				}
+			}
+		}
+		return $currentItem;
+	}
+
+	function cart_item_to_build($currentItem, $cartID)
+	{
+		$build = array('options'=>array());
+		#error_log("CART_ID=$cartID");
+		#echo "CI=".print_r($currentItem,true);
+
+		$item = array();
+
+		if (is_object($currentItem)) # From old version....
+		{
+			$parts = get_object_vars($currentItem->parts);
+			$item = get_object_vars($currentItem);
+			$item['parts'] = $parts;
+			$build['cartID'] = $cartID;
+		} else if (!empty($currentItem['CartItem'])) { # From cart db record.
+			$item = $currentItem['CartItem'];
+			$item['parts'] = unserialize($currentItem['CartItem']['parts']);
+			$build['cart_item_id'] = $cartID;
+		} else if (!empty($currentItem['OrderItem'])) { # Reorder...
+			$item = $currentItem['OrderItem'];
+			$item['quantity'] = $currentItem['OrderItem']['Quantity'];
+			$item['unitPrice'] = $currentItem['OrderItem']['Price'];
+			$product_type_id = $item['product_type_id'];
+			$product = $this->Product->read(null, $product_type_id);
+			$item['productCode'] = $product['Product']['code'];
+			$item['parts'] = $currentItem['ItemPart'];
+			$item['parts']['customImageID'] = $currentItem['ItemPart']['imageID'];
+			$build['cart_item_id'] = $cartID;
+
+		}
+
+		$code = $item['productCode'];
+		if ($code == 'BC') { $code = 'B'; }
+		if ($code == 'PSF') { $code = 'PS'; }
+		$product = $this->Product->find("code = '$code'");
+
+		$build['Product'] = $product['Product'];
+		$build['quantity'] = $item['quantity'];
+		$build['quantity_price'] = $item['unitPrice'];
+		$build['isNewItem'] = false;
+		$build['options']["comments"] = array('itemComments'=>$item['comments']);
+
+		error_log("LOADING=".print_r($item,true));
+
+		# Load stamp.
+		if(!empty($item['parts']['stampNumber'])) {
+			$catalogNumber = $item['parts']['stampNumber'];
+			$gallery_image = $this->GalleryImage->find("catalog_number = '$catalogNumber'");
+			$build['GalleryImage'] = $gallery_image['GalleryImage'];
+		} else if(!empty($item['parts']['catalogNumber'])) {
+			$catalogNumber = $item['parts']['catalogNumber'];
+			$gallery_image = $this->GalleryImage->find("catalog_number = '$catalogNumber'");
+			$build['GalleryImage'] = $gallery_image['GalleryImage'];
+		} else if (!empty($item['parts']['customImageID'])) {
+		# Load custom image.
+			$ImageID = $item['parts']['customImageID'];
+			$custom_image = $this->CustomImage->find("Image_ID = '$ImageID'");
+			$build['CustomImage'] = $custom_image['CustomImage'];
+		}
+
+		print_r($item['parts']);
+
+		# Load parts..... as separate subarrays....
+		foreach($item['parts'] as $part => $value)
+		{
+			if ($value == '') { continue; }
+			echo "P=$part, V=$value, ";
+			if(preg_match("/(.*)_ID$/", $part, $matches))
+			{
+				$partkey = $matches[1];
+				$part = "{$matches[1]}ID";
+				if(empty($build['options'][$partkey])) { $build['options'][$partkey] = array(); }
+				$build['options'][$partkey][$part] = $value;
+			}
+			else if (preg_match("/(.*)ID$/", $part, $matches))
+			{
+				$partkey = $matches[1];
+				if(empty($build['options'][$partkey])) { $build['options'][$partkey] = array(); }
+				$build['options'][$partkey][$part] = $value;
+			} else if (preg_match("/custom(.*)$/", $part, $matches)) {
+				$partkey = strtolower($matches[1]);
+				if(empty($build['options'][$partkey])) { $build['options'][$partkey] = array(); }
+				$build['options'][$partkey][$part] = $value;
+
+			} else if ($part == 'personalization' || $part == 'personalizationInput') { 
+				$partkey = 'personalization';
+				if(empty($build['options'][$partkey])) { $build['options'][$partkey] = array(); }
+				$build['options'][$partkey]["personalizationInput"] = $value;
+				#echo "<br/><br/>DAKLSJALSJALKSAL<br/>";
+				#exit(0);
+
+			} else if ($part == 'personalizationStyle') {
+				$partkey = 'personalization';
+				if(empty($build['options'][$partkey])) { $build['options'][$partkey] = array(); }
+				$build['options'][$partkey][$part] = $value;
+
+			} else if ($part == 'reproductionStamp') {
+				$build['stampReproduction'] = $value;
+			} else if ($part == 'itemComments') {
+				
+				$partkey = 'comments';
+				#if(empty($build['options'][$partkey])) { $build['options'][$partkey] = array(); }
+			}
+		}
+
+		#print_r($build['options']);
+
+		return $build;
+	}
+
+	function load_reorder($orderID)
+	# TODO
+	{
+		$this->OrderItem->recursive = 2;
+		$order_item = $this->OrderItem->read(null, $orderID);
+
+		#print_r($order_item);
+	}
+
+	function load_redorder_old($orderID)
+	{
+		echo "ord=$orderID";
+				$itemCustomImageID=$row->imageID;
+				$itemRibbonID=$row->ribbon_ID;
+				$itemTasselID=$row->tassel_ID;
+				$itemCharmID=$row->charm_ID;
+				$itemQuoteID=$row->quote_ID;
+				$itemBorderID=$row->border_ID;
+				$itemCustomQuote=$row->custom_quote;
+				$itemPersonalization=$row->personalization;
+				$itemStampID=$row->stampNumber;
+				$itemFrameID=$row->frameID;
+				$itemPinStyle=$row->pinStyle;
+				$itemShirtSize=$row->Size;
+				$itemPrintSide=$row->printSide;
+				$itemReproduction = $row->reproduction;
+				$stampReproduction=$row->reproductionStamp;
+				if ($stampReproduction == "yes")
+				{
+					$stampReproduction = "No";
+				} 
+				else 
+				{
+					$stampReproduction = "Yes";
+				};
+				$personalizationStyle=$row->personalizationStyle;
+				$itemComments=$row->comments;
+
+
+			if ($itemStampID !="")
+			{
+				$currentItem->parts->catalogNumber = $itemStampID;
+			} 
+			else 
+			{
+				unset($currentItem->parts->catalogNumber);
+			};
+			if ($itemCustomImageID != "")
+			{
+				$currentItem->parts->customImageID = $itemCustomImageID;
+			} 
+			else 
+			{
+				unset($currentItem->parts->customImageID);
+			};
+			if ($itemQuoteID != "")
+			{
+				$currentItem->parts->quoteID = $itemQuoteID;
+			} 
+			else {
+				unset($currentItem->parts->quoteID);
+			};
+			if ($itemShirtSize != "")
+			{
+				$currentItem->parts->shirtSize = $itemShirtSize;
+			} 
+			else 
+			{
+				unset($currentItem->parts->shirtSize);
+			};
+			if ($itemPrintSide != "")
+			{
+				$currentItem->parts->printSide = $itemPrintSide;
+			} 	else 
+			{
+				unset($currentItem->parts->printSide);
+			};
+			if ($itemCustomQuote != "")
+			{
+				$currentItem->parts->customQuote =$itemCustomQuote;
+			};
+			if ($itemBorderID != "")
+			{
+				$currentItem->parts->borderID = $itemBorderID;
+			} 
+			else 
+			{
+				unset($currentItem->parts->borderID);
+			};
+			if ($itemTasselID != "")
+			{
+				$currentItem->parts->tasselID = $itemTasselID;
+			} 
+			else 
+			{
+				unset($currentItem->parts->tasselID);
+			};
+			if ($itemCharmID != "")	
+			{
+				$currentItem->parts->charmID = $itemCharmID;
+			} else 
+			{
+				unset($currentItem->parts->charmID);
+			};
+			if ($itemFrameID != "")
+			{
+				$currentItem->parts->frameID = $itemFrameID;
+			} 
+			else 
+			{
+				unset($currentItem->parts->frameID);
+			};
+			if ($itemPinStyle != "")
+			{
+			  if ($itemPinStyle =="Tie Tack")
+			  {
+			  	$currentItem->parts->pinStyle = "Tie Tack";
+			  } 
+			  else 
+			  {
+			  	$currentItem->parts->pinStyle = "Bar";
+			  };
+			} 
+			else 
+			{
+				unset($currentItem->parts->pinStyle);
+			};
+			if ($itemPosterFrame != "Yes")
+			{
+				$currentItem->parts->posterframe = true;
+			} 
+			else 
+			{
+				unset($currentItem->parts->posterframe);
+			};
+			if ($itemRibbonID != "")
+			{
+				$currentItem->parts->ribbonID = $itemRibbonID;
+			} 
+			else 
+			{
+				unset($currentItem->parts->ribbonID);
+			};
+			if ($itemPersonalization != "")
+			{
+				$tempPers=str_replace("%20", " ", $itemPersonalization);
+				$currentItem->parts->personalization = str_replace("<br />", "\n", $tempPers);
+				$currentItem->parts->personalizationStyle = $personalizationStyle;
+			};
+			if ($itemComments != "")
+			{
+				$currentItem->comments = $itemComments;
+			}
+			if (array_key_exists('quantity', $_REQUEST))
+			{
+				$currentItem->quantity = $_REQUEST['quantity'];
+			};
+
+	}
+
+
+	function load_variables_tassel()
+	{
+		$tassel = array();
+		$result = mysql_query ("Select * from tassel where available='yes' order by color_name", $this->database);
+		while ( $temp = mysql_fetch_object($result) ) {
+			$tassels[] = $temp;
+		}
+		$this->set("tassels", $tassels);
+	}
+
+	function load_variables_border()
+	{
+		$borders = array();
+		$result = mysql_query ("Select * from border where available='yes' order by name", $this->database);
+		while ( $temp = mysql_fetch_object($result) ) {
+			$borders[] = $temp;
+		}
+		$this->set("borders", $borders);
+	}
+
+	function load_variables_charm()
+	{
+		$charms = array();
+		$result = mysql_query ("Select * from charm where available='yes' order by name", $this->database);
+		while ( $temp = mysql_fetch_object($result) ) {
+			$charms[] = $temp;
+		}
+		$this->set("charms", $charms);
+	}
+
+	function load_variables_ribbon()
+	{
+		$ribbons = array();
+		$result = mysql_query ("Select * from ribbon where available='yes' order by color_name", $this->database);
+		while ( $temp = mysql_fetch_object($result) ) {
+			$ribbons[] = $temp;
+		}
+		$this->set("ribbons", $ribbons);
+	}
+
+	function load_variables_quote()
+	{
+		# Set quotes for product.
+		$product_type_id = $this->build['Product']['product_type_id'];
+
+		$productQuotes = array();
+		$sql = "Select quote.* from productQuote, quote where productQuote.productTypeID = $product_type_id && productQuote.quoteID = quote.quote_id";
+		#echo "SQL=$sql";
+        	$result = mysql_query ( $sql, $this->database);
+        	while ( $tempQuote = mysql_fetch_object($result) ) {
+                	$temp = new QuoteObject();
+                	$temp->init($tempQuote);
+                	$productQuotes["q$temp->id"] = $temp;
+        	}       
+		$this->set("productQuotes", $productQuotes);
+
+		$quoteLength = 0;
+		$quoteText = "";
+		$quoteAttribution = "";
+
+		if (isset($_REQUEST['selectedQuote']))
+		{
+			$selectedQuote = $_REQUEST['selectedQuote'];
+
+			$result = mysql_query ("Select text, text_length, attribution from quote where quote_id = '$selectedQuote'", $this->database);
+			if(mysql_num_rows($result)>0)
+			{
+				while($temp = mysql_fetch_object($result))
+				{
+					$quoteText = $temp->text;
+					$quoteLength = $temp->text_length;
+					$quoteAttribution = $temp->attribution;
+				}
+			}
+			if ($quoteAttribution != "")
+			{
+				$quoteText = $quoteText . "\n - " . $quoteAttribution;
+			}
+		}
+
+		$this->set("quoteText", preg_replace('/\<br(\s*)?\/?\>/i', "\n", $quoteText));
+		$this->set("quoteLength", $quoteLength);
+		
+	}
+	
+	function product_view_large_png($prod = null)
+	{
+		Configure::write("debug", 0);
+		$this->view = 'Media';
+		if (!empty($prod))
+		{
+			$this->Session->write("Build.productCode", $prod);
+			$product = $this->Product->find("code = '$prod'");
+			$this->Session->write("Build.Product", $product['Product']);
+			$this->build = $this->Session->read("Build");
+		}
+
+		$catalogNumber = !empty($this->params['form']['catalogNumber']) ? $this->params['form']['catalogNumber'] : null;
+		$imageID = !empty($this->params['form']['imageID']) ? $this->params['form']['imageID'] : null;
+
+		if ($catalogNumber)
+		{
+			$galleryImage = $this->CustomImage->find("catalog_number = '$catalogNumber'");
+			$this->build['GalleryImage'] = $galleryImage['GalleryImage'];
+		}
+
+		if ($imageID)
+		{
+			$customImage = $this->CustomImage->read(null, $imageID);
+			$this->build['CustomImage'] = $customImage['CustomImage'];
+		}
+
+		/*
+
+		$large = true;
+		if (isset($_REQUEST['small'])) { $large = false; }
+		Configure::write('debug',0);
+		#$this->layout = 'default_plain_html';
+		include_once(dirname(__FILE__)."/../../includes/build/preview/product_preview.php");
+		?><html><body><div style="text-align: center; margin-left: auto; margin-right: auto; background-color: white; text-align: center;"><?
+		#product_view_large($this->build);
+		product_preview($this->build, $large);
+		?></div></body></html><?
+		exit(0);
+		*/
+	}
+
+	function product_view_large($prod = null)
+	{
+		Configure::write("debug", 0);
+		$this->layout = 'default_plain';
+		if (!empty($prod))
+		{
+			$this->Session->write("Build.productCode", $prod);
+			$product = $this->Product->find("code = '$prod'");
+			$this->Session->write("Build.Product", $product['Product']);
+			$this->build = $this->Session->read("Build");
+		}
+
+		$catalogNumber = !empty($this->params['form']['catalogNumber']) ? $this->params['form']['catalogNumber'] : null;
+		$imageID = !empty($this->params['form']['imageID']) ? $this->params['form']['imageID'] : null;
+
+		if ($catalogNumber)
+		{
+			$galleryImage = $this->CustomImage->find("catalog_number = '$catalogNumber'");
+			$this->build['GalleryImage'] = $galleryImage['GalleryImage'];
+		}
+
+		if ($imageID)
+		{
+			$customImage = $this->CustomImage->read(null, $imageID);
+			$this->build['CustomImage'] = $customImage['CustomImage'];
+		}
+
+		/*
+
+		$large = true;
+		if (isset($_REQUEST['small'])) { $large = false; }
+		Configure::write('debug',0);
+		#$this->layout = 'default_plain_html';
+		include_once(dirname(__FILE__)."/../../includes/build/preview/product_preview.php");
+		?><html><body><div style="text-align: center; margin-left: auto; margin-right: auto; background-color: white; text-align: center;"><?
+		#product_view_large($this->build);
+		product_preview($this->build, $large);
+		?></div></body></html><?
+		exit(0);
+		*/
+	}
+
+	function index() {
+		# Make sure they have both a product and image selected.
+
+		if (!empty($this->build['Product']['is_stock_item']))
+		{
+			# Show add-to-cart page.
+			$this->redirect(array('action'=>'cart'));
+		}
+
+		if (!isset($this->build['Product']))
+		{
+			$this->redirect("/products/select"); 
+		}
+
+		if (!isset($this->build['GalleryImage']) && !isset($this->build['CustomImage']))
+		{
+			$this->redirect("/gallery");
+		}
+
+		if (!empty($this->params['form']))#!empty($this->data))
+		{
+			$this->redirect(array('action'=>'step',$this->option_list[0]));
+			#$this->redirect(array('action'=>'quantity'));
+			#$this->redirect(array('action'=>'quantity'));
+		}
+
+		#foreach($this->options as $option)
+		#{
+		#	$part_code = $option['Part']['part_code'];
+		#	if (!isset($this->build['Build'][$part_code]))
+		#	{
+		#		$this->redirect(array('action'=>'step',$part_code));
+		#	}
+		#}
+		$code = $this->build['Product']['code'];
+		$this->Product->recursive = 2;
+		$product = $this->Product->find("code = '$code'");
+		$this->set("product", $product);
+		if ($parent_id = $product['Product']['parent_product_type_id'])
+		{
+			$parent_product = $this->Product->find("product_type_id = '$parent_id'");
+			$this->set("parent_product", $parent_product);
+		}
+
+		$this->set("body_title", "Custom ".($this->viewVars['image_name'] ? "&quot;{$this->viewVars['image_name']}&quot; " : "").$this->pluralize($this->viewVars['product_name']));
+
+		$minimum_price = $this->Product->get_minimum_price($this->build['Product']['code']);
+
+		$this->set("minimum_price", $minimum_price);
+
+	}
+
+	function quantity()
+	{
+		#print_r($this->option_list);
+			$next = $this->option_list[0];
+			#echo "N=$next";
+		$catalog_number = $this->Session->read("Build.GalleryImage.catalog_number");
+		$this->GalleryImage->recursive = 2;
+		$stamp_surcharge = ($catalog_number && $this->real_only_product) ? $this->StampSurcharge->find("Catalog_number = '$catalog_number'") : null;
+
+		if (!empty($this->params['form']))#!empty($this->data))
+		{
+			$quantity =  $this->params['form']['quantity'];
+			if ($quantity < $this->build['Product']['minimum'])
+			{
+				$this->Session->setFlash("Minimum quantity is ". $this->build['Product']['minimum']);
+				$quantity =  $this->build['Product']['minimum'];
+			}
+			$this->Session->write("Build.quantity", $quantity);
+			 $parts = $this->load_build_parts();
+			$quantity_price =  $this->Product->get_effective_base_price($this->build['Product']['code'], $this->params['form']['quantity'], $this->Session->read("Auth.Customer"), $stamp_surcharge, $parts);
+			$this->Session->write("Build.quantity_price", $quantity_price);
+
+			 $this->params['form'] = null;
+
+			$this->redirect(array('action'=>'step',$next));
+			#$this->redirect(array('action'=>'quantity'));
+		}
+		$minimum = $this->build['Product']['minimum'];
+		$quantity = $this->Session->read("Build.quantity");
+		if (!$quantity || $quantity < $minimum)
+		{
+			$quantity = $minimum;
+		}
+		$this->set("quantity", $quantity);
+		$this->set("minimum", $minimum);
+		$this->set("current_step", "quantity");
+		$this->set("product_pricings", $this->Product->generate_pricing_list($this->build['Product']['code'],false, $stamp_surcharge));
+	}
+
+	function quote()
+	{
+		if (!empty($this->data['quote']))
+		{
+			$this->Session->write("Build.quote", $this->data['quote']);
+
+			$this->goto_next_step('quote'); # May want to implement 'save' vs 'save and next'
+		}
+		# Get quote info...
+		$product_id = $this->build['Product']['product_type_id'];
+		$quote_limit = $this->build['Product']['quote_limit'];
+		$this->set("quote_limit", $quote_limit);
+		$productQuotes = $this->ProductRecommendedQuote->findAll("productTypeID = '$product_id'");
+
+		$quotes = array();
+
+		foreach($productQuotes as $productQuote)
+		{
+			$length = $productQuote['Quote']['attrib_length'] + $productQuote['Quote']['text_length'];
+			if ($length <= $quote_limit)
+			{
+				$quotes[] = $productQuote;
+			}
+		}
+
+		if (isset($this->build['GalleryImage']['catalog_number']))
+		{
+			$catalog_number = $this->build['GalleryImage']['catalog_number'];
+			$imageQuotes = $this->ImageRecommendedQuote->findAll("Catalog_Number = '$catalog_number'");
+			foreach($imageQuotes as $imageQuote)
+			{
+				$length = $imageQuote['Quote']['attrib_length'] + $imageQuote['Quote']['text_length'];
+				if ($length <= $quote_limit)
+				{
+					$quotes[] = $imageQuote;
+				}
+			}
+		}
+
+		$this->set("quotes", $quotes);
+
+		# Get current quote 
+		# TODO
+		$quoteLength = 0;
+		$this->set("quoteLength", $quoteLength);
+	}
+
+	function border()
+	{
+	}
+
+
+	###############################
+
+	function customize($customization_step = '')
+	{
+		if (isset($this->data['Build']['customization_step']))
+		{
+			$this->build['customization_step'] = $this->data['Build']['customization_step'];
+		}
+		else if (!empty($customization_step))
+		{
+			$this->build['customization_step'] = $customization_step;
+		}
+
+		$this->build['step'] = 3;
+
+		if (!isset($this->build['customization_step']))
+		{
+			$this->build['customization_step'] = 'intro';
+		}
+
+		$page = $this->build['customization_step'];
+
+		$prod = $this->build['prod'];
+
+		$this->CustomizationOption->recursive = 2;
+		$product = $this->Product->find("code = '$prod'");
+		$options = $product['CustomizationOptions'];
+		#$options = $this->CustomizationOption->Products->findAll("Products.code = '$prod'");
+
+		#print_r($options);
+
+		# Maybe just get a list of sub-pages? and ignore url....
+		$next_page = $page;
+
+		if (!empty($this->data))
+		{
+			$ix = 0;
+			for($ix = 0; $ix < count($options); $ix++)
+			{
+				$option = $options[$ix];
+				if ($page == 'intro')
+				{
+					$next_page = $option['part_code'];
+					break;
+				}
+				else if ($option['part_code'] == $page && $ix < count($options)-1)
+				{
+					$next_page = $option[$ix+1]['part_code'];
+					break;
+				}
+			}
+
+			# Set next page.
+			$page = $next_page;
+		}
+
+		if (method_exists($this, "customize_$page"))
+		{
+			$customize_method = "customize_$page";
+			$this->$customize_method();
+		}
+
+
+		$this->set("next_page", $next_page);
+
+		$this->set("action_page", $page);
+	}
+
+	function customize_quote()
+	{
+		$this->body_title = "Customization: Select Your Quote/Text";
+
+		# XXX ADD IN JS TO SELECT CORRECT QUOTE IF RELOADING FROM DB....
+
+		$quotes = array();
+		$product_id = $this->build['Product']['product_type_id'];
+		$catalog_number = $this->build['catalog_number'];
+		$this->ProductRecommendedQuote->contain('Quote');
+		$this->ImageRecommendedQuote->contain('Quote');
+		$product_quotes = $this->ProductRecommendedQuote->findAll("ProductRecommendedQuote.productTypeID = '$product_id'");
+		#echo "PQ=".print_r($product_quotes,true);
+		foreach($product_quotes as $quote)
+		{
+			$quotes[] = $quote['Quote'];
+		}
+
+		# IMAGE BASED QUOTES.....
+		# XXX TOMAS_MALY
+		$image_quotes = $this->ImageRecommendedQuote->findAll("ImageRecommendedQuote.catalog_number = '$catalog_number'");
+		#echo "IM_QUOTE=".print_r($image_quotes,true);
+		foreach($image_quotes as $quote)
+		{
+			$quotes[] = $quote['Quote'];
+		}
+		#print_r($quotes);
+		$this->set("quotes", $quotes);
+	}
+
+	function personalize()
+	{
+		$this->build['step'] = 4;
+	}
+
+	function cart_old()
+	{
+		$this->body_title = "Add to Cart";
+		# Display page to add to cart.
+		$this->set("min_quantity", $min_quantity);
+
+		# XXXX TODO once we add to cart, we need to save info into STACK, so we can reference back again!
+		# MAYBE just a matter of reading 'cart' entry in db....
+		# XXX cart entry should encompass EVERYTHING HERE we need.
+		# MAYBE just be an XML dump? for expandability? AND EASY SESSION RESTORATION!!!!!
+		# XXX 
+	}
+
+	#
+	#
+	#
+	#
+	#
+	#
+	#
+	####################################################################################
+	# Stuff below for managing building....
+
+
+	function admin_index() {
+		$this->Product->recursive = 0;
+		$this->set('products', $this->paginate());
+		#$this->set('products', $this->Product->findAll());
+	}
+
+	function admin_view($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid Product.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$this->set('product', $this->Product->read(null, $id));
+	}
+
+	function admin_add() {
+		$this->action = 'admin_edit';
+		if (!empty($this->data)) {
+			$this->Product->create();
+			if ($this->Product->save($this->data)) {
+				$this->Session->setFlash(__('The Product has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The Product could not be saved. Please, try again.', true));
+			}
+		}
+	}
+
+	function admin_edit($id = null) {
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid Product', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$this->set("product_id", $id);
+		if (!empty($this->data)) {
+			if ($this->Product->save($this->data)) {
+				$this->Session->setFlash(__('The Product has been saved', true));
+				#$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The Product could not be saved. Please, try again.', true));
+			}
+		}
+		if (empty($this->data)) {
+			$this->data = $this->Product->read(null, $id);
+			#$this->data['product_pricing_matrix'] = $this->Product->create_pricing_matrix($this->data);
+			#print_r($this->data['product_pricing_matrix']);
+		}
+
+		$this->breadcrumbs["/".$this->params['url']['url']] = $this->data['Product']['name'];
+
+		$product_count = $this->Product->find('count', array('conditions'=>array('buildable' => 'yes')));
+		$popularity_options = array(''=>'N/A');
+		for($i = 0; $i <$product_count; $i++)
+		{
+			$popularity_options[$i] = $i;
+		}
+		$this->set("popularity_ranking_options", $popularity_options);
+		$this->set("parent_product_types", $this->Product->get_product_option_list($id));
+
+		include_once("includes/image_gallery.php");
+		$count = get_gallery_file_count("details/".$this->data['Product']['name'], 'jpg');
+		#echo "C=$count, P=".$this->data['Product']['name'];
+		$this->set("gallery_image_count", $count);
+	}
+
+	function admin_delete($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for Product', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if ($this->Product->del($id)) {
+			$this->Session->setFlash(__('Product deleted', true));
+			$this->redirect(array('action'=>'index'));
+		}
+	}
+
+}
+?>

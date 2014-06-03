@@ -1,0 +1,22 @@
+<div>
+<? 
+$section = array();
+
+foreach($this->data['SpecialtyPageSectionContent'] as $section_data)
+{
+	if ($section_data['page_section_name'] == $page_section_name)
+	{
+		$section = $section_data;
+		break;
+	}
+}
+# If not found, then it's new....
+
+	<fieldset>
+ 		<legend><?php __('Edit '.$page_section_name.' Section Content');?></legend>
+	<?php
+		echo $form->input("SpecialtyPageSectionContent.$page_section_name.specialty_page_id");
+		echo $form->input("SpecialtyPageSectionContent.$page_section_name.content");
+	?>
+	</fieldset>
+</div>

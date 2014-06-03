@@ -1,0 +1,15 @@
+<?php
+class Tassel extends AppModel {
+
+	var $name = 'Tassel';
+	var $useTable = 'tassel';
+	var $primaryKey = 'tassel_id';
+
+	var $hasMany = array(
+	);
+
+	var $hasOne = array(
+	);
+
+}
+?>

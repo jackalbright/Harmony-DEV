@@ -1,0 +1,31 @@
+ul.fontselector {
+  background: white;
+  border: 1px solid #999;
+  /*border-top: 0;*/
+  font-size: 14px;
+  float: left;
+  list-style: none;
+  margin: 0;
+  padding:0;
+  line-height: 1.2;
+  z-index:    1000;
+  position:   absolute;
+}
+ul.fontselector li {
+  margin:   0;
+  padding:  0;
+  list-style: none;
+}
+ul.fontselector a {
+  overflow: hidden; /* needed for large ascending/descending fonts */
+  display:    block;
+  padding:    0.1em 0.25em;
+  color:      black;
+  width: 225px;
+  text-decoration: none;
+  font-size: 1.5em;
+}
+ul.fontselector a:hover {
+  background: #ddd;
+  cursor:     pointer;
+}

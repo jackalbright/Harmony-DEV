@@ -1,0 +1,162 @@
+<div style="margin-top: 0px;">
+<h3 class="hidden"><b><?= !empty($product['Product']['is_stock_item']) ? "Select a quantity:" : "Choose an option below to get started:" ?></b></h3>
+
+<? if(empty($prod)) { $prod = !empty($product['Product']['code']) ? $product['Product']['code'] : null; } ?>
+
+<? if(!empty($related_products)) { ?>
+<div style="border-bottom: solid #CCC 1px; text-align: left;">
+<div class="left padded"><img src="/images/icons/small/1.gif"/> </div> 
+<div class="hidden"><h4 class="bold block">Select a <?= strtolower($product['Product']['short_name']) ?> style:</h4></div>
+	<table cellspacing=5 align="left">
+	<tr>
+		<td>
+			<img onClick="$('prod_<?= $product['Product']['code'] ?>').checked = 'checked'; $('prod_<?= $product['Product']['code'] ?>').onclick();" src="/images/products/thumbnail/<?= $product['Product']['code'] ?>.jpg"/><br/>
+			<input id="prod_<?= $product['Product']['code'] ?>" type="radio" name="prod" onClick="set_get_started_prod(this.value);" checked="checked" value="<?= $product['Product']['code'] ?>"/>
+			<?= $product['Product']['name'] ?>
+		</td>
+		<? foreach($related_products as $related) { ?>
+		<td>
+			<img onClick="$('prod_<?= $related['Product']['code'] ?>').checked = 'checked'; $('prod_<?= $related['Product']['code'] ?>').onclick();" src="/images/products/thumbnail/<?= $related['Product']['code'] ?>.jpg"/><br/>
+			<input id="prod_<?= $related['Product']['code'] ?>" type="radio" name="prod" onClick="set_get_started_prod(this.value);" value="<?= $related['Product']['code'] ?>"/>
+			<?= $related['Product']['name'] ?>
+		</td>
+		<? } ?>
+	</tr>
+	</table>
+	<div class="clear"></div>
+	<br/>
+<div class="left padded"><img src="/images/icons/small/2.gif"/> </div>
+</div>
+
+<? } ?>
+<div align="center">
+
+	<table style="position: relative; height: 200px; padding: 0px; margin: 0px;" cellpadding=0 border=0 align="center">
+	<tr style="">
+		<?
+		$width = "225px";
+		$completed = true;
+		?>
+		<th colspan=1 align="center" class="bold" style="width: <?= $width ?>;">
+		Email a "press-ready" design
+		</th>
+		<? $stampok = $customok = $existing = false; if((!empty($build['GalleryImage']) && preg_match("/(real|repro)/", $product['Product']['image_type'])) || (!empty($build['CustomImage']) && preg_match("/custom/", $product['Product']['image_type']))) { $width = "250px"; ?>
+		<td style="width: 30px; font-weight: bold;">&nbsp;</td>
+		<th colspan=1 align="center" class="bold" style="width: <?= $width ?>%;">
+		Use Existing Image
+		</th>
+		<? $existing = true; } ?>
+		<? if(preg_match("/custom/", $product['Product']['image_type'])) { $customok = true; ?>
+			<? if ($completed || $existing) { ?><td style="width: 30px; font-weight: bold;">&nbsp;</td><? } ?>
+		<th colspan=1 align="center" class="bold" style="width: <?= $width ?>;">
+		Use your image on<br/>a standard layout
+		</th>
+		<? } ?>
+		<? if(preg_match("/(real|repro)/", $product['Product']['image_type'])) { $stampok = true; ?>
+			<? if ($completed || $existing || $customok) { ?><td style="width: 30px; font-weight: bold;">&nbsp;</td><? } ?>
+		<th colspan=1 align="center" class="bold" style="width: <?= $width ?>;">
+		Browse stamp images
+		</th>
+		<? } ?>
+		<? if(false && preg_match("/custom/", $product['Product']['image_type'])) { ?>
+			<? if ($completed || $existing || $customok || $stampok) { ?><td style="width: 30px; font-weight: bold;">&nbsp;</td><? } ?>
+		<th colspan=1 align="center" class="bold" style="width: <?= $width ?>;">
+		Browse clip art
+		</th>
+		<? } ?>
+	</tr>
+	<tr>
+		<td colspan=1 align="center" valign="top">
+			<img border=0 src="/images/icons/email.jpg" alt="Email Your Press-Ready Design" height="100">
+		</td>
+		<? $completed = true; ?>
+		<? if((!empty($build['GalleryImage']) && preg_match("/(real|repro)/", $product['Product']['image_type'])) || (!empty($build['CustomImage']) && preg_match("/custom/", $product['Product']['image_type']))) { ?>
+		<td style="width: 30px; font-weight: bold;">-OR-</td>
+		<td colspan=1 align="center" valign="top">
+			<?= $this->element("build/preview_thumbnail", array('size'=>'-100x100')); ?>
+		</td>
+		<? } ?>
+		<? if(preg_match("/custom/", $product['Product']['image_type'])) { ?>
+			<? if ($completed || $existing) { ?><td style="width: 30px; font-weight: bold;">-OR-</td><? } ?>
+		<td style="" align=center valign="top">
+			<img border=0 src="/images/upload_image.jpg" alt="Upload Your Image" height="100">
+		</td>
+		<? } ?>
+		<? if(preg_match("/(real|repro)/", $product['Product']['image_type'])) { ?>
+			<? if ($completed || $existing || $customok) { ?><td style="width: 30px; font-weight: bold;">-OR-</td><? } ?>
+		<td style="" align=center valign="top">
+			<img border=0 src="/images/choose_stamp.jpg" alt="Use One of Our Images" height="100">
+		</td>
+		<? } ?>
+		<? if(false && preg_match("/custom/", $product['Product']['image_type'])) { ?>
+			<? if ($completed || $existing || $customok || $stampok) { ?><td style="width: 30px; font-weight: bold;">-OR-</td><? } ?>
+		<td style="" align=center valign="top">
+			<img border=0 src="/images/icons/Mona-lisa-clipart.jpg" alt="Browse Clip Art" height="100">
+		</td>
+		<? } ?>
+	</tr>
+	<tr>
+		<td align="center" valign="top">
+			<a href="mailto:graphics@harmonydesigns.com?subject=Completed Art"><img src="/images/buttons/small/Send-Email-grey.gif"/></a>
+			<br/>
+			<br/>
+			Attach your completed<br/>design ready for print.
+		</td>
+		<? if((!empty($build['GalleryImage']) && preg_match("/(real|repro)/", $product['Product']['image_type'])) || (!empty($build['CustomImage']) && preg_match("/custom/", $product['Product']['image_type']))) { ?>
+			<td style="width: 30px; font-weight: bold;">&nbsp;</td>
+		<td align="center" valign="top">
+			<form method="POST" action="/products/get_started/build">
+				<input id="existing_prod" type="hidden" name="prod" value="<?= $prod ?>"/>
+				<input id="" type="hidden" name="catalog_number" value="<?= !empty($build['GalleryImage']) ? $build['GalleryImage']['catalog_number'] : "" ?>"/>
+				<input id="" type="hidden" name="image_id" value="<?= !empty($build['CustomImage']) ? $build['CustomImage']['Image_ID'] : "" ?>"/>
+				<input type="image" src="/images/buttons/small/Personalize.gif"/>
+			</form>
+		</td>
+		<? } ?>
+		<? if(preg_match("/custom/", $product['Product']['image_type'])) { ?>
+			<? if ($completed || $existing) { ?><td style="width: 30px; font-weight: bold;">&nbsp;</td><? } ?>
+		<td align="center" valign="top">
+			<form method="POST" action="/products/get_started/custom_add">
+				<input id="custom_prod" type="hidden" name="prod" value="<?= $prod ?>"/>
+				<input type="image" src="/images/buttons/small/Upload-Your-Image-grey.gif"/>
+			</form>
+			<div class="bold">- OR -</div>
+			<a href="/products/get_started/custom_images?prod=<?= $prod?>">Select a previously uploaded image</a>
+			<br/>
+			<br/>
+			Build your custom product online
+		</td>
+		<? } ?>
+		<?
+			$image_type = $product['Product']['image_type'];
+			$custom_only_product = (preg_match("/custom/", $image_type) && !preg_match("/(real|repro)/", $image_type));
+
+		?>
+		<? if(preg_match("/(real|repro)/", $product['Product']['image_type']) || ($custom_only_product && !preg_match("/custom/", $image_type))) { ?>
+			<? if ($completed || $existing || $customok) { ?><td style="width: 30px; font-weight: bold;">&nbsp;</td><? } ?>
+		<td align="center" valign="top">
+			<form method="POST" action="/products/get_started/gallery">
+				<? if(empty($custom_only_product)) { ?>
+					<input type="hidden" name="prod" value="<?= $prod ?>" id="gallery_prod">
+				<? } else { ?>
+				        <input type="hidden" name="clear_product" value="1"/>
+				<? } ?>
+
+				<input type="image" src="/images/buttons/small/Browse-Our-Images-grey.gif"/>
+			</form>
+		</td>
+		<? } ?>
+		<? if(false && preg_match("/custom/", $product['Product']['image_type'])) { ?>
+			<? if ($completed || $existing || $customok || $stampok) { ?><td style="width: 30px; font-weight: bold;">&nbsp;</td><? } ?>
+		<td align="center" valign="top">
+			<form method="POST" action="/gallery/clipart">
+				<input type="hidden" name="prod" value="<?= $prod ?>" id="clipart_prod">
+				<input type="image" src="/images/buttons/small/Browse-Clip-Art-grey.gif"/>
+			</form>
+		</td>
+		<? } ?>
+	</tr>
+	</table>
+</div>
+
+</div>

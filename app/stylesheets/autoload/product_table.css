@@ -1,0 +1,12 @@
+.product_table .itemDisplay { text-align: center; vertical-align: bottom; width: 200px; padding: 1.0em 0 1.0em 0; }
+.product_table .itemDisplay a { text-decoration: none; }
+.product_table .itemDisplay a:hover span { text-decoration: underline; }
+.product_table .itemDisplay a:hover img { text-decoration: none !important; }
+.product_table { background-color: #FFE; text-align: center; margin: 0 auto 1em auto; border: #E0E0E0 1px solid; padding: 2px; }
+.product_grid .title
+{
+	font-size: 14pt;
+	font-weight: bold;
+	color: #333399;
+}
+

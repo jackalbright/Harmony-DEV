@@ -1,0 +1,176 @@
+div#header
+{
+	width: 765px;
+	/*height: 95px;
+	position: absolute;
+	top: 0px;
+	left: auto;
+	right: auto;
+	*/
+	background-image: url(/new-images/background.gif);
+}
+#header div#imageAlert
+{
+	position: absolute;
+	top: 38px;
+	right: 2px;
+	width: 166px;
+	height: 15px;
+	background-color: #FFE;
+	border-color: #900;
+	border-width: 1px;
+	border-style: solid;
+	padding: 1px;
+}
+
+div#buttons
+{
+	top: 69px;
+}
+#header div#lost
+{
+	position: absolute;
+	right: 390px;
+	top: 36px;
+	width: 534px;
+}
+
+div#header ul.menu
+{
+	position: absolute;
+	top: 96px;
+	right: 6px;
+	width: 534px;
+	margin: 0.25em 0 0.5em 0;
+	padding: 0px 0;
+	background-color: #FFE;
+	border-color: #936 silver;
+	border-width: 1px 0 1px 1px;
+	border-style: solid;
+	font-size: 0.9em;
+	font-weight: bold;
+}
+div#header ul.menu li		
+{
+	display: inline;
+	list-style: none;
+	margin: 0;
+	padding: 0px 4px;
+	font-family: Optima, Verdana, Helvetica,Arial, sans-serif;
+	border-color: silver;
+	border-width: 0 1px 0 0;
+	border-style: solid;
+}
+div#header a
+{
+	text-decoration: underline;
+}
+
+table#dataEntry
+{
+	border-width: 3px;
+	border-style: groove;
+	border-color: #FFF;
+	background-color: #FFE;
+}
+#dataEntry td { padding: 3px; }
+#dataEntry th
+{
+	background-color: #060;
+	color: #FFE;
+	padding: 3px;
+	text-align: left;
+	font-family: Optima, Verdana, Helvetica,Arial, sans-serif;
+	font-weight: bolder;
+	font-size: 1.2em;
+}
+table.dataEntry
+{
+	border-width: 3px;
+	border-style: groove;
+	border-color: #FFF;
+	background-color: #FFE;
+}
+.dataEntry td { padding: 3px; }
+.dataEntry th
+{
+	background-color: #060;
+	color: #FFE;
+	padding: 3px;
+	text-align: left;
+	font-family: Optima, Verdana, Helvetica,Arial, sans-serif;
+	font-weight: bold;
+	font-size: 1.1em;
+}
+.formLabel
+{
+	text-align: right;
+	font-weight: bold;
+	font-size: 0.8em;
+	vertical-align: text-top;
+	line-height: 1.2em;
+}
+.formField { text-align: left; }
+.formField input
+{
+	padding: 2px;
+	margin: 0;
+}
+.dataList
+{
+	border-color: white;
+	border-width: 2px 0 0 0;
+	border-style: groove;
+	padding: 1em 0 0 0;
+}
+.dataDisplay
+{
+	border-bottom: white;
+	border-width: 0 0 2px 0;
+	border-style: none none groove none;
+	padding: 0 0 0.5em 0;
+	margin: 0.25em 0 1em 0;
+}
+.dataDisplay .label
+{
+	font-size: smaller;
+	font-style: italic;
+	color: #333;
+	float: left;
+	clear: both;
+	width: 60px;
+}
+.dataDisplay .value { margin: 0 0 0 4px; }
+ul.option button
+{
+	margin: 0;
+	padding: 1px 3px 1px 3px;
+	background-color: #039;
+	color: white;
+	font-weight: bold;
+	font-family: Optima, Verdana, Helvetica,Arial, sans-serif;
+	border-color: white;
+	border-width: 3px;
+	border-style: outset;
+}
+
+
+.dataDisplay img.thumbnail
+{
+	float: left;
+	margin: 0 0.5em 0.5em 0;
+}
+ul.option
+{
+	clear: left;
+}
+
+.highlight a { color: #CC0000; font-weight: bold; }
+
+div#title
+{
+	clear: right;
+	margin-top: 25px;
+}
+
+a h1, a h2, a h3, a h4, a h5, a h6 { text-decoration: none; }

@@ -1,0 +1,9 @@
+<? if($build['Product']['code'] == 'TS') { ?>
+	<?= $this->element("build/estimate_shirt"); ?>
+<? } else { ?>
+	<?= $this->element("build/estimate"); ?>
+<? } ?>
+
+<script>
+hidePleaseWait();
+</script>

@@ -1,0 +1,11 @@
+/* Starbox.css 
+   Part of http://www.nickstakenburg.com/projects/starbox/
+*/
+
+.starbox .default { background: #cccccc; }
+.starbox .default .colorbar { background: #1e90ff; }
+.starbox .default .hover .colorbar { background: #ffcc1c; }
+
+.starbox .dotted { background: url(/images/default_dotted_background.gif) top left repeat-x; }
+.starbox .dotted .colorbar { background: #000000; }
+

@@ -1,0 +1,29 @@
+<?
+if (!empty($testimonials))
+{
+?>
+<div class="testimonials_container">
+	<?
+	if (!empty($random)) { shuffle($testimonials); }
+	if (!empty($limit))
+	{
+		$limit_testimonials = array();
+		for($i = 0; $i < $limit; $i++)
+		{
+			$limit_testimonials[] = $testimonials[$i];
+		}
+		$testimonials = $limit_testimonials;
+	}
+	foreach($testimonials as $testimonial) 
+	{
+	?>
+	<div class="testimonial_sidebar">
+	<blockquote class="testimonial"><?= $testimonial['text'] ?></blockquote>
+	<blockquote class="attribution"><?= $testimonial['attribution'] ?></blockquote>
+	</div>
+	<?
+	}
+?>
+	<div class="right_align"><a target="_new" href="/info/testimonials.php" class="">more...</a></div>
+</div>
+<? } ?>

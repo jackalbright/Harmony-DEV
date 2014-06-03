@@ -1,0 +1,528 @@
+<?php
+class AccountController extends AppController {
+
+	var $name = 'Account';
+	var $title = 'My Account';
+	var $helpers = array('Html', 'Form');
+	var $components = array('Cookie');
+	var $uses = array('Customer','CustomImage');
+	var $paginate = array(
+		'Customer'=>array(
+			'order'=>'customer_id',
+		),
+	);
+
+
+	function beforeFilter()
+	{
+		#$this->Auth->deny('*'); # Anonymous pages....
+		#$this->Auth->allow('forgot','signup','index','login'); # Anonymous pages....
+		$this->Auth->allow('login','signup','forgot','reset','logout');
+		parent::beforeFilter();
+	}
+
+	function admin_logout()
+	{
+		$this->action = 'logout';
+
+		$_SESSION['customerRecord'] = array();
+		$this->set_legacy_cookie("customerlogin", null);
+		$this->Session->setFlash("You have been logged out");
+		$this->redirect($this->Auth->logout());
+	}
+
+
+	function admin_login()
+	{
+		$this->body_title = "Administrative Account Login";
+		if ($customer = $this->Auth->user())
+		{
+			$this->legacy_login($customer, $this->data['Customer']['Password']);
+			$this->redirect($this->Auth->redirect());
+		}
+		$this->action = 'login';
+	}
+
+
+	function login()
+	{
+		$this->_redirect_referer();
+
+		$this->body_title = "Account Login";
+		if ($customer = $this->Auth->user())
+		{
+			# Set cookie for older pages...
+			$email_pass = $customer['Customer']['eMail_Address'] . $this->data['Customer']['Password']; # Password only available in form...
+			#error_log("EMAIL_PASS = $email_pass");
+			$cookieText = $customer['Customer']['customer_id'] . 'x' . md5($email_pass);
+			#$this->Cookie->write("customerlogin", $cookieText);
+			$this->set_legacy_cookie("customerlogin", $cookieText);
+			#$this->Cookie->write("customerlogin", $cookieText);
+			# WRONG, sets CakeCookie[customerlogin]
+
+			#error_log("CUST=".print_r($customer,true));
+
+			# Now move all images over....
+			$session_id = session_id();
+			$this->CustomImage->moveAnonymousImages($session_id, $customer['Customer']['customer_id']);
+			# If images are anonymous and dont move over, they may already be assigned to some other account!
+
+			$_SESSION['customerRecord'] = $this->Session->read("Auth.Customer");
+			#error_log("OK, REDIR, = ". $this->Auth->redirect());
+			#error_log("PARAMS=".print_r($this->params,true));
+			if (!empty($_COOKIE['goto'])) {
+				$goto = $this->clear_goto();
+				$this->redirect($goto);
+			}
+			else if ($goto = $this->Session->read("goto")) { 
+				$this->Session->write('goto', null);
+				$this->redirect($goto);
+			}
+			else if (!empty($this->params['url']['goto']))
+			{
+				#error_log("OK, REDIR_GOTO, = ". $this->params['url']['goto']);
+				$this->redirect($this->params['url']['goto']);
+			} else {
+				$this->redirect($this->Auth->redirect());
+			}
+		}
+		# return false;
+	}
+
+	function logout()
+	{
+		$this->_redirect_referer();
+
+		$_SESSION['customerRecord'] = array();
+		##error_log("SESS=".print_r($_SESSION['customerRecord'],true));
+		$this->set_legacy_cookie("customerlogin", null);
+		$this->Session->setFlash("You have been logged out");
+		$this->redirect($this->Auth->logout());
+	}
+
+	function index() {
+		$this->body_title = "My Account";
+		#$this->Customer->recursive = 0;
+		#$this->set('customers', $this->paginate());
+		$this->set("customer", $this->get_customer());
+	}
+
+	function _redirect_referer()
+	{
+		$referer = $_SERVER['HTTP_REFERER'];
+		#error_log("REF=$referer");
+		# We SHOULD be catching original source...
+		if (!empty($_REQUEST['goto']))
+		{
+			$referer = $_REQUEST['goto'];
+		}
+		if (!$this->data && !preg_match("/\/account/", $referer))
+		{
+			#error_log("SETTING SRC=$referer");
+			#$this->set_goto($referer); # Go to referer.
+			$this->Session->write("goto", $referer);
+			#$this->Auth->redirect($referer);
+		}
+	}
+
+	function redir() { } # hmmm....
+
+	function signup()
+	{
+		$customer = $this->Session->read("Auth.Customer");
+		#error_log("C=".print_r($customer,true));
+		if (!empty($customer)) { #error_log("LOGGED IN..."); return $this->logout(); 
+		}
+
+		# Set referer...
+	#	$this->set_goto(); # Goes to referer.
+
+		$this->_redirect_referer();
+
+		$this->body_title = "Account Signup";
+		if (!empty($this->data))
+		{
+			##error_log(print_r($this->data,true));
+			$email = $this->data['Customer']['eMail_Address'];
+
+			# Make sure username is alphanumeric, 6+ chars.
+			# Make sure password matches password2, at least 6 chars.
+			$firstname = $this->data['Customer']['First_Name'];
+			$lastname = $this->data['Customer']['Last_Name'];
+
+			$password = $this->data['Customer']['Password'];
+			$password2 = $this->data['Customer']['Password2'];
+
+			#if (isset($email) && $this->BannedEmail->hasAny("email = '$email'"))
+			#{
+			#	$this->Session->setFlash("Email has been blacklisted. It is not allowed as a primary account email. Please choose another email.");
+			#}
+			#else 
+			if (strlen($firstname) <= 0 || strlen($lastname) <= 0)
+			{
+				$this->Session->setFlash('Must enter in your complete first and last names.');
+			}
+			#else if (strlen($username) < 6)
+			#{
+			#	$this->Session->setFlash('Username too short. Must be 6 or more characters.');
+			#}
+			#else if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_-]+$/', $username))
+			#{
+			#	$this->Session->setFlash("Username must start with a letter, with letters, numbers, dashes '-', and underscores '_' allowed only.");
+#
+#			}
+			else if ($password2 == "" || strlen($password2) == 0)
+			{
+				$this->Session->setFlash('Password verification required. Please enter your password again.');
+			}
+			else if (strlen($password2) < 6)
+			{
+				$this->Session->setFlash('Password too short. Must be 6 or more characters.');
+			}
+			else if ($password != $password2) 
+			{
+				$this->Session->setFlash("Passwords do not match.");
+			}
+			else if (!preg_match("/^.+@.+[.].+$/", $email)) 
+			{
+				$this->Session->setFlash("Invalid email.");
+			}
+			#else if (!isset($this->params['form']['terms']) || !$this->params['form']['terms'])
+			#{
+			#	$this->Session->setFlash("You must agree to the Terms of Service to sign up.");
+			#}
+			else if ($this->Customer->hasAny(array('eMail_Address' => $email)))
+			# Verify email not already signed up....
+			{
+				$this->Session->setFlash('Email already in use. Choose another or <a href="/account/forgot">retrieve your password</a>.');
+				# Hopefully this will display on THIS page, and not require a redirect.
+			} else {
+				# All good, do actual signup...
+				$this->Customer->create();
+
+				# Now set registration date...
+				$this->data['Customer']['dateAdded'] = $this->unix_date(true);
+
+				if ($this->Customer->save($this->data))
+				{
+					$this->CustomImage->moveAnonymousImages(session_id(), $this->Customer->id);
+
+					$this->Session->setFlash(__('Account created', true));
+					# Send out email confirmation.... with username, password, email, etc.
+					# XXX TODO
+					$this->sendEmail($this->data, "HarmonyDesigns.com Account", "account_created", array('customer'=>$this->data['Customer']));
+
+					# redirect to thank you page, with login form. 
+					$this->set('eMail_Address', $email);
+					$this->set('content_file', "content/signup_thanks");
+					# under elements/content/signup_thanks.ctp
+					#$this->redirect(array('action'=>'login'));
+
+					# Manually login
+					# WE NEED
+					$this->manual_login($email);
+					if (!empty($_COOKIE['goto']))
+					{
+						$goto = $_COOKIE['goto'];
+						$this->clear_goto();
+						$this->redirect($goto);
+					} else if ($goto = $this->Session->read("goto")) { 
+						$this->Session->write('goto', null);
+						$this->redirect($goto);
+					} else {
+						$this->redirect(array('action'=>'index'));
+					}
+				} else {
+					$this->setError("Cannot create account", $this->Customer);
+
+				}
+			}
+		}
+
+	}
+
+	function reset($email = '', $code = '') # Changing password, given email and secret code.
+	{
+		if ($email == '' || $code == '') 
+		{
+			$this->Session->setFlash("Invalid link.");
+			$this->redirect("/account/login");
+		}
+
+		$customer = $this->Customer->find(array('eMail_Address'=>$email,'reset_code'=>$code));
+
+		if (!$customer)
+		{
+			$this->Session->setFlash("Invalid link.");
+			$this->redirect("/account/login");
+		} else {
+			# LOG THEM IN...
+			$this->manual_login($customer);
+			$this->Customer->id = $customer['Customer']['customer_id'];
+			$this->Customer->saveField("reset_code", null);
+
+			$this->Session->setFlash("Please update your password to something memorable.");
+
+			$this->redirect("/account/change_password");
+		}
+	}
+
+	function forgot() # Allows for code to be put in to change later to something memorable.
+	{
+		$this->body_title = "Password Retrieval";
+		if (!empty($this->data)) # Specified email to send new password to.
+		{
+			$email = $this->data['Customer']['eMail_Address'];
+			$customer = $this->Customer->find("eMail_Address = '$email'");
+
+			# Somehow there's a disconnect from findByEmail to saveField...
+			# (since it creates a new record!!!!)
+
+			if ($customer)
+			{ # FOUND!
+				##error_log("FOUND!=");
+				#print_r($customer);
+				# XXX TODO (email send, regen password)
+				
+				# For now, just reset password to 'username1';
+				$customer_id = $customer["Customer"]["customer_id"];
+				#$new_password = $username . "1";
+
+				$reset_code = $this->Customer->generate_code(64);
+
+				$this->Customer->id = $customer["Customer"]['customer_id'];
+				$this->Customer->saveField("reset_code", $reset_code);
+				
+				# Send email out.
+				$this->sendEmail($customer, "HarmonyDesigns.com Account Access", "password_reset", array("reset_code" => $reset_code));
+
+				$this->Session->setFlash("You should receive an email shortly with a link to access your account and change your password.");
+				$this->Session->delete('Auth.redirect');
+			} else { # Doesn't exist.
+				$this->Session->setSplash(__('Sorry, that email does not exist.', true));
+			}
+
+
+		}
+
+	}
+
+	function forgot_reset() # Resets password instead.
+	{
+		$this->body_title = "Password Retrieval";
+		if (!empty($this->data)) # Specified email to send new password to.
+		{
+			$email = $this->data['Customer']['eMail_Address'];
+			$customer = $this->Customer->find("eMail_Address = '$email'");
+
+			# Somehow there's a disconnect from findByEmail to saveField...
+			# (since it creates a new record!!!!)
+
+			if ($customer)
+			{ # FOUND!
+				##error_log("FOUND!=");
+				#print_r($customer);
+				# XXX TODO (email send, regen password)
+				
+				# For now, just reset password to 'username1';
+				$customer_id = $customer["Customer"]["customer_id"];
+				#$new_password = $username . "1";
+
+				$new_password = $this->Customer->generate_password();
+
+				# SET...
+				#$id = $this->Customer->customer_id = $customer["Customer"]['customer_id'];
+				#$id = $this->Customer->id = $customer["Customer"]['customer_id'];
+				##error_log( "ID=$id\n");
+				#$enc_password = $this->Auth->password($new_password);
+				$this->Customer->id = $customer["Customer"]['customer_id'];
+				$this->Customer->saveField("Password", $new_password);
+				
+				#$customer["Customer"]["password"] = $enc_password;
+				#$this->Customer->save($customer);
+
+				# Send email out.
+				$this->sendEmail($customer, "HarmonyDesigns.com New Password", "password_reset", array("new_password" => $new_password));
+
+				#$this->Session->setFlash("Password changed. You should receive an email shortly. ($new_password = $enc_password)");
+				$this->Session->setFlash("Password changed. You should receive an email shortly.");
+				#$this->redirect(array('action'=>"login"));
+				# this is breaking it!
+				$this->Session->delete('Auth.redirect');
+				#$this->redirect(array('action'=>'change_password'));
+
+			
+			} else { # Doesn't exist.
+				$this->Session->setSplash(__('Sorry, that email does not exist.', true));
+			}
+
+
+		}
+
+	}
+
+	function change_password()
+	{
+		$sessid = $this->Session->read("Auth.Customer.customer_id");
+		$customer = $this->Session->read("Auth");
+		
+		if (!empty($this->data)) # Sent back...
+		{
+			# If customer_id isn't theirs, BARF!
+			$id = $this->data["Customer"]["customer_id"];
+			if ($id !== $sessid)
+			{
+				$this->Session->setFlash('Unauthorized. You are not this user.');
+				return;
+			}
+
+			$password = $this->data["Customer"]["Password"];
+			$password2 = $this->data["Customer"]["Password2"];
+	
+			if ($password != "") # Changing...
+			{
+				if ($password2 == "" || strlen($password2) == 0)
+				{
+					$this->Session->setFlash('Password verification required. Please enter your password again.');
+					return; # Go straight to error page
+				} else if (strlen($password2) < 6)
+				{
+					$this->Session->setFlash('Password too short. Must be 6 or more characters.');
+					return; # Go straight to error page
+				}
+				else if ($password != $password2) 
+				{
+					$this->Session->setFlash("Passwords do not match.");
+					return; # Go straight to error page
+				}
+
+				if ($this->Customer->save($this->data)) {
+					$this->legacy_login($customer, $password);
+					$this->Session->setFlash(__('Your password has been changed', true));
+					$this->redirect(array('action'=>'index'));
+				} else {
+					$this->Session->setFlash(__('Your password could not be saved. Please, try again.', true));
+				}
+			}
+
+		} # Else display form
+		$this->data["Customer"] = array();
+		$this->data["Customer"]["customer_id"] = $sessid;
+		# All we really need anyway.
+	}
+
+	function edit() {
+		$this->body_title = "Edit Account";
+		$id = $this->Session->read("Auth.Customer.customer_id");
+
+
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid Account', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if (!empty($this->data)) {
+			if ($this->Customer->save($this->data)) {
+				$this->Session->setFlash(__('Your Account has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('Your Account could not be saved. Please, try again.', true));
+			}
+		}
+		if (empty($this->data)) {
+			$this->data = $this->Customer->read(null, $id);
+		}
+	}
+
+	function delete($id = null) {
+		exit(1);
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for Customer', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if ($this->Customer->del($id)) {
+			$this->Session->setFlash(__('Customer deleted', true));
+			$this->redirect(array('action'=>'index'));
+		}
+	}
+
+
+	function admin_index() {
+		$this->Customer->recursive = 0;
+		$this->set('customers', $this->paginate());
+	}
+
+	function admin_search()
+	{
+		$value = $this->data['value'];
+
+		if (isset($this->data))
+		{
+			if ($this->data['field'] == 'firstlast') { 
+				$conditions = "CONCAT(First_Name, ' ', Last_Name) LIKE '%$value%'";
+			} else if ($this->data['field'] == 'lastfirst') { 
+				$conditions = "CONCAT(Last_Name, ', ', First_Name) LIKE '%$value%'";
+			} else if ($this->data['field'] == 'email') { 
+				$conditions = array('eMail_Address LIKE'=>"%$value%");
+			} else if ($this->data['field'] == 'company') { 
+				$conditions = array('Company LIKE'=>"%$value%");
+			}
+			$this->Customer->recursive = 0;
+			$this->set('customers', $this->paginate('Customer',$conditions));
+			$this->action = 'admin_index'; # Use same template...
+		} else {
+			$this->redirect(array('action'=>'index'));
+		}
+
+	}
+
+	function admin_view($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid Customer.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$this->set('customer', $this->Customer->read(null, $id));
+	}
+
+	function admin_add() {
+		if (!empty($this->data)) {
+			$this->Customer->create();
+			if ($this->Customer->save($this->data)) {
+				$this->Session->setFlash(__('The Customer has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The Customer could not be saved. Please, try again.', true));
+			}
+		}
+	}
+
+	function admin_edit($id = null) {
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid Customer', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if (!empty($this->data)) {
+			if ($this->Customer->save($this->data)) {
+				$this->Session->setFlash(__('The Customer has been saved', true));
+				#$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The Customer could not be saved. Please, try again.', true));
+			}
+		}
+		if (empty($this->data)) {
+			$this->data = $this->Customer->read(null, $id);
+		}
+	}
+
+	function admin_delete($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for Customer', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if ($this->Customer->del($id)) {
+			$this->Session->setFlash(__('Customer deleted', true));
+			$this->redirect(array('action'=>'index'));
+		}
+	}
+
+}
+?>

@@ -1,0 +1,48 @@
+<?
+$defaultBorderID = $currentItem->parts->borderID;
+$default = true;
+?>
+<div class="clear">
+<!--<h2><?php echo $counter;?>. Choose your border</h2>-->
+		Click on a picture or name to choose your border.
+
+		<br/>
+
+		<div class="left thick_padded center" style="width: 100px; height: 60px; float: left;">
+				<a href="Javascript:void(0);" onClick="build_choose('border', '');">
+				<img src="/borders/blank.gif" class="" alt="no border"/></a><br/>
+				<a href="Javascript:void(0);" onClick="build_choose('border', '');">No Border</a>
+		</div>
+
+		<? $img_borders = $image->listBorders(); 
+		$found = array();
+		if(count($img_borders))
+		{
+			foreach($img_borders as $record) { 
+				$found[$record->id] = true;
+			?>
+				<div class="left thick_padded center" style="width: 100px; height: 60px; float: left;">
+				<a href="Javascript:void(0);" onClick="build_choose('border', '<?= $record->id ?>');">
+				<img src="<?=$record->image ?>" onClick="$('border_<?= $record->id ?>').checked = 1;"/></a>
+				<br/>
+				<a href="Javascript:void(0);" onClick="build_choose('border', '<?= $record->id ?>');"><?= ucwords($record->name); ?></a>
+				</a>
+				</div>
+			<? }
+		} 
+
+		foreach($borders as $record) {
+				if (!empty($found[$record->border_id])) { continue; }
+				?>
+				<div class="left thick_padded center" style="width: 100px; height: 60px; float: left;">
+				<a href="Javascript:void(0);" onClick="build_choose('border', '<?= $record->border_id ?>');">
+				<img src="<?=$record->location ?>" onClick="$('border_<?= $record->border_id ?>').checked = 1;"/></a><br/>
+				<a href="Javascript:void(0);" onClick="build_choose('border', '<?= $record->border_id ?>');"><?= ucwords($record->name); ?></a>
+				</div>
+		<? } ?>
+
+		<div style="clear: both;">
+		<p>Tip: A border helps anchor your design.</p>
+		</div>
+</div>
+

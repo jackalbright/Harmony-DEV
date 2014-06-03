@@ -1,0 +1,28 @@
+#prinav_wrapper
+{
+	display: block;
+	clear: both;
+	padding-bottom: 30px;
+}
+
+#prinav_bar
+{
+	background: url("/images/style/gradient_bar_bg_green.png") repeat-x;
+	height: 32px;
+	text-align: right;
+}
+
+#prinav_wrapper .dropdown_nav_submenu
+{
+	background-color: #99CC66;
+}
+
+#prinav_wrapper .dropdown_nav_button
+{
+	padding: 5px 5px;
+}
+
+#header_search_field
+{
+	width: 150px;
+}

@@ -1,0 +1,63 @@
+<?
+if(empty($goto)) { $goto = ""; }
+
+?>
+<? if (!empty($blurb))
+{
+	echo $this->element("account/blurb/$blurb"); 
+} ?>
+
+<? $session->flash('auth'); ?>
+
+<table width="100%">
+<tr>
+	<td width="33%" valign=top>
+		<h3 class="alert2">Log in to an existing account:</h3>
+		<?php echo $form->create('Customer',array('url'=>array('controller'=>'account','action'=>'login')));?>
+			<input type="hidden" name="goto" value="<?= $goto ?>"/>
+			<?= $form->input('eMail_Address', array('label'=>'Email:')); ?>
+			<?= $form->input('Password', array('type'=>'password')); ?>
+			<input type="image" src="/images/buttons/Log-In.gif" onClick="<?= !empty($checkout) ? "track('checkout','login');" : "" ?>"/>
+		</form>
+
+		<div id="forgot"><a href="/account/forgot">Forgot password?</a></div>
+	</td>
+	<td width="33%" valign=top>
+		<h3 class="alert2">Sign up for a new account:</h3>
+		<!--<a href="/account/signup?goto=/checkout">
+		<img src="/images/buttons/Signup-Now.gif">
+		</a>-->
+		<p>
+		Signing up is easy. You can save your images, designs, and order preferences for easy checkout.
+		</p>
+		<?php echo $form->create('Customer',array('url'=>array('controller'=>'account','action'=>'signup')));?>
+			<input type="hidden" name="goto" value="<?= $goto ?>"/>
+			<?
+				#$form->input('First_Name'); 
+				?>
+			<?
+				#$form->input('Last_Name'); 
+				?>
+			<?= $form->input('eMail_Address', array('label'=>'Email:')); ?>
+			<?= $form->input('Password', array('type'=>'password','label'=>"Create password", 'after'=>'<br/>6 or more characters required<br/><br/>')); ?>
+			<?= $form->input('Password2', array('type'=>'password','label'=>'Password verification','after'=>'<br/>Repeat password for verification<br/><br/>')); ?>
+			<? 
+			#$form->input('Phone', array('type'=>'text','after'=>'<br/>A phone number lets us contact you regarding order details and shipping questions.<br/><br/>')); 
+			?>
+			<input type="image" src="/images/buttons/Signup-Now.gif" onClick="<?= !empty($checkout) ? "track('checkout','signup');" : "" ?>"/>
+		</form>
+
+		<br/>
+
+		<div>
+			We never share customer information with anyone. <a href="/info/privacy.php">Privacy Policy</a>
+		</div>
+	</td>
+	<td width="33%" valign=top>
+		<? if(!empty($anonymous)) { ?>
+			<?= $this->element("account/login_anonymous",array('goto'=>$goto,'checkout'=>(!empty($checkout)?$checkout:null))); ?>
+		<? } ?>
+	</td>
+</tr>
+</table>
+

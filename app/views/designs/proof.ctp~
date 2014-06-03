@@ -1,0 +1,17 @@
+<div id="" style="padding: 10px;">
+		<label for="no_proof_checkbox">
+			<input id="no_proof_checkbox" type="radio" <?= (empty($design['Design']['proof']) || $design['Design']['proof'] == 'no') ? "checked='checked'" : "" ?> name="data[Design][proof]" value="no"/> <b>I do not want an email proof.</b>
+		</label>
+		<br/>
+		<label for="proof_checkbox" class="">
+			<input id="proof_checkbox" type="radio" <?= (!empty($design['Design']['proof']) && $design['Design']['proof'] == 'yes') ? "checked='checked'" : "" ?> name="data[Design][proof]" value="yes"/> <b>I would like an email proof with my paid order.</b> <span class="alert2">(This may delay your order 24-48 hours.)</span> 
+			<a href='#' id='proof_details' class='proof_details'>Details</a>
+			<span class='proof_details' style='display: none;'>
+			When we receive your order, we will email you a proof. You are entitled to one free email proof plus one free revision.</label>
+			</span>
+
+</div>
+<script>
+j('#proof_details').click(function() { j('.proof_details').toggle(); });
+</script>
+

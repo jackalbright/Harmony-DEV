@@ -1,0 +1,41 @@
+<?php
+class ProductRecommendedQuote extends AppModel {
+	# OBSOLETE!
+
+	var $name = 'ProductRecommendedQuote';
+	var $useTable = 'productQuote';
+	var $primaryKey = 'product_quote_id';
+	var $actsAs = array('Containable');
+
+	//The Associations below have been created with all possible keys, those that are not needed can be removed
+	var $hasMany = array(
+			'Product' => array('className' => 'Product',
+								'foreignKey' => 'product_type_id',
+								'dependent' => false,
+								'conditions' => '',
+								'fields' => '',
+								'order' => '',
+								'limit' => '',
+								'offset' => '',
+								'exclusive' => '',
+								'finderQuery' => '',
+								'counterQuery' => ''
+			),
+	);
+	var $belongsTo = array(
+			'Quote' => array('className' => 'Quote',
+								'foreignKey' => 'quoteID',
+								'dependent' => false,
+								'conditions' => '',
+								'fields' => '',
+								'order' => '',
+								'limit' => '',
+								'offset' => '',
+								'exclusive' => '',
+								'finderQuery' => '',
+								'counterQuery' => ''
+			)
+	);
+
+}
+?>

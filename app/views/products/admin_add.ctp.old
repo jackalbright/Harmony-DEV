@@ -1,0 +1,37 @@
+<div class="products form">
+<?php echo $form->create('Product');?>
+	<fieldset>
+ 		<legend><?php __('Add Product');?></legend>
+	<?php
+		echo $form->input('prod');
+		echo $form->input('name');
+		echo $form->input('plural_name');
+		echo $form->input('rank');
+		echo $form->input('size');
+		echo $form->input('minimum');
+		echo $form->input('normal_ship_time_days');
+		echo $form->input('weight');
+		echo $form->input('weight_count');
+		echo $form->input('image_type',array('options'=>$image_types,'multiple'=>'checkbox'));
+		echo $form->input('main_intro');
+		echo $form->input('main_desc');
+		echo $form->input('secondary_desc');
+		echo $form->input('meta_keywords');
+		echo $form->input('meta_desc');
+		echo $form->input('page_title');
+		echo $form->input('body_title');
+	?>
+	</fieldset>
+<?php echo $form->end('Submit');?>
+</div>
+<div class="actions">
+	<ul>
+		<li><?php echo $html->link(__('List Products', true), array('action'=>'index'));?></li>
+		<li><?php echo $html->link(__('List Product Customization Options', true), array('controller'=> 'product_customization_options', 'action'=>'index')); ?> </li>
+		<li><?php echo $html->link(__('New Product Customization Option', true), array('controller'=> 'product_customization_options', 'action'=>'add')); ?> </li>
+		<li><?php echo $html->link(__('List Product Pricings', true), array('controller'=> 'product_pricings', 'action'=>'index')); ?> </li>
+		<li><?php echo $html->link(__('New Product Pricing', true), array('controller'=> 'product_pricings', 'action'=>'add')); ?> </li>
+		<li><?php echo $html->link(__('List Product Testimonials', true), array('controller'=> 'product_testimonials', 'action'=>'index')); ?> </li>
+		<li><?php echo $html->link(__('New Product Testimonial', true), array('controller'=> 'product_testimonials', 'action'=>'add')); ?> </li>
+	</ul>
+</div>

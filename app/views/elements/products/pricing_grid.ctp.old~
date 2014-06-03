@@ -1,0 +1,49 @@
+<div>
+	<h3><?= ucwords($product['Product']['name']) ?> Pricing:</h3>
+	<table id="pricing_chart" cellspacing=0> 
+		<? 
+		$min_quantity = $product['Product']['minimum'];
+		if (!$min_quantity) { $min_quantity = 1; }
+
+		foreach($product_pricings as $product_pricing)
+		{
+		?>
+		<tr>
+			<th class="product_heading" colspan="<?= count($product_pricing['pricing_data']) + 1 ?>">
+			<?= $product_pricing['name'] ?>
+			</th>
+		</tr>
+		<tr>
+			<td valign=top>Quantity:</td>
+			<?
+			$prev_quantity = $min_quantity;
+			foreach($product_pricing['pricing_data'] as $quantity => $cost) {
+			?>
+			<td>
+				<?= $prev_quantity ?> - <?= $quantity ?>
+			</td>
+			<?
+			$prev_quantity = $quantity + 1;
+			}
+			?>
+
+		</tr>
+		<tr>
+			<td style="border-top: solid black 1px;">&nbsp;</td>
+			<?
+			foreach($product_pricing['pricing_data'] as $quantity => $cost) {
+				echo "<td style='border-top: black solid 1px;'>";
+				echo sprintf("$%.02f ea", $cost);
+				echo "</td>";
+			}
+			?>
+		</tr>
+		<tr>
+			<td class="product_spacer" colspan="<?= count($product_pricing['pricing_data']) ?>">&nbsp;</td>
+		</tr>
+		<? } ?>
+		</table>
+		<div style="background-color: #CECECE;">
+			More than 1000 please call: 888.293.1109
+		</div>
+</div>

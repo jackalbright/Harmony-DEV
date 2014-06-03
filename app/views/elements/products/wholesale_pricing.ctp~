@@ -1,0 +1,25 @@
+<table cellpadding=5 style="border: solid black 2px; <?= !empty($style) ? $style : "" ?>">
+	<tr>
+		<th>
+			&nbsp;
+		</th>
+		<? for($i = 0; $i < count($quantity_breaks)-1; $i++) { ?>
+		<td>
+			<?= $quantity_breaks[$i] ?> - <?= $quantity_breaks[$i+1] -1 ?>
+		</td>
+		<? } ?>
+	</tr>
+	<? $r = 0; foreach($products as $product) { $prod = $product['Product']['code']; ?>
+	<tr class="<?= $r++ % 2 == 0 ? 'even' : 'odd' ?>">
+		<th align="left" style="width: 225px;">
+			<?= $product['Product']['pricing_name'] ?> <?= !empty($product['Product']['pricing_description']) ? " &mdash; ".$product['Product']['pricing_description']:"" ?>
+		</th>
+		<? for($i = 0; $i < count($quantity_breaks)-1; $i++) { $qty = $quantity_breaks[$i]; ?>
+		<td>
+			<?= sprintf("$%.02f ea", $pricing[$prod][$qty]); ?>
+		</td>
+		<? } ?>
+	</tr>
+	<? } ?>
+</table>
+

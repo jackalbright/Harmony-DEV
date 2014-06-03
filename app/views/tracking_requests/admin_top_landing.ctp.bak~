@@ -1,0 +1,38 @@
+<?= $this->element("admin/tracking_requests/header"); ?>
+<div>
+<h4>Top Landing Pages:</h4>
+	<table border=1>
+	<tr>
+		<th>Count</th>
+		<th>Page</th>
+		<th>Referers</th>
+	</tr>
+	<? arsort($hits); ?>
+	<? foreach($hits as $url => $count) { ?>
+	<tr>
+		<td>
+			<?= $count ?>
+		</td>
+		<td>
+			<?= $url ?>
+			<br/>
+			<a href="/admin/tracking_requests/trail?path=<?=$url?>&landing=1">What Visitors Did Next</a>
+		</td>
+		<td>
+			<? foreach($referers[$url] as $referer_url => $query_strings) { 
+				arsort($query_strings);
+			?>
+				<b><?= $referer_url ?></b>
+				<div style="padding-left: 20px;">
+				<? arsort($query_strings); foreach($query_strings as $query_string => $count) { ?>
+					<? if ($query_string == "") { continue; } ?>
+					<?= $query_string ?> (<?= $count ?>) <a href="/admin/tracking_requests/trail_by_search?search=<?=$query_string?>">Pages Viewed</a><br/>
+				<? } ?>
+				</div>
+				<br/>
+			<? } ?>
+		</td>
+	</tr>
+	<? } ?>
+	</table>
+</div>

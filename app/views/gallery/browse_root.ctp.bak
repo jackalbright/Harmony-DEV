@@ -1,0 +1,39 @@
+<?= $this->element("gallery/browse_intro"); ?>
+<? if (!isset($browseurl)) { $browseurl = "/gallery/browse"; } ?>
+<? if (!isset($cols_per_row)) { $cols_per_row = 3; } ?>
+
+<div class="right_align">
+	<a href="/gallery/browse">View All Subjects</a>
+</div>
+<div class="clear"></div>
+<br/>
+
+
+<div align=left>
+<table width="100%" cellpadding=5>
+<? for($i = 0; $i < count($categories); $i++) { 
+	$cat = $categories[$i]; ?>
+<tr>
+	<td valign="top">
+		<? if(!empty($cat['thumb_catalog_number'])) { ?>
+		<a href="<?=$browseurl?>/<?=preg_replace("/ /", "_", $cat['browse_name']); ?>" style="font-weight: bold;">
+			<img class="stamp_thumbnail" src="/gallery/image/<?= $cat['thumb_catalog_number'] ?>" height="50"/></a>
+		<? } ?>
+	</td>
+	<td valign="top">
+		<a href="<?=$browseurl?>/<?=preg_replace("/ /", "_", $cat['browse_name']); ?>" style="font-weight: bold;">
+			<?= $cat['browse_name'] ?>
+		</a>
+		<div style="padding-left: 20px;">
+			<? for($j = 0; !empty($cat['Subcategories']) && $j < count($cat['Subcategories']); $j++)
+			{
+				$sc = $cat['Subcategories'][$j];
+				?><?= $j > 0 ? ", " : "" ?>
+				<a href="<?=$browseurl?>/<?= $cat['browse_name'] ?>;<?= preg_replace("/ /", "_", $sc['browse_name']) ?>"><?= $sc['browse_name'] ?></a><? } ?>
+			</div>
+		</div>
+	</td>
+</tr>
+<? } ?>
+</table>
+</div>

@@ -1,0 +1,42 @@
+#five_step_bar
+{
+	background-color: #FFFFFF;
+	/*border: solid #CCC 1px;*/
+	border-collapse: collapse;
+}
+
+#five_step_bar td
+{
+	white-space: nowrap;
+	border: solid #CCC 1px;
+	padding: 5px;
+}
+
+.five_step_img
+{
+	float: left;
+	width: 20px;
+	padding: 2px;
+	display: none;
+}
+
+#five_step_bar .five_step_options, #five_step_bar .five_step_selected
+{
+	background-color: #FFFFCC;
+}
+
+.five_step_selected
+{
+	font-weight: bold;
+	font-size: 1.1em;
+}
+
+#five_step_bar .five_step_options
+{
+	border-top: 0px;
+}
+
+#five_step_bar .five_step_selected
+{
+	border-bottom: 0px;
+}

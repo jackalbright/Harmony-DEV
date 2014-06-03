@@ -1,0 +1,63 @@
+<?
+if (isset($product['Product']))
+{
+	$product = $product['Product'];
+}
+
+	$path = "details/tassel";
+
+	$underpath = preg_replace("/\W+/", "_", $path);
+?>
+	<table width="100%" class="image_gallery_scroll_table">
+	<tr>
+		<td>&nbsp; </td>
+		<td colspan=1>
+			<h3><?= $hd->pluralize(ucwords($product['name'])) ?></h3>
+			<div class="right">
+				Click an image below to view larger
+			</div>
+		</td>
+		<td>&nbsp; </td>
+	</tr>
+	<tr>
+		<td>
+			<a href="Javascript:void(0)" onClick="return image_gallery_scroll_left('image_gallery_scroll_row');"><img src="/images/buttons/Circle-left.gif"/></a>
+		</td>
+		<td align=center>
+			<div id="<?= !empty($rightbar_template) ? "image_gallery_scroll_container" : "image_gallery_scroll_container_full" ?>">
+			<table id="image_gallery_scroll_table" class="image_gallery_scroll" style="" cellpadding=0 cellspacing=0>
+			<tr id="image_gallery_scroll_row">
+				<? 
+				for($i = 0; $i < count($tassels); $i++)
+				{ 
+					#$hidden = $i++ > 0 ? "hidden" : "";
+					$hidden = "";
+					#
+					$tassel = $tassels[$i];
+					if($tassel['Tassel']['available'] == 'Yes') {
+				?>
+				<td class="image" valign=top align=center>
+						<div class="tassel lightbox image_gallery_scroll_image sample_image_<?=$underpath?>" title="<?= ucwords($tassel['Tassel']['color_name']) ?>" rel="shadowbox[<?=$underpath?>]" id="image_gallery_largelink1_<?=$underpath?>">
+							<a rel="shadowbox" href="/tassels/<?= preg_replace("/ /", "-", $tassel['Tassel']['color_name']); ?>.gif" onClick="selectTassel(this, '<?= $tassel['Tassel']['tassel_id']?>', '<?= ucwords($tassel['Tassel']['color_name']) ?>', '/tassels/<?= preg_replace("/ /", "-", $tassel['Tassel']['color_name']) ?>.gif', '/tassels/thumbs/<?= preg_replace("/ /", "-", $tassel['Tassel']['color_name']) ?>.gif'); ">
+							<img border="0" src="/tassels/thumbs/<?= preg_replace("/ /", "-", $tassel['Tassel']['color_name']); ?>.gif" id="image_gallery_<?=$underpath?>"/>
+							</a>
+							<br/>
+							<a rel="shadowbox" href="/tassels/<?= preg_replace("/ /", "-", $tassel['Tassel']['color_name']); ?>.gif" onClick="selectTassel(this, '<?= $tassel['Tassel']['tassel_id']?>', '<?= ucwords($tassel['Tassel']['color_name']) ?>', '/tassels/<?= preg_replace("/ /", "-", $tassel['Tassel']['color_name']) ?>.gif', '/tassels/thumbs/<?= preg_replace("/ /", "-", $tassel['Tassel']['color_name']) ?>.gif'); ">
+							<?= ucwords($tassel['Tassel']['color_name']) ?>
+							</a>
+						</div>
+
+				</td>
+				<?
+					}
+				}
+				?>
+			</tr>
+			</table>
+			</div>
+		</td>
+		<td>
+			<a href="Javascipt:void(0)" onClick="return image_gallery_scroll_right('image_gallery_scroll_row');"><img src="/images/buttons/Circle-right.gif"/></a>
+		</td>
+	</tr>
+	</table>

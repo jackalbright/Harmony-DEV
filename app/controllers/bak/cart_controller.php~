@@ -1,0 +1,409 @@
+<?php
+
+include_once("cart_items_controller.php");
+
+class CartController extends CartItemsController {
+
+	var $name = 'Cart';
+	var $helpers = array('Html', 'Form','Ajax');
+	var $uses = array("Product", "ProductPricing", "ProductPart", "GalleryImage", "CustomImage", "CustomizationOption", "ProductRecommendedQuote", "ImageRecommendedQuote","Quote","Tassel","Charm","Border","Ribbon","Frame","ContactInfo","ShippingPricePoint","CartItem","CreditCard");
+	var $options = array();
+
+	function beforeRender()
+	{
+		parent::beforeRender();
+
+		# XXX TODO FIGURE OUT WHICH STEP THIS IS SO CAN GENERATE # FOR IT...
+
+		# GENERATE steps lists....
+
+		switch($this->action)
+		{
+			case 'admin_add':
+			case 'admin_edit':
+			case 'add':
+			case 'edit':
+				break;
+		}
+
+		$this->set("rightbar_disabled", true);
+
+		#$this->set("status_bar_template", "cart/progress");
+		$this->set("current_build_step", 4);
+
+	}
+
+	function checkout()
+	{
+		$this->redirect("/checkout");
+	}
+
+
+	function checkout_receipt()
+	{
+	}
+
+	function updateother()
+	{
+		#error_log("F=".print_r($this->params['form']));
+		$submit = isset($this->params['form']['submit']) ? $this->params['form']['submit'] : "";
+		# Remove from cart, change quantity (and unit pricing), etc...
+		$cart_items = $this->Session->read("shoppingCart");
+		$revised_cart_items = array();
+
+		foreach($this->data as $item_id => $item_data)
+		{
+			for($i = 0; $i < count($cart_items); $i++)
+			{
+				if ($i == $item_id)
+				{
+					$cart_items[$i]['quantity'] == $item_data['quantity'];
+				}
+			}
+
+			if (!isset($item_data['remove']))
+			{
+				$revised_cart_items[] = $cart_items[$item_id];
+			}
+		}
+		$this->Session->write("shoppingCart", $revised_cart_items);
+
+		#error_log("S=$submit");
+
+		if ($submit == 'Checkout')
+		{
+			$this->redirect("/checkout");
+		} else {
+			$this->redirect(array('action'=>'display'));
+		}
+	}
+
+	function add()
+	{
+		# We need to redo since we're saving into db now....
+		# Standard stuff gets saved to db, tho parts gets saved to xml....
+		if (empty($this->params['form']))
+		{
+			$this->redirect("/cart/display");
+		}
+
+		unset($this->params['form']['action']);
+
+		#print_r($this->params['form']);
+		$productCode = $this->params['form']['productCode'];
+		$product = $this->Product->find(" code = '$productCode' ");
+		if (empty($product['Product'])) { $this->redirect("/cart/display"); }
+		$minimum = $product['Product']['minimum'];
+
+		$quantity = $this->params['form']['quantity'];
+		if ($quantity < $minimum)
+		{
+			$quantity = $minimum;
+			$this->Session->setFlash("Minimum is $minimum");
+		}
+
+		$cartItem = array();
+		$cartItem['productCode'] = $productCode;
+		$cartItem['quantity'] = $quantity;
+		unset($this->params['form']['quantity']);
+		$cartItem['comments'] = !empty($this->params['form']['itemComments']) ? $this->params['form']['itemComments'] : null;
+		unset($this->params['form']['itemComments']);
+
+		# Other stuff....
+		$parts = array();
+
+		# Switch id's over if from dropdown vs radio
+		foreach($this->params['form'] as $field => $value)
+		{
+			if (preg_match("/_data$/", $field)) { continue; }
+			if (preg_match("/^action_*/", $field)) { continue; }
+			if (preg_match("/next_step/", $field)) { continue; }
+
+			#if ($value == 'None') { continue; }
+			# Should preserve 'None' when reload for modification, etc...
+			if ($value == 'Custom')
+			{
+				$customfield = null;
+				if(preg_match("/(.*)ID$/", $field, $fieldparts))
+				{
+					$customfield = "custom".$fieldparts[1];
+				}
+				if ($customfield && !empty($this->params['form'][$customfield]))
+				{
+					$value = $this->params['form'][$customfield];
+					unset($this->params['form'][$customfield]);
+				}
+			}
+			$parts[$field] = $value;
+		}
+
+		#$parts_xml = $this->encode_xml($parts);
+		#$cartItem['parts'] = $parts_xml;
+		$cartItem['parts'] = serialize($parts);
+
+		###$cartItem['unitPrice'] = $this->calculate_item_unit_price($productCode, $quantity, $parts);
+		# Need to know which options are included (ie charm, etc) to calculate accurate price.
+		$stamp_surcharge = $this->get_stamp_surcharge();
+		$unitPrice = $this->Product->get_effective_base_price($productCode, $quantity, $this->Session->read("Auth.Customer"), $stamp_surcharge, $parts);
+		$cartItem['unitPrice'] = $unitPrice;
+
+		# Identify with user....
+
+		$session_id = $this->get_session_id();
+		$customer_id = $this->get_customer_id();
+
+		$cartItem['customer_id'] = $customer_id;
+		$cartItem['session_id'] = $session_id;
+
+		if (empty($this->params['form']['cart_item_id']))
+		{
+			$this->CartItem->create();
+		} else {
+			$cartItem['cart_item_id'] = $this->params['form']['cart_item_id'];
+		}
+
+		$this->CartItem->save(array('CartItem'=>$cartItem));
+
+		#print_r($cartItem);
+		$this->Session->del("Build"); # Remove build, qty, etc...
+		$this->redirect("/cart/display");
+	}
+
+
+	function update()
+	{
+		$action = !empty($this->params['form']['action']) ? $this->params['form']['action'] : null;
+		$zipCode = !empty($this->params['form']['zipCode']) ? $this->params['form']['zipCode'] : null;
+
+		#error_log("FORM=".print_r($this->params['form'],true));
+
+		# Always make sure shipping method is updated properly...
+		$shippingMethod = !empty($this->params['form']['shipping_method']) ? $this->params['form']['shipping_method'] : null;
+		$this->Session->write("zipCode", $zipCode);
+
+		if ($shippingMethod)
+		{
+			$this->Session->write("defaultShippingMethod", $shippingMethod);
+			#error_log("SHIP=$shippingMethod");
+		}
+
+		if ($action == 'checkout')
+		{
+			$this->redirect("/checkout");
+		}
+
+		$session_id = $this->get_session_id();
+		$customer_id = $this->get_customer_id();
+
+		# Else, update quantity....
+		foreach($this->params['form'] as $field => $value)
+		{
+			if (preg_match("/quantity(\d+)$/", $field, $matches))
+			{
+				$id = $matches[1];
+				$cartItem = $this->CartItem->find(" cart_item_id = '$id' AND (session_id = '$session_id' OR customer_id = '$customer_id') ");
+				if (!empty($cartItem))
+				{
+					$code = $cartItem['CartItem']['productCode'];
+					$product = $this->Product->find("code = '$code'");
+					#print_r($cartItem);
+					if ($value < $product['Product']['minimum']) { $value = $product['Product']['minimum']; $this->Session->setFlash("Minimum quantity is $value"); } # Don't let them get any less than min, in case of JS error.
+
+					$cartItem['CartItem']['quantity'] = $value;
+
+					# Update unit pricing for this quantity....
+					$stamp_surcharge = $this->get_stamp_surcharge();
+					$parts = unserialize($cartItem['CartItem']['parts']);
+					$unitPrice = $this->Product->get_effective_base_price($cartItem['CartItem']['productCode'], $value, $this->Session->read("Auth.Customer"), $stamp_surcharge, $parts);
+					$cartItem['CartItem']['unitPrice'] = $unitPrice;
+
+					#$this->CartItem->create();
+					#$this->CartItem->id = $cartItem["CartItem"]['cart_item_id'];
+					$this->CartItem->save($cartItem);
+				}
+				#$cartItem = $this->Session->read("shoppingCart.$id");
+				#$cartItem->quantity = $value;
+				#$this->Session->write("shoppingCart.$id", $cartItem);
+			}
+		}
+
+		$this->redirect("/cart/display.php");
+	}
+
+	function save()
+	{
+		$customer = $this->Session->read("Auth.Customer");
+		if (empty($customer))
+		{
+			$this->redirect("/account/login?goto=/cart/save");
+		}
+
+		$cart_items = $this->Session->read("shoppingCart");
+		#$shoppingCart = $this->load_cart_data($cart_items);
+		#print_r($shoppingCart);
+		#$this->set("shoppingCart", $shoppingCart);
+
+		foreach($cart_items as $cart_item_object)
+		{
+			#$cart_item_xml = $this->encode_xml($cart_item_object, "cart_item");
+			$cart_item_json = serialize($cart_item_object);
+			# Encode as XML
+		}
+
+	}
+
+	function remove($id = '')
+	{
+		$session_id = $this->get_session_id();
+		$customer_id = $this->get_customer_id();
+
+		if ($id != "")
+		{
+			$cartItem = $this->CartItem->find(" cart_item_id = '$id' AND (session_id = '$session_id' OR customer_id = '$customer_id') ");
+			if (!empty($cartItem))
+			{
+				$this->CartItem->delete($id);
+			}
+			#$shoppingCart = $this->Session->read("shoppingCart");
+			#unset($shoppingCart[$id]);
+			#$this->Session->write("shoppingCart", $shoppingCart);
+		}
+		$this->redirect("/cart/display");
+	}
+
+
+	function display()
+	{
+		$this->body_title = "Items in your cart";
+		#$cart_items = $this->Session->read("shoppingCart");
+
+
+		#print_r($db_cart_items);
+		list($shoppingCart, $subtotal, $product_list) = $this->get_cart_items();
+
+		if (!count($shoppingCart))
+		{
+			$this->action = 'display_empty';
+			return;
+		}
+
+		$this->set("shoppingCart", $shoppingCart);
+		$this->Product->recursive = 1;
+		#$products = $this->Product->findAll("is_stock_item = 0");
+		$buildable_products = $this->Product->findAll("buildable = 'yes' AND available = 'yes' AND is_stock_item = 0");
+		$this->set("products", $buildable_products);
+
+		$products = $this->Product->findAll();
+		$this->set("product_map", Set::combine($products, '{n}.Product.code', '{n}.Product'));
+		$this->set("pricing_map", Set::combine($products, '{n}.Product.code', '{n}.ProductPricing'));
+
+		$related_products = array();
+		foreach($products as $product)
+		{
+			$product_id = $product['Product']['product_type_id'];
+			$parent_id = $product['Product']['parent_product_type_id'];
+			$related = $this->Product->findAll(" Product.product_type_id != '$product_id' AND (Product.parent_product_type_id = '$product_id' OR Product.parent_product_type_id = '$parent_id' OR Product.product_type_id = '$parent_id') AND Product.available = 'yes' ");
+			$parent = $this->Product->find(" Product.product_type_id != '$product_id' AND (Product.parent_product_type_id = '$product_id' OR Product.parent_product_type_id = '$parent_id' OR Product.product_type_id = '$parent_id') AND Product.available = 'yes' ");
+			$parent_products[$product['Product']['code']] = $parent;
+			$related_products[$product['Product']['code']] = $related;
+			# The parent, the child, or a sibling.
+		}
+			
+		$this->set("related_product_map", $related_products);
+		$this->set("parent_product_map", $parent_products);
+
+	}
+
+	function display_old() # Show cart.
+	{
+		$all_cart_items = $this->Session->read("shoppingCart");
+		$this->Product->recursive = -2;
+		$this->CustomImage->recursive = -2;
+		$this->GalleryImage->recursive = -2;
+		$cart_items = array();
+		foreach($all_cart_items as $ci)
+		{
+			if (!empty($ci))
+			{
+				$cart_items[] = $ci;
+			}
+		}
+
+		foreach($cart_items as &$cart_item)
+		{
+			# Load product, stamp/image, etc records...
+			$code = $cart_item['productCode'];
+			$product = $this->Product->find("code = '$code'");
+			$cart_item['Product'] = $product['Product'];
+
+			# Load quote if there...
+			if (isset($cart_item['quote']['quoteID'])) {
+				$quote = $this->Quote->read(null, $cart_item['quote']['quoteID']);
+				$cart_item['quote_info'] = $quote['Quote'];
+			}
+
+			if (isset($cart_item['tassel']['customTassel'])) {
+				$tassel = $this->Tassel->read(null, $cart_item['tassel']['customTassel']);
+				$cart_item['tassel_info'] = $tassel['Tassel'];
+			} else if (isset($cart_item['tassel']['tasselID'])) {
+				$tassel = $this->Tassel->read(null, $cart_item['tassel']['tasselID']);
+				$cart_item['tassel_info'] = $tassel['Tassel'];
+			}
+
+			if (isset($cart_item['ribbon']['customRibbon'])) {
+				$ribbon = $this->Ribbon->read(null, $cart_item['ribbon']['customRibbon']);
+				$cart_item['ribbon_info'] = $ribbon['Ribbon'];
+			} else if (isset($cart_item['ribbon']['ribbonID'])) {
+				$ribbon = $this->Ribbon->read(null, $cart_item['ribbon']['ribbonID']);
+				$cart_item['ribbon_info'] = $ribbon['Ribbon'];
+			}
+
+			if (isset($cart_item['charm']['customCharm'])) {
+				$charm = $this->Charm->read(null, $cart_item['charm']['customCharm']);
+				$cart_item['charm_info'] = $charm['Charm'];
+			} else if (isset($cart_item['charm']['charmID'])) {
+				$charm = $this->Charm->read(null, $cart_item['charm']['charmID']);
+				$cart_item['charm_info'] = $charm['Charm'];
+			}
+
+			if (isset($cart_item['border']['customBorder'])) {
+				$border = $this->Border->read(null, $cart_item['border']['customBorder']);
+				$cart_item['border_info'] = $border['Border'];
+			} else if (isset($cart_item['border']['borderID'])) {
+				$border = $this->Border->read(null, $cart_item['border']['borderID']);
+				$cart_item['border_info'] = $border['Border'];
+			}
+
+			if (isset($cart_item['frame']['frameID'])) {
+				$frame = $this->Frame->read(null, $cart_item['frame']['frameID']);
+				$cart_item['frame_info'] = $frame['Frame'];
+			}
+
+
+
+
+
+			# XXX TODO calculate price for product based upon quantity...
+			if (isset($cart_item['image_id']))
+			{
+				$custom_image = $this->CustomImage->find("Image_ID = ".$cart_item['image_id']);
+				$cart_item['CustomImage'] = $custom_image['CustomImage'];
+			}
+			if (isset($cart_item['catalog_number']))
+			{
+				$catnum = $cart_item['catalog_number'];
+				$gallery_image = $this->GalleryImage->find("catalog_number = '$catnum'");
+				$cart_item['GalleryImage'] = $gallery_image['GalleryImage'];
+			}
+		}
+		$this->set("cart_items", $cart_items);
+
+		if (count($cart_items) <= 0)
+		{
+			$this->action = "display_empty";
+		}
+	}
+
+
+}
+?>

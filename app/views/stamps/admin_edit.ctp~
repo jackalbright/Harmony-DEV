@@ -1,0 +1,139 @@
+<script src="/js/jquery.simpleMultiSelect.js"></script>
+
+<div class="stamps form">
+<?php echo $form->create('Stamp',array('type'=>'file','url'=>array('action'=>'edit')));?>
+	<fieldset>
+ 		<legend><?= !empty($this->data) ? "Edit Stamp" : "Add Stamp" ?></legend>
+		<table border=1>
+		<tr>
+			<td colspan=4 align="right">
+				<?= $form->submit("Save Changes"); ?>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<? echo $form->input('stampID');?>
+				<?echo $form->input('stamp_name');?>
+				<?echo $form->input('catalog_number');?>
+				<br/>
+				<? if(!empty($this->data['Stamp']['image_location'])) { ?>
+					<img style="background-color: black; border: solid black 5px !important;" src="<?= $this->data['Stamp']['image_location']; ?>"/>
+				<? } ?>
+				<?= $form->input('file',array('type'=>'file')); ?>
+				<?echo $form->input('reproducible',array('options'=>array('Only'=>'Repro Only','No'=>'No (Real Only)','Yes'=>'Yes (Real & Repro)'),'default'=>'Yes'));?>
+				<?echo $form->input('available',array('options'=>array('No'=>'No','Yes'=>'Yes'),'default'=>'No'));?>
+				<? if(empty($this->data['Stamp']['available']) || $this->data['Stamp']['available'] == 'No') { ?>
+				<div class="alert2">
+					The stamp will not be displayed until it is made available.
+				</div>
+				<? } ?>
+			</td>
+			<td width="400">
+				<?echo $form->input('keywords',array('class'=>'no_editor','label'=>'Search and Meta keywords'));?>
+				<?echo $form->input('short_description',array('style'=>'width: 95%;','type'=>'textarea','class'=>'no_editor'));?>
+				<?echo $form->input('long_description',array('class'=>'no_editor'));?>
+
+				<hr/>
+				<h3>Surcharge</h3>
+				<script>
+				<?
+				$qtys = array(1,12,50,100,250,500,1000,2500,5000,7500);
+				?>
+				function setSurcharge()
+				{
+					j('#surcharge').show();
+					<? foreach($qtys as $q) { ?>
+						var value = j('#StampSurchargePer<?=$q?>').val();
+						console.log(value);
+						if(!value) { j('#StampSurchargePer<?=$q?>').val("1.00"); }
+					<? } ?>
+				}
+				function clearSurcharge()
+				{
+					j('#surcharge').hide();
+					<? foreach($qtys as $q) { ?>
+						j('#StampSurchargePer<?=$q?>').value = "";
+					<? } ?>
+				}
+				</script>
+
+				<?
+					$surcharge = false;
+					foreach($qtys as $q) { 
+						if(!empty($this->data['StampSurcharge']["per$q"])) { $surcharge = true; }
+					} 
+				?>
+				<input type="checkbox" <?= !empty($surcharge) ? "checked='checked'" : "" ?> onClick="if(this.checked) { setSurcharge(); } else { clearSurcharge(); } "/> Has surcharge?
+
+				<div id="surcharge" style="<?= !empty($surcharge) ? "" : "display: none;" ?>">
+					<?= $form->input('StampSurcharge.stamp_surcharge_id'); ?>
+					<?= $form->input('StampSurcharge.per1'); ?>
+					<?= $form->input('StampSurcharge.per12'); ?>
+					<?= $form->input('StampSurcharge.per50'); ?>
+					<?= $form->input('StampSurcharge.per100'); ?>
+					<?= $form->input('StampSurcharge.per250'); ?>
+					<?= $form->input('StampSurcharge.per500'); ?>
+					<?= $form->input('StampSurcharge.per1000'); ?>
+					<?= $form->input('StampSurcharge.per2500'); ?>
+					<?= $form->input('StampSurcharge.per5000'); ?>
+					<?= $form->input('StampSurcharge.per7500'); ?>
+				</div>
+
+				<hr/>
+
+
+			</td>
+			<td>
+
+				<?echo $form->input('issue_date',array('empty'=>'','minYear'=>'1850','maxYear'=>date('Y')+1));?>
+				<?echo $form->input('series');?>
+				<?= $form->input("Border", array('options'=>$borders,'multiple'=>'multiple','size'=>10)); ?>
+				<?= $form->input("Charm", array('options'=>$charms,'multiple'=>'multiple','size'=>10)); ?>
+				<?= $form->input("Ribbon", array('options'=>$ribbons,'multiple'=>'multiple','size'=>10)); ?>
+				<?= $form->input("Tassel", array('options'=>$tassels,'multiple'=>'multiple','size'=>10)); ?>
+				<script>
+					j('#BorderBorder').simpleMultiSelect();
+					j('#CharmCharm').simpleMultiSelect();
+					j('#RibbonRibbon').simpleMultiSelect();
+					j('#TasselTassel').simpleMultiSelect();
+				</script>
+
+			</td>
+			<td>
+				<h3>Categories</h3>
+
+				<div style="overflow: scroll; height: 600px;">
+				<?= $this->element("stamps/categories",array('categories'=>$categories,'pid'=>"")); ?>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td colspan=4 align="right">
+				<?= $form->submit("Save Changes"); ?>
+			</td>
+		</tr>
+		</table>
+	</fieldset>
+<?php echo $form->end(); ?>
+</div>
+
+<? if(!empty($this->data['Stamp']['stampID'])) { ?>
+		<div>
+				<h3>Recommended Quotes</h3>
+				<div id="recommendedQuotes" style="width: 600px;">
+					<?= $this->element("../stamps/admin_quotes",array('stamp_id'=>$this->data['Stamp']['stampID'])); ?>
+				</div>
+
+				<div id="quoteSearch" style="width: 600px;">
+					<?= $this->element("../stamps/admin_search_quote",array('stamp_id'=>$this->data['Stamp']['stampID'])); ?>
+				</div>
+		</div>
+<? } ?>
+
+<div class="actions">
+	<ul>
+		<li><?php echo $html->link(__('Delete', true), array('action' => 'delete', $form->value('Stamp.stampID')), null, sprintf(__('Are you sure you want to delete # %s?', true), $form->value('Stamp.stampID'))); ?></li>
+		<li><?php echo $html->link(__('List Stamps', true), array('action' => 'index'));?></li>
+		<li><?php echo $html->link(__('Add Stamp', true), array('action' => 'edit'));?></li>
+	</ul>
+</div>

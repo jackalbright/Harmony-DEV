@@ -1,0 +1,27 @@
+<div class="customer form">
+<?php echo $form->create("Customer", array('url'=>array('controller'=>'account','action'=>'edit')));  ?>
+	<fieldset>
+	<?php
+		echo $form->input('First_Name');
+		echo $form->input('Last_Name');
+		#echo $form->input('eMail_Address');
+		#echo $form->input('Username');
+		#echo $form->input('Password');
+		#echo $form->input('Password_Question');
+		#echo $form->input('Password_Answer');
+		#echo $form->input('Company');
+		echo $form->input('Phone');
+		?><br/><a href="/custserv/addressList.php">Manage Shipping/Billing Addresses</a><br/><br/><?
+		echo $form->input('Mail_List',array('type'=>'checkbox','label'=>'Mailing list subscription (optional)','after'=>'<br/>Join our mailing list to be contacted with new promotions, offers, products and additions to our catalog.'));
+		#echo $form->input('customer_id');
+		#echo $form->input('billing_id_pref');
+		#echo $form->input('shipping_id_pref');
+		#echo $form->input('testAccount');
+		#echo $form->input('dateAdded');
+		#echo $form->input('idHash');
+	?>
+	</fieldset>
+	<input type="image" src="/images/buttons/Save-grey.gif"/>
+</form>
+
+</div>

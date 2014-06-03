@@ -1,0 +1,16 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<script src="/js/scriptaculous/prototype.js"></script>
+	<script src="/tmp/shadowbox/shadowbox.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="/tmp/shadowbox/shadowbox.css"/>
+	<script>
+	Shadowbox.init();
+	</script>
+
+
+</head>
+<body onLoad="Shadowbox.init();">
+	<a href="/charms/large/airplane.jpg" rel="shadowbox"><img src="/charms/airplane.jpg"></a>
+</body>
+</html>

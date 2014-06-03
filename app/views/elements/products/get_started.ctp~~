@@ -1,0 +1,149 @@
+<div style="margin-top: 0px;">
+
+<? if(empty($prod)) { $prod = !empty($product['Product']['code']) ? $product['Product']['code'] : null; } ?>
+
+<?
+$image_id = !empty($build['CustomImage']) ? $build['CustomImage']['Image_ID'] : null;
+$catalog_number = !empty($build['GalleryImage']) ? $build['GalleryImage']['catalog_number'] : null;
+
+$preview_url = "/products/get_started/build?existing_prod=$prod&catalog_number=$catalog_number&image_id=$image_id";
+$custom_url = "/products/get_started/custom_add?";
+$gallery_url = empty($custom_only_product) ?  "/products/get_started/gallery?" : "/products/get_started/gallery?clear_product=1";
+
+?>
+
+<script>
+function choose_product(prod)
+{
+var preview_url = "<?= $preview_url ?>";
+var custom_url = "<?= $custom_url ?>";
+var gallery_url = "<?= $gallery_url ?>";
+
+var preview_img = $('preview_link_img');
+var preview_button = $('preview_link_button');
+
+var custom_img = $('custom_link_img');
+var custom_button = $('custom_link_button');
+
+var gallery_img = $('gallery_link_img');
+var gallery_button = $('gallery_link_button');
+
+if(preview_img)
+{
+	preview_img.href = preview_url+"&prod="+prod;
+	preview_button.href = preview_url+"&prod="+prod;
+}
+
+if(custom_img)
+{
+	custom_img.href = custom_url+"&prod="+prod;
+	custom_button.href = custom_url+"&prod="+prod;
+}
+
+//alert("custom="+custom_img.href);
+
+if(gallery_img)
+{
+	gallery_img.href = gallery_url+"&prod="+prod;
+	gallery_button.href = gallery_url+"&prod="+prod;
+}
+
+
+}
+</script>
+
+
+<? if(!empty($related_products)) { ?>
+<div style="border-bottom: solid #CCC 1px; text-align: left;">
+<div class="left padded"><img src="/images/icons/small/1.gif"/> </div> 
+<div class="hidden"><h4 class="bold block">Select a <?= strtolower($product['Product']['short_name']) ?> style:</h4></div>
+	<table cellspacing=5 align="left">
+	<tr>
+		<td>
+			<img onClick="$('prod_<?= $product['Product']['code'] ?>').checked = 'checked'; choose_product('<?= $product['Product']['code'] ?>'); $('prod_<?= $product['Product']['code'] ?>').onclick();" src="/images/products/thumbnail/<?= $product['Product']['code'] ?>.jpg"/><br/>
+			<input id="prod_<?= $product['Product']['code'] ?>" type="radio" name="prod" onClick="set_get_started_prod(this.value);choose_product('<?= $product['Product']['code'] ?>'); " checked="checked" value="<?= $product['Product']['code'] ?>"/>
+			<?= $product['Product']['name'] ?>
+		</td>
+		<? foreach($related_products as $related) { ?>
+		<td>
+			<img onClick="$('prod_<?= $related['Product']['code'] ?>').checked = 'checked'; choose_product('<?= $related['Product']['code'] ?>'); $('prod_<?= $related['Product']['code'] ?>').onclick();" src="/images/products/thumbnail/<?= $related['Product']['code'] ?>.jpg"/><br/>
+			<input id="prod_<?= $related['Product']['code'] ?>" type="radio" name="prod" onClick="set_get_started_prod(this.value);choose_product('<?= $related['Product']['code'] ?>'); " value="<?= $related['Product']['code'] ?>"/>
+			<?= $related['Product']['name'] ?>
+		</td>
+		<? } ?>
+	</tr>
+	</table>
+	<div class="clear"></div>
+	<br/>
+<div class="left padded"><img src="/images/icons/small/2.gif"/> </div>
+</div>
+
+<? } ?>
+<div align="left">
+	<table style="" cellpadding=0 align="left">
+	<tr>
+		<? $existing = false; $upload = false; ?>
+		<? if((!empty($build['GalleryImage']) && preg_match("/(real|repro)/", $product['Product']['image_type'])) || (!empty($build['CustomImage']) && preg_match("/custom/", $product['Product']['image_type']))) {  $existing = true; ?>
+
+		<td align="center" valign="top">
+			<?
+			?>
+			<div style="width: 100px; height: 100p x; border: solid #ccc 1px; ">
+				<a id="preview_link_img" href="<?= $preview_url ?>"><?= $this->element("build/preview_thumbnail", array('size'=>'-100x100')); ?></a>
+			</div>
+			<div style="height: 50px; width: 150px; font-weight: bold;">
+			&nbsp;
+			</div>
+			<div>
+				<a id="preview_link_button" href="<?=$preview_url ?>"><img src="/images/buttons/small/Personalize.gif"/></a>
+				<form class="hidden" id="form_personalize" method="POST" action="/products/get_started/build">
+					<input id="existing_prod" type="hidden" name="prod" value="<?= $prod ?>"/>
+					<input id="" type="hidden" name="catalog_number" value="<?= !empty($build['GalleryImage']) ? $build['GalleryImage']['catalog_number'] : "" ?>"/>
+					<input id="" type="hidden" name="image_id" value="<?= !empty($build['CustomImage']) ? $build['CustomImage']['Image_ID'] : "" ?>"/>
+					<input type="image" src="/images/buttons/small/Personalize.gif"/>
+				</form>
+			</div>
+		</td>
+		<? } ?>
+
+
+		<? if(preg_match("/custom/", $product['Product']['image_type'])) { $upload = true; ?>
+		<? if($existing) { ?>
+		<td style="width: 30px; font-weight: bold; text-align: center; vertical-align: top; padding: 45px;">
+			-OR-
+		</td>
+		<? } ?>
+
+		<td align="center" valign="top">
+			<div style="width: 100px; height: 100px; border: solid #ccc 1px; ">
+				<a id="custom_link_img" href="<?=$custom_url?>"><img border=0 src="/images/upload_image.jpg" alt="Upload Your Image" height="100"></a>
+			</div>
+			<div style="height: 50px; width: 150px; font-weight: bold;">
+				<a id="custom_link_button" href="<?= $custom_url ?>">I want to use<br/>my own image</a>
+			</div>
+		</td>
+		<? } ?>
+
+
+		<? if(preg_match("/(real|repro)/", $product['Product']['image_type'])) { ?>
+		<? if($existing || $upload) { ?>
+		<td style="width: 30px; font-weight: bold; text-align: center; vertical-align: top; padding: 45px;">
+			-OR-
+		</td>
+		<? } ?>
+
+		<td align="center" valign="top">
+			<div style="width: 100px; height: 100px; border: solid #ccc 1px; ">
+				<a id="gallery_link_img" href="<?=$gallery_url ?>"><img border=0 src="/images/choose_stamp.jpg" alt="Use One of Our Images" height="100"></a>
+			</div>
+			<div style="height: 50px; width: 150px; font-weight: bold;">
+				<a id="gallery_link_button" href="<?= $gallery_url ?>">I want to browse stamp images for ideas</a>
+			</div>
+		</td>
+		<? } ?>
+	</tr>
+	</table>
+
+</div>
+
+</div>

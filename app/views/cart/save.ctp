@@ -1,0 +1,6 @@
+<p>Save your items for later and come back at your convenience to order or modify items in your cart.
+</p>
+
+QUICK SIGNUP....and redirect....
+
+LIST....

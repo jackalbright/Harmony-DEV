@@ -1,0 +1,49 @@
+<?
+?>
+
+
+<div class="hidden clear">
+		<script>
+			var border_images = new Array();
+			border_images[''] = "/borders/No Border.gif";
+			<? foreach($borders as $border) { ?>
+				border_images[<?= $border->border_id ?>] = '<?= $border->location ?>';
+			<? } ?>
+		</script>
+		<select id="option_border" name="data[options][borderID]" onChange="updateBuild('<?=$i?>');" onChangeX="changeOptionPreview('border', this.value, border_images); updateBuildImage();">
+			<option value="">None</option>
+		<? $img_borders = $image->listBorders();
+			$existing_borders = array();
+			$first_border = "Double Line"; # Default.
+			if (!empty($img_borders))
+			{
+				foreach($img_borders as $border)
+				{
+					$existing_borders[$border->id] = true;
+				?>
+					<option value="<?= $border->id ?>" <?= $first_border == $border->name ? "selected='selected'" : "" ?> ><?= ucwords($border->name); ?></option>
+				<?
+					# LOAD DEFAULT???
+				}
+			}
+			foreach($borders as $border)
+			{
+				if(!empty($existing_borders[$border->border_id])) { continue; }
+				?>
+					<option value="<?= $border->border_id ?>" <?= $first_border == $border->name ? "selected='selected'" : "" ?> ><?= ucwords($border->name); ?></option>
+				<?
+			}
+		?>
+		</select>
+		<a rel="shadowbox;width=600;height=400" href="/build/option_select/<?= $build['Product']['code'] ?>/border">View All</a>
+		<script>
+			<? if(!empty($build['options']['borderID'])) { ?>
+				//Event.observe('window', 'load', function (event) { alert("BOR"); $('option_border').value = '<?= $build['options']['borderID'] ?>'; $('option_border').onchange(); });
+				$('option_border').value = '<?= $build['options']['borderID'] ?>'; 
+				changeOptionPreview('border', $('option_border').value, border_images);
+			<? } ?>
+		</script>
+		<br/>
+		<p>Tip: A border helps anchor your design.</p>
+</div>
+

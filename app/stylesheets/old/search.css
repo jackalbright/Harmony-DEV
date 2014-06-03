@@ -1,0 +1,100 @@
+/*div#main { width: 380px; }*/
+h2#alert { color: #C33; }
+.subjectList		
+{
+	margin: 0 0 1em 0;
+	clear: both;
+	border-bottom: #DDC;
+	border-width: 0 0 1px 0;
+	border-style: none none solid none;
+	padding: 0 0 0.5em 0;
+}
+#updateCount p		
+{
+	text-align: left;
+	margin: 0;
+}
+.subjectList *
+{
+	margin: 0;
+	text-decoration:none;
+}
+
+.subjectList h2
+{
+	color: #039;
+	text-decoration: underline;
+}
+.subjectList div.img		
+{
+	float: left;
+	border: 0px;
+	margin-bottom: 10px;
+}
+
+.subjectList a img
+{
+	border-width: 0px;
+}
+
+.subjectList a:hover div.img .link
+{
+	text-decoration: underline !important;
+}
+
+.stampDesc
+{
+	margin-left: 72px;
+}
+select { width: 4em; }
+#main h1, #main h2, #main h3, #main h4, #main h5, #main h6 { clear: both; }
+h4.category		
+{
+	text-indent: -1em;
+	padding-left: 1em;
+	margin: 0.25em 0 0.75em 0.5em;
+}
+h4.subHead {
+	font-style: italic;
+}
+p#altSearch {
+	color: gray;
+}
+p#altSpelling		
+{
+	color: gray;
+	font-size: 0.85em;
+}
+.productLink p { margin-left: 80px; }
+.productLink img		
+{
+	float: left;
+	margin: 0 6px 0.5em 0;
+}
+span.catNum		
+{
+	font-size: smaller;
+	font-style: italic;
+	opacity: 0.5;
+	font-size: 0.8em;
+}
+.subjectList form		
+{
+	clear: left;
+	margin: 0.25em 0 0 0;
+}
+.subjectList select
+{
+	width: 12em;
+	font-size: 1.0em;
+}
+.subjectList button		
+{
+	font-weight: bold;
+	padding: 0 3px;
+	border-color: #FFF;
+	border-width: 2px;
+	border-style: outset;
+	font-family: sans-serif;
+	/*font-weight: normal;*/
+}

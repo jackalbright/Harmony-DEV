@@ -1,0 +1,54 @@
+<?php
+class ContactInfo extends AppModel {
+
+	var $name = 'ContactInfo';
+	var $useTable = 'contact_info';
+	var $primaryKey = 'Contact_ID';
+
+	//The Associations below have been created with all possible keys, those that are not needed can be removed
+	var $belongsTo = array(
+			'Customer' => array('className' => 'Customer',
+								'foreignKey' => 'Customer_ID',
+								'conditions' => '',
+								'fields' => '',
+								'order' => ''
+			)
+	);
+
+	function read($q, $id)
+	{
+		$data = parent::read($q, $id);
+		if (empty($data)) { return $data; }
+		if (!empty($data['ContactInfo']) && !empty($data['ContactInfo']['In_Care_Of']))
+		{
+			$data['ContactInfo']['Name'] = split(" ", $data['ContactInfo']['In_Care_Of']);
+		}
+		return $data;
+	}
+
+	function find($conditions = null, $fields = array(), $order = null, $recursive = null) {
+		$data = parent::find($conditions, $fields, $order, $recursive);
+		# Doing 'all' in some cases?
+		if (empty($data)) { return $data; }
+		if (!empty($data['ContactInfo']) && !empty($data['ContactInfo']['In_Care_Of']))
+		{
+			$data['ContactInfo']['Name'] = split(" ", $data['ContactInfo']['In_Care_Of']);
+		}
+		return $data;
+	}
+
+	function save($data)
+	{
+		if (!empty($data['ContactInfo']['Name']) && is_array($data['ContactInfo']['Name']))
+                {
+                	$in_care_of = join(" ", $data['ContactInfo']['Name']);
+                	$data['ContactInfo']['In_Care_Of'] = $in_care_of;
+                } else if (!empty($data['ContactInfo']['Name'])) {
+                	$data['ContactInfo']['In_Care_Of'] = $data['ContactInfo']['Name'];
+		}
+
+		return parent::save($data);
+	}
+}
+
+?>

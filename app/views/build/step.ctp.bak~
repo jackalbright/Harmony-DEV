@@ -1,0 +1,44 @@
+<div id="build_step_page">
+
+<table id="build_step_tabs" cellspacing=0>
+<tr>
+<? for ($i = 0; $i < count($options); $i++) { 
+	$option = $options[$i]['Part'];
+?>
+	<td class="build_step_tab <?= ($option['part_code'] == $step ? 'build_step_tab_selected' : '') ?>">
+		<a href="/build/step/<?=$option['part_code'] ?>"><?=$option['part_name']?></a>
+	</td>
+<? } ?>
+</tr>
+</table>
+
+<div id="build_step_container">
+
+<form method="POST">
+<?
+	if (isset($product_step_template_path) && file_exists($product_step_template_path))
+	{
+		include($product_step_template_path);
+	} else {
+		include($step_template_path);
+	}
+
+?>
+<div class="clear"></div>
+<br/>
+<br/>
+<table width="100%">
+<tr>
+<td align=left>
+	<input type="submit" value="&lt; Previous"/>
+</td>
+<td align=right>
+	<input type="submit" value="Next &gt;"/>
+</td>
+</tr>
+</table>
+</form>
+
+</div>
+
+</div>

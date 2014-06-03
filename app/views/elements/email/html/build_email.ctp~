@@ -1,0 +1,13 @@
+<p>
+	A link to harmonydesigns.com has been sent to you<?= !empty($your_name) ? " by $your_name":""?>.
+</p>
+
+<? if(!empty($custom_message)) { ?>
+<p>
+	Sender's comment: <?= nl2br($custom_message) ?>
+</p>
+<? } ?>
+
+<a href="<?= Router::url("/product_image/build_view?build_email_id=$build_email_id"); ?>">
+	<img src="<?= Router::url("/product_image/build_view/-600x600?build_email_id=$build_email_id"); ?>">
+</a>

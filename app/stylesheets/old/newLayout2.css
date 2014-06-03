@@ -1,0 +1,164 @@
+@import url("/stylesheets/mainnav.css");
+@import url("/stylesheets/mainnav2.css");
+@import url("/stylesheets/topnav.css");
+
+div#mainWrapper
+{	
+	/*width: 765px;*/
+	width: 965px;
+	padding-top: 0px;
+	margin: 0 auto 0 auto;
+}
+
+div#bodyWrapper
+{
+	/*width: 765px;*/
+	position: relative;
+	width: 965px;
+	margin: 0 auto 0 auto;
+}
+
+div#contentWrapper
+{
+	/*position: relative;
+	right: 0px;
+	top: 10px;
+	*/
+	/*position: relative;
+	margin-left: 195px;
+	*/
+
+	/*width: 544px;*/
+	/*margin-left: 190px;*/
+	/*float: right;
+	clear: none;
+	*/
+	float: right;
+	width: 544px;
+	margin-right: 220px;
+}
+
+div#header
+{
+	/*height: 115px;
+	overflow: overflow;
+	*/
+	position: relative;
+	right: 0px;
+	top: 0px;
+	top: 0;
+}
+div#title
+{
+	margin: 0px 0 0px 0;
+	position: relative;
+	/*left: -10px;*/
+	width: 544px;
+}
+
+div#main
+{
+	position: relative;
+	/*
+	top: 10px;
+	margin: 0;
+	padding: 0;
+	*/
+	width: 544px;
+	/*overflow: visible;*/
+}
+
+#main_table
+{
+	width: 100%;
+}
+
+#main_table td
+{
+	vertical-align: top;
+}
+
+div#rightBar
+{
+	margin-top: 0px;
+	float: right;
+}
+
+div#footer
+{
+	position: relative;
+	right: 0px;
+	top: 30px;
+	margin: 30px auto 0 auto;
+	clear: both;
+	width: 965px;
+	/*width: 765px;*/
+}
+
+.stretcher
+{
+	clear: both;
+}
+#bookmark
+{
+	width: 221px;
+	background-image: url(/background-images/Bookmark-Rework.gif);
+	background-repeat: no-repeat;
+	background-position: 0 0;
+	padding: 1px 0 0 0;
+	margin: 0 0 10px 0;
+}
+#bookmark #bookBottom		
+{
+	width: 221px;
+	height: 14px;
+	background-image: url(/background-images/Bookmark-Rework-bottom.gif);
+	margin: 0;
+}
+#bookmark #bookContents
+{
+	width: 166px;
+	margin: 60px auto 14px 8px;
+	padding: 0;
+}
+input#searchTerms
+{
+	width: 164px;
+	margin: 0 auto 0 auto;
+}
+button#searchSubmit
+{
+	margin: 0 auto 0 auto;	
+}
+
+#productColumn .product
+{
+	float: left;
+	font-size: 11px;
+	text-align: center;
+	width: 70px;
+	height: 76px;
+	margin: 0.5em 2px 1.5em 2px;
+}
+
+#item { text-decoration: underline; }
+
+#rightbar
+{
+	float: right;
+	width: 275px;
+}
+
+
+
+#otherProductsDropdown
+{
+/*	float: right;
+	margin: 0 0 4px 10px;
+	*/
+	width: 150px;
+}
+
+
+.clear { clear: both; }
+

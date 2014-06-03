@@ -1,0 +1,31 @@
+<?
+if(!isset($product_name))
+{
+	$product_name = "Gifts";
+}
+
+?>
+		<table width="100%" class="">
+		<tr>
+			<td rowspan=2 valign=top> 
+				<a href="/gallery/view/<?=$image['GalleryImage']['catalog_number']?>/<?= $galleryCategory['GalleryCategory']['browse_node_id']?>"><img class="stamp_thumbnail" src="<?= $image['GalleryImage']['thumbnail_location'] ?>"></a> 
+				<br/>
+				<a class="nowrap" href="/gallery/view/<?=$image['GalleryImage']['catalog_number']?>/<?= $galleryCategory['GalleryCategory']['browse_node_id']?>">+ Larger</a>
+			</td>
+			<td valign=top>
+				<a href="/gallery/view/<?=$image['GalleryImage']['catalog_number']?>/<?= $galleryCategory['GalleryCategory']['browse_node_id']?>">
+					<?= $image['GalleryImage']['stamp_name']; ?></a>
+				[<a href="/gallery/view/<?=$image['GalleryImage']['catalog_number']?>/<?= $galleryCategory['GalleryCategory']['browse_node_id']?>"?>more info</a>]
+				<br/>
+				<?= $image['GalleryImage']['short_description'] ?>
+			</td>
+		</tr>
+		<tr>
+			<td valign=top>
+				<form method="GET" action="/gallery/select/<?= $image['GalleryImage']['catalog_number'] ?>">
+				<input type="submit" name="submit" value="Create <?= $product_name ?> &gt;" style="font-weight: bold;"/>
+				</form>
+			</td>
+		</tr>
+		</table>
+

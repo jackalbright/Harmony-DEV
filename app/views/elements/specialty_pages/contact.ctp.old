@@ -1,0 +1,148 @@
+<form action="/specialty_contact/add">
+<h4>Inquiry Form</h4>
+<table width="100%">
+<tr>
+	<td>
+		<div>
+			<label>Name</label>
+			<input type="text" name="data[SpecialtyContact][name]"/>
+		</div>
+	</td>
+	<td>
+		<div>
+			<label>Email</label>
+			<input type="text" name="data[SpecialtyContact][email]"/>
+		</div>
+	</td>
+</tr>
+<tr>
+	<td>
+		<div>
+			<label>Organization (optional)</label>
+			<input type="text" name="data[SpecialtyContact][organization]"/>
+		</div>
+	</td>
+	<td>
+		<div>
+			<label>Title (optional)</label>
+			<input type="text" name="data[SpecialtyContact][title]"/>
+		</div>
+	</td>
+</tr>
+<tr>
+	<td>
+		<div>
+			<label>Phone</label>
+			<input type="text" name="data[SpecialtyContact][phone]"/>
+		</div>
+	</td>
+	<td>
+		&nbsp;
+	</td>
+</tr>
+<tr>
+	<td colspan=2>
+		<b>Interested in:</b><br/>
+		<input type="checkbox" name="data[SpecialtyContact][free_consult]" value="1">Free product consultation<br/>
+		<input type="checkbox" name="data[SpecialtyContact][random_sample]" value="1" onChange="if(this.checked) { showblock('specialtyContactAddress'); } ">Random samples<br/>
+		<input type="checkbox" name="data[SpecialtyContact][catalog]" value="1" onChange="if(this.checked) { showblock('specialtyContactAddress'); } ">Product catalog<br/>
+	</td>
+</tr>
+
+<tbody id="specialtyContactAddress" class="hidden">
+<tr>
+	<td colspan=2>
+	<br/>
+	<b>Please provide your address for your random sample or product catalog:</b>
+	<br/>
+	</td>
+</tr>
+<tr>
+	<td>
+		<div>
+			<label>Address</label>
+			<input type="text" name="data[SpecialtyContact][address]"/>
+		</div>
+	</td>
+	<td>
+		<div>
+			<label>City</label>
+			<input type="text" name="data[SpecialtyContact][city]"/>
+		</div>
+	</td>
+</tr>
+<tr>
+	<td>
+		<div>
+			<label>State</label>
+			<input type="text" name="data[SpecialtyContact][state]"/>
+		</div>
+	</td>
+	<td>
+		<div>
+			<label>Zip Code</label>
+			<input type="text" name="data[SpecialtyContact][zipcode]"/>
+		</div>
+	</td>
+</tr>
+</tbody>
+
+<tr>
+	<td colspan=2>
+		<br/>
+		<b>Products:</b><br/>
+		<input type="checkbox" name="data[SpecialtyContact][product_type_ids]">All<br/>
+		<table width="100%">
+		<? $i = 0; foreach($all_products as $p) { ?>
+		<? if($i++ % 2 == 0) { ?>
+			<? if($i > 1) { ?></tr><? } ?>
+			<tr>
+		<? } ?>
+			<td>
+				<input type="checkbox" name="data[SpecialtyContact][product_type_ids]" value="<?= $p['Product']['product_type_id'] ?>"> 
+					<?= $p['Product']['name'] ?>
+			</td>
+		<? } ?>
+		</table>
+	</td>
+</tr>
+
+<?
+if (!empty($subjects))
+{
+?>
+<tr>
+	<td colspan=2>
+		<b>Subjects:</b><br/>
+		<table width="100%">
+		<? $i = 0; foreach($subjects as $s) { ?>
+		<? if($i++ % 2 == 0) { ?>
+			<? if($i > 1) { ?></tr><? } ?>
+			<tr>
+		<? } ?>
+			<td>
+				<input type="checkbox" name="data[SpecialtyContact][subjects][]" value="<?= $s['GalleryCategory']['browse_node_id'] ?>">
+					<?= $s['GalleryCategory']['browse_name'] ?>
+			</td>
+		<? } ?>
+		</table>
+	</td>
+</tr>
+<? } ?>
+
+<tr>
+	<td colspan=2>
+		<label class="bold">Comments:</label>
+		<textarea style="width: 100%;" rows=5></textarea>
+	</td>
+</tr>
+
+<tr>
+	<td colspan=2 align="center">
+		<hr/>
+		<input type="image" src="/images/buttons/Submit-grey.gif"/>
+	</td>
+</tr>
+
+</table>
+</form>

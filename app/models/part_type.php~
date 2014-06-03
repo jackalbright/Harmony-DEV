@@ -1,0 +1,10 @@
+<?php
+class PartType extends AppModel {
+
+	var $name = 'PartType';
+	var $useDbConfig = 'default_legacy';
+	var $useTable = 'part_type';
+	var $primaryKey = 'part_id';
+
+}
+?>

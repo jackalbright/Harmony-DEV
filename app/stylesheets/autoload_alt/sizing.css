@@ -1,0 +1,50 @@
+/* So stuff can be resized, etc easily, related objects grouped together */
+
+
+/* ******************* */
+#header_row #header_left
+{
+       margin: 0px;
+       width: 225px;
+}
+
+#header_row #header_right
+{
+       margin: 0px;
+       width: 225px;
+}
+
+#contentWrapper
+{
+	/*
+	border-left: solid #CECECE 1px;
+	border-right: solid #CECECE 1px;
+	*/
+	margin-left: 225px;
+	margin-right: 225px;
+}
+
+/* ******************* */
+
+#header_row
+{
+	height: 175px;
+}
+
+#leftbar
+{
+}
+
+#sidebar_left
+{
+	width: 225px;
+}
+
+#sidebar_right
+{
+	width: 225px;
+}
+
+
+
+/* ******************************* */

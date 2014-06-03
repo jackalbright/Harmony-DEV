@@ -1,0 +1,19 @@
+<div id="quantity_container">
+
+<?
+$discounted = ($build['retail_price_list']['total'] > $build['quantity_price_list']['total']);
+
+?>
+<div>
+
+<? if(empty($build['cart_item_id'])) { ?>
+<input type="image" align="middle" alt="Add to Cart" src="/images/buttons/Add-to-Cart.gif" onClick="return assertMinimum('<?= $build['Product']['minimum'] ?>');"/>
+<? } else { ?>
+<input type="image" align="middle" alt="Update Cart" src="/images/buttons/Update-Cart.gif" onClick="return assertMinimum('<?= $build['Product']['minimum'] ?>');"/>
+<? } ?>
+
+	<br/>
+	<?= $this->element("build/estimate"); ?>
+</div>
+
+</div>

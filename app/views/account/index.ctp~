@@ -1,0 +1,105 @@
+<div>
+	<fieldset class="account_page_box">
+		<legend>Orders:</legend>
+		<div>
+			<div class="hidden account_page_task">
+				<a href="">
+				<img src="/images/icons/arrow.png" height="30">
+				Order Status
+				</a>
+			</div>
+			<div class="account_page_task">
+				<a href="/cart"><img src="/images/icons/shopping_cart.gif" height="30"></a>
+				<a href="/cart">View Cart</a>
+			</div>
+			<div class="account_page_task">
+				<?
+					$reorder = (!empty($malysoft) || !empty($hdtest));
+				?>
+					<a href="/purchases"><img src="/images/icons/previous_orders.jpg" height="30"></a>
+					<a href="/purchases">Order History / Reorder</a> 
+			</div>
+		</div>
+	</fieldset>
+
+	<fieldset class="account_page_box">
+		<legend>Your Images:</legend>
+		<div>
+			<div class="account_page_task">
+				<a href="/custom_images/add"><img src="/images/icons/arrow.png" height="30"></a>
+				<a href="/custom_images/add">Upload Your Images</a>
+			</div>
+
+			<div class="account_page_task">
+				<a href="/custom_images/add"><img src="/images/icons/previous_art.jpg" height="30"></a>
+				<a href="/custom_images/add">View Saved Images</a>
+			</div>
+			<div class="account_page_task">
+				<a href="/saved_items"><img src="/images/icons/saved_items.png" height="30"></a>
+				<a href="/saved_items">View Saved Designs</a>
+			</div>
+		</div>
+	</fieldset>
+
+	<fieldset class="account_page_box">
+		<legend>Account Management:</legend>
+		<div>
+			<div class="account_page_task">
+				<a href="/account/edit"><img src="/images/icons/personal_info.jpg" height="30"></a>
+				<a href="/account/edit">Personal Information</a>
+			</div>
+			<div class="account_page_task">
+				<a href="/account/address_select"><img src="/images/icons/address_book.jpg" height="30"></a>
+				<a href="/account/address_select">Address Book</a>
+			</div>
+			<div class="account_page_task">
+				<a href="/account/payment_select"><img src="/images/icons/payment_info.jpg" height="30"></a>
+				<a href="/account/payment_select">Payment Methods</a>
+			</div>
+			<div class="account_page_task" valign="middle">
+				<a href="/account/change_password"><img valign="top" src="/images/icons/change_password.jpg" height="30"></a>
+				<a href="/account/change_password">Change Password</a>
+			</div>
+		</div>
+	</fieldset>
+
+
+
+</div>
+
+
+
+<div id="account_index" class="hidden account customer index account_index">
+<hr/>
+
+
+<p>
+Hello, <?= $customer['First_Name'] ?>!
+</p>
+
+<div class="clear"></div>
+
+<table>
+<tr>
+	<td colspan=2 align="right">
+		<a href="/account/logout">Logout</a>
+	</td>
+</tr>
+<tr>
+	<td valign=top>
+		<?= $this->element("account/account"); ?>
+	</td>
+	<td valign=top>
+		<?= $this->element("account/past_orders"); ?>
+	</td>
+</tr>
+<tr>
+	<td valign=top>
+		<?= $this->element("account/my_images"); ?>
+	</td>
+	<td valign=top>
+		<?= $this->element("account/cart"); ?>
+	</td>
+</tr>
+</table>
+</div>

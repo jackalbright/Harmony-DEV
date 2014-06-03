@@ -1,0 +1,81 @@
+<?php
+class CustomImage extends AppModel {
+
+	var $name = 'CustomImage';
+	var $useTable = 'custom_image';
+	var $primaryKey = 'Image_ID';
+
+#	var $validate = array(
+#		'Title'=>array(
+#			'rule'=>'notEmpty',
+#			'required'=>true,
+#		),
+#	);
+
+	var $belongsTo = array(
+		'Customer'=>array(
+			'className'=>'Customer',
+			'foreignKey'=>'Customer_ID',
+		),
+
+	);
+	
+	function moveAnonymousImages($session_id, $customer_id)
+	{
+		############return; # DONT DO THIS AUTOMATICALLY ANY MORE...
+		# DO this automatically, so we link their image to their account in case they sign up somewhere. so we can approve their image, send email, etc.
+
+		#error_log("SID=$session_id, CID=$customer_id");
+		if (!$customer_id)
+		{
+			error_log("NO CUSTOMER ASSIGNED TO PASSED SESSION $session_id..... WONT MOVE!");
+			return;
+		}
+		#$images = $this->findAll("CustomImage.session_id = '$session_id' AND CustomImage.customer_id IS NULL");
+		$images = $this->findAll("CustomImage.session_id = '$session_id'");
+
+		foreach($images as $image)
+		{
+			$this->saveImage($image, $session_id, $customer_id);
+		}
+	}
+
+	function saveImage($image, $session_id, $customer_id)
+	{
+		$new_image = $image;
+
+		$new_image['CustomImage']['Customer_ID'] = $customer_id;
+		$image_parts = split("/", $image['CustomImage']['Image_Location']);
+		$image_file = $image_parts[count($image_parts)-1];
+		$new_image['CustomImage']['Image_Location'] = "/images/custom/customers/$customer_id/$image_file";
+		$new_image['CustomImage']['display_location'] = "/images/custom/customers/$customer_id/display/$image_file";
+		$new_image['CustomImage']['thumbnail_location'] = "/images/custom/customers/$customer_id/thumbs/$image_file";
+
+		if (!file_exists(APP."/webroot".dirname($new_image['CustomImage']['Image_Location']))) { mkdir(APP."/webroot".dirname($new_image['CustomImage']['Image_Location']), 0755, 1); }
+		if(!file_exists(APP."/webroot".dirname($new_image['CustomImage']['display_location']))) { mkdir(APP."/webroot".dirname($new_image['CustomImage']['display_location']), 0755, 1); }
+		if(!file_exists(APP."/webroot".dirname($new_image['CustomImage']['thumbnail_location']))) { mkdir(APP."/webroot".dirname($new_image['CustomImage']['thumbnail_location']), 0755, 1); }
+
+		#error_log("MOVING IMAGE=".APP."/webroot".$image['CustomImage']['Image_Location']." TO " .APP."/webroot".$new_image['CustomImage']['Image_Location']);
+
+		if ($image['CustomImage']['Image_Location'] != $new_image['CustomImage']['Image_Location'])
+		{
+			rename(APP."/webroot".$image['CustomImage']['Image_Location'], APP."/webroot".$new_image['CustomImage']['Image_Location']);
+		}
+		if ($image['CustomImage']['display_location'] != $new_image['CustomImage']['display_location'])
+		{
+			rename(APP."/webroot".$image['CustomImage']['display_location'], APP."/webroot".$new_image['CustomImage']['display_location']);
+		}
+		if ($image['CustomImage']['thumbnail_location'] != $new_image['CustomImage']['thumbnail_location'])
+		{
+			rename(APP."/webroot".$image['CustomImage']['thumbnail_location'], APP."/webroot".$new_image['CustomImage']['thumbnail_location']);
+		}
+
+		$this->id = !empty($new_image['CustomImage']['Image_ID']) ? $new_image['CustomImage']['Image_ID'] : null;
+
+		#error_log("NEW_IM=".print_r($new_image,true));
+
+		$this->save($new_image);
+	}
+
+}
+?>

@@ -1,0 +1,46 @@
+<?
+$defaultRibbonID = !empty($build['options']['ribbonID']) ? $build['options']['ribbonID'] : 1;
+?>
+<div class="heigth: 400px; width: 400px; overflow: scroll;">
+		<div>
+		<? 
+		$ribbons_found = array();
+
+		$img_ribbons = $image->listRibbons();
+		if(count($img_ribbons)) {
+		?>
+		<?php
+			foreach ($img_ribbons as $record) {
+				$ribbon_code = preg_replace("/ /", "-", $record->name);
+				$ribbons_found[$ribbon_code] = true;
+				?>
+				<div class="left padded center" style="float: left; width: 80px;">
+				<label for="ribbon_<?= $record->id ?>">
+					<img src="/ribbons/<?= $ribbon_code ?>.png" height="50"/>
+					<br/>
+					<nobr><input type="radio" <?= $defaultRibbonID == $record->id ? "checked='checked'" : "" ?> id="ribbon_<?= $record->id ?>" value="<?= $record->id ?>" name="data[options][ribbonID]" onClick="updateBuild('ribbon');"><?= ucwords($record->name); ?></nobr>
+				</label>
+				</div>
+				<?
+			}
+		}
+
+			foreach ($ribbons as $record) {
+				$ribbon_code = preg_replace("/ /", "-", $record->color_name);
+				if (!empty($ribbons_found[$ribbon_code])) { continue; }
+				?>
+				<div class="left padded center" style="float: left; width: 80px;">
+				<label for="ribbon_<?= $record->ribbon_id ?>">
+					<img src="/ribbons/<?= $ribbon_code ?>.png" height="50"/>
+					<br/>
+					<nobr><input type="radio" <?= $defaultRibbonID == $record->ribbon_id ? "checked='checked'" : "" ?> id="ribbon_<?= $record->ribbon_id ?>" value="<?= $record->ribbon_id ?>" name="data[options][ribbonID]" onClick="updateBuild('ribbon');"><?= ucwords($record->color_name); ?></nobr>
+				</label>
+				</div>
+				<?
+			}
+			?>
+
+		</div>
+</div>
+<div class="clear"></div>
+

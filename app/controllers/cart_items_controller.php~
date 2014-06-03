@@ -1,0 +1,416 @@
+<?
+
+# Parent wrapper for various shared cart stuff...
+
+class CartItemsController extends AppController
+{
+	#var $uses = array("Product", "ProductPricing", "ProductPart", "GalleryImage", "CustomImage", "CustomizationOption", "ProductRecommendedQuote", "ImageRecommendedQuote","Quote","Tassel","Charm","Border","Ribbon","Frame","ContactInfo","ShippingPricePoint","CartItem","CreditCard",'Country','ShippingMethod');
+	# $uses is ignored here, either used in appcontroller or child controller
+
+	function clear_build()
+	{
+		$this->build = array();
+		$this->Session->write("Build", $this->build);
+	}
+
+	function clear_cart()
+	{
+		#$this->Session->write("shoppingCart", array());
+		$customer_id = $this->get_customer_id();
+		$session_id = $this->get_session_id();
+
+		$this->CartItem->deleteAll("customer_id = '$customer_id' OR session_id = '$session_id'");
+
+		$this->Session->delete("rush");
+		$this->Session->delete("rush_cost");
+		$this->Session->delete("rush_date");
+	}
+
+	function load_cart_data($cart_items)
+	{
+		#echo "X=".print_r($cart_items,true);
+		$shoppingCart = array();
+		$product_list = array();
+		$subtotal = 0;
+		$proofcost = !empty($this->config['proof_cost']) ? $this->config['proof_cost'] : 25; # Default.
+
+		foreach($cart_items as $cart_item)
+		{
+			$cartItem = array();
+			$parts = array();
+			if (is_object($cart_item))
+			{
+				$cartItem = get_object_vars($cart_item);
+				$parts = get_object_vars($cart_item->parts);
+			} else if (!empty($cart_item['CartItem'])) { 
+				$cartItem = $cart_item['CartItem'];
+				$parts = unserialize($cart_item['CartItem']['parts']);
+			}
+			$cartItem['parts'] = $parts;
+			$imageID = !empty($cartItem['parts']['customImageID']) ? $cartItem['parts']['customImageID'] : null;
+			$catalogNumber = !empty($cartItem['parts']['catalogNumber']) ? $cartItem['parts']['catalogNumber'] : null;
+			$galleryImage = $catalogNumber ? $this->GalleryImage->find("GalleryImage.catalog_number = '$catalogNumber'") : null;
+			$cartItem['GalleryImage'] = $galleryImage ? $galleryImage['GalleryImage'] : null;
+			$productCode = $cartItem['productCode'];
+			if ($productCode == 'B' && !empty($cartItem['parts']['charmID']) && $cartItem['parts']['charmID'] != 'None')
+			{
+				$productCode = 'BC';
+			}
+			if ($productCode == 'B' && (empty($cartItem['parts']['tasselID']) || $cartItem['parts']['tasselID'] == 'None'))
+			{
+				$productCode = 'BNT';
+			}
+			$product = $this->Product->find("code = '$productCode'");
+			$cartItem['Product'] = $product['Product'];
+			$customImage = $imageID ? $this->CustomImage->find("Image_ID = '$imageID'") : null;
+			$cartItem['CustomImage'] = $customImage ? $customImage['CustomImage'] : null;
+
+			if(empty($cartItem['proof']) || $cartItem['proof'] !== 'only')
+			{
+				$subtotal += $cartItem['quantity'] * $cartItem['unitPrice'];
+			} else {
+				$subtotal += $proof_cost;
+			}
+			if(!empty($cartItem['setupPrice']))
+			{
+				$subtotal += $cartItem['setupPrice'];
+			}
+
+
+			if(empty($product_list[$product['Product']['code']])) { $product_list[$product['Product']['code']] = 0; }
+			$product_list[$product['Product']['code']] += $cartItem['quantity'];
+
+			# LOAD OTHER STUFF
+			# Load quote if there...
+			$partsInfo = $this->load_parts_info($cartItem['parts']);
+
+			$shoppingCart[] = array_merge($cartItem, $partsInfo);
+		}
+		return array($shoppingCart, $subtotal, $product_list);
+	}
+
+	function load_parts_info($parts)
+	{
+		$info = array();
+		if (isset($parts['quoteID'])) {
+			$quote = $this->Quote->read(null, $parts['quoteID']);
+			$info['quote_info'] = $quote['Quote'];
+		}
+
+		if (isset($parts['customTassel'])) {
+			$tassel = $this->Tassel->read(null, $parts['customTassel']);
+			$info['tassel_info'] = $tassel['Tassel'];
+		} else if (isset($parts['tasselID'])) {
+			$tassel = $this->Tassel->read(null, $parts['tasselID']);
+			$info['tassel_info'] = $tassel['Tassel'];
+		}
+
+		if (isset($parts['customRibbon'])) {
+			$ribbon = $this->Ribbon->read(null, $parts['customRibbon']);
+			$info['ribbon_info'] = $ribbon['Ribbon'];
+		} else if (isset($parts['ribbonID'])) {
+			$ribbon = $this->Ribbon->read(null, $parts['ribbonID']);
+			$info['ribbon_info'] = $ribbon['Ribbon'];
+		}
+
+		if (isset($parts['customCharm'])) {
+			$charm = $this->Charm->read(null, $parts['customCharm']);
+			$info['charm_info'] = $charm['Charm'];
+		} else if (isset($parts['charmID'])) {
+			$charm = $this->Charm->read(null, $parts['charmID']);
+			$info['charm_info'] = $charm['Charm'];
+		}
+
+		if (isset($parts['customBorder'])) {
+			$border = $this->Border->read(null, $parts['customBorder']);
+			$info['border_info'] = $border['Border'];
+		} else if (isset($parts['borderID'])) {
+			$border = $this->Border->read(null, $parts['borderID']);
+			$info['border_info'] = $border['Border'];
+		}
+
+		if (isset($parts['frameID'])) {
+			$frame = $this->Frame->read(null, $parts['frameID']);
+			$info['frame_info'] = $frame['Frame'];
+		}
+
+		return $info;
+	}
+
+	function get_cart_items()
+	{
+		$db_cart_items = $this->get_cart();
+		list ($shoppingCart, $subtotal, $product_list) = $this->load_cart_data($db_cart_items);
+
+		list($ship_by_start, $ship_by_end, $rush_ship_by_start, $rush_ship_by_end) = $this->Product->get_shipment_times($product_list);
+		if(!empty($rush_ship_by_start))
+		{
+			$this->set("rush_ships_by_start", date("D M j", $rush_ship_by_start));
+		}
+		$this->set("ships_by_start", date("D M j", $ship_by_start));
+		$this->set("ships_by_end", date("D M j", $ship_by_end));
+
+		$ships_by_time = $this->Product->get_shipment_time($product_list);
+		$ships_by = date("D M j", $ships_by_time);
+
+		$this->set("ships_by_time", $ships_by_time);
+		$this->set("ships_by", $ships_by);
+
+		$country = "";
+		$is_po_pox = false;
+
+		$shipping_id = $this->Session->read("shipping_id");
+		#echo "SID=$shipping_id";
+
+		$is_po_box = false;
+		$country = 'US';
+		$zipCode = null;
+		$sessionZip = $this->Session->read("zipCode");
+		$sessionCountry = $this->Session->read("country");
+		if(!empty($sessionZip)) # Always use if there. Once they set address on checkout, will updated session vars.
+		{
+			$country = $sessionCountry;
+			$zipCode = $sessionZip;
+		} else if ($shipping_id) {
+			$shippingAddress = $this->ContactInfo->read(null, $shipping_id);
+			if(!empty($shippingAddress['ContactInfo']['Zip_Code']))
+			{
+				$country = $shippingAddress['ContactInfo']['Country'];
+				$zipCode = $shippingAddress['ContactInfo']['Zip_Code'];
+				$is_po_box = !empty($shippingAddress['ContactInfo']['is_po_box']) ? $shippingAddress['ContactInfo']['is_po_box'] : false;
+				#echo "SHIP=$zipCode";
+			}
+		}
+
+		$this->set("subtotal", $subtotal);
+
+		$rush_cost = $this->Session->read("rush_cost");
+
+		$grandTotal = 0;
+		$shippingTotal = 0;
+
+		$shipping_method_id = $this->Session->read("shipping_method_id");
+
+		$countries = $this->Country->findAll(" can_order = 'Yes' ", null, 'name ASC');
+		$countries_list = Set::combine($countries, '{n}.Country.iso_code', '{n}.Country.name');
+		$this->set("countries_map", $countries_list);
+		$this->set("zipCode", $zipCode);
+		$this->set("country", $country);
+
+		$customer = $this->get_customer();
+
+		if ($zipCode)
+		{
+			$availableShippingOptions = $this->ShippingPricePoint->calculate_shipping_options_list(array($zipCode, $country), $product_list, $subtotal, !empty($customer['is_wholesale']));
+			if(empty($availableShippingOptions)) { 
+				return array($shoppingCart, $subtotal, $product_list);
+			}
+			if(empty($shipping_method_id)) # JUST starting out, no shipping method set. Assume slowest.
+			{
+				$ixs = array_keys($availableShippingOptions);
+				$shipping_method_id = $availableShippingOptions[$ixs[0]]['shippingMethod']['shippingMethodID'];
+			}
+			# Should AUTOMATICALLY get just the cheapest for each day.
+
+			#print_r($shippingOptions);
+
+			# Get days for all shipping methods since we may be changing carriers when changing zip codes (don't want to lose speed)
+			$allShippingMethods = $this->ShippingMethod->findAll();
+			$shippingMethodDays = Set::combine($allShippingMethods, '{n}.ShippingMethod.shippingMethodID', '{n}.ShippingMethod.dayMax');
+			#error_log("SMEDAYS=".print_r($shippingMethodDays,true));
+
+
+			$found_shipping_method = false;
+			foreach($availableShippingOptions as $shippingOption)
+			{
+				$smid = $shippingOption['shippingMethod']['shippingMethodID'];
+				$name = $shippingOption['shippingMethod']['name'];
+				$dayMax = $shippingOption['shippingMethod']['dayMax'];
+				#error_log("NAME=$name = $smid");
+				#error_log("AVAIL+SMID=$smid, CURRENT_SET=$shipping_method_id");
+				if($shipping_method_id == $smid || (!empty($shippingMethodDays[$shipping_method_id]) && $dayMax == $shippingMethodDays[$shipping_method_id]))
+				{
+					$this->Session->write("shipping_method_id", $smid);
+					$found_shipping_method = true;
+					$shippingTotal = $shippingOption[0]['cost'];
+					$this->set("shippingTotal", $shippingTotal);
+					$this->set("shippingOption", $shippingOption);
+
+					if(!empty($shippingOption[0]['original_cost']))
+					{
+						$this->set("shippingTotalOrig", $shippingOption[0]['original_cost']);
+					}
+
+					$grandTotal = $subtotal + $shippingOption[0]['cost'] + $rush_cost;
+					$this->set("grandTotal", $grandTotal);
+				}
+			}
+			if(empty($found_shipping_method) &&!empty($availableShippingOptions)) # Lost because change in address.
+			# Need to pick first one in list.
+			{
+				$ixs = array_keys($availableShippingOptions);
+				$shippingOption = $availableShippingOptions[$ixs[0]];
+				$smid = $shippingOption['shippingMethod']['shippingMethodID'];
+				$this->Session->write("shipping_method_id", $smid);
+				$shippingTotal = $shippingOption[0]['cost'];
+				$this->set("shippingTotal", $shippingTotal);
+				$this->set("shippingOption", $shippingOption);
+
+				if(!empty($shippingOption[0]['original_cost']))
+				{
+					$this->set("shippingTotalOrig", $shippingOption[0]['original_cost']);
+				}
+
+				$grandTotal = $subtotal + $shippingOption[0]['cost'] + $rush_cost;
+				$this->set("grandTotal", $grandTotal);
+			}
+
+			#echo "ASO=".print_r($availableShippingOptions,true);
+
+			$this->set("shippingOptions", $availableShippingOptions);
+
+			list($rush_dates, $fastestShippingMethodID) = $this->Product->get_rush_dates($availableShippingOptions, $product_list, $db_cart_items);
+			$this->set("rush_shipping_method_id", $fastestShippingMethodID);
+			# date=>cost
+
+			$this->set("rush_dates", $rush_dates);
+
+			$rush_date = $this->Session->read("rush_date");
+
+			if(!empty($rush_date) && empty($rush_dates[$rush_date])) # Not available any more, ie qty changed.
+			{
+				if(empty($rush_dates)) # None available any more.
+				{
+					$this->Session->write("rush_cost", null);
+					$this->Session->write("rush_date", null);
+					$rush_date = null;
+				} else { # Set to nearest rush date.
+					$nearest = null;
+					$rds = strtotime($rush_date);
+					$dates = array_keys($rush_dates);
+					foreach($dates as $date)
+					{
+						$ds = strtotime($date);
+						if(empty($nearest) || (abs($rds-$ds) > abs($rds-$nearest)))
+						{
+							$nearest = $ds;
+						}
+					}
+					$rush_date = date("Y-m-d", $nearest);
+					$rush_cost = $rush_dates[$rush_date];
+					$this->Session->write("rush_cost", $rush_cost);
+					$this->Session->write("rush_date", $rush_date);
+				}
+			}
+			$this->set("rush_date", $rush_date);
+			$this->set("rush_cost", $this->Session->read("rush_cost"));
+
+			# If it's a bigger order, we MAY have another day as an option.
+			# Loop from fastest normal day to fastest rush day.
+
+			# Get soonest day
+
+		}
+
+		$smid = $this->Session->read("shipping_method_id");
+		# FORCE defaultShippingMethod to be in list of options.... otherwise no options will show up....
+
+		if (!empty($availableShippingOptions)) # May not have if no zip code yet!
+		{
+			foreach($availableShippingOptions as $shippingOption)
+			{
+				if ($smid == $shippingOption['shippingMethod']['shippingMethodID'])
+				{
+					#print_r($shippingOption);
+					$delivery_days = $dayMax = $shippingOption['shippingMethod']['dayMax'];
+					$dayMin = $shippingOption['shippingMethod']['dayMin'];
+					$hour_of_day = date("H", time());
+					$delivery_time = $ships_by_time;
+
+					while($delivery_days > 0)
+                                        {
+                                                        $delivery_time += 24*60*60;
+                                                        $delivery_day = date("D", $delivery_time);
+                                                        if ($delivery_day != "Sun" && $delivery_day != "Sat") { $delivery_days--; }
+                                        }
+
+					if(!empty($rush_date))
+					{
+						$this->set("delivery_end", date("D M j", strtotime($rush_date)));
+					} else {
+						$this->set("delivery_end", date("D M j", $delivery_time));
+					}
+					$this->set("shippingOption", $shippingOption);
+				}
+			}
+		}
+		$this->set("defaultShippingMethod", $smid);
+
+		########################################################
+
+
+
+		#
+		#
+		#
+		#
+		####################################################################
+
+		return array($shoppingCart, $subtotal, $product_list);
+	}
+
+	function admin_index() {
+		$this->CartItem->recursive = 0;
+		$this->set('cartItems', $this->paginate());
+	}
+
+	function admin_view($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid CartItem.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$this->set('cartItem', $this->CartItem->read(null, $id));
+	}
+
+	function admin_add() {
+		if (!empty($this->data)) {
+			$this->CartItem->create();
+			if ($this->CartItem->save($this->data)) {
+				$this->Session->setFlash(__('The CartItem has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The CartItem could not be saved. Please, try again.', true));
+			}
+		}
+	}
+
+	function admin_edit($id = null) {
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid CartItem', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if (!empty($this->data)) {
+			if ($this->CartItem->save($this->data)) {
+				$this->Session->setFlash(__('The CartItem has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The CartItem could not be saved. Please, try again.', true));
+			}
+		}
+		if (empty($this->data)) {
+			$this->data = $this->CartItem->read(null, $id);
+		}
+	}
+
+	function admin_delete($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for CartItem', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if ($this->CartItem->del($id)) {
+			$this->Session->setFlash(__('CartItem deleted', true));
+			$this->redirect(array('action'=>'index'));
+		}
+	}
+}
+?>

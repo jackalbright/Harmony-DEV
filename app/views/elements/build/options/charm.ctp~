@@ -1,0 +1,112 @@
+<?
+$defaultCharmID = !empty($build['options']['charmID']) ? $build['options']['charmID'] : null;
+?>
+<? if($build['Product']['code'] == 'PW') { ?>
+	<p class="note">Please Note: The small ring shown on the charms is removed before placement in your paperweight.</p>
+<? } ?>
+<div class="left" align="left"> <a href="Javascript:void('charm');" onClick="showBuildStepNext('<?= $option_code ?>');"><img src="/images/buttons/small/Next-green.gif"></a> </div>
+
+<div class="clear" style="height: 350px; overflow: scroll;">
+			<script>
+			document.observe('dom:loaded', function() {
+				window.charms = {};
+			<? foreach($charms as $record) { ?>
+				window.charms['charm_image_<?= $record->charm_id ?>'] = '<?= $record->graphic_location ?>';
+			<? } ?>
+			});
+			</script>
+
+				<div class="thin_padded center" style="float: left; height: 70px;"
+					onClick="selectCharm('-1','charm'); check_tassel(); updateBuild('charm'); update_build_review(); update_build_pricing(); <?= in_array($build['Product']['code'],array('BC')) ? "setProduct('B','charm');":"" ?>"
+				>
+
+				<div class="charm_div" id="charm_div_-1">
+					<img id="charm_image_-1" title="<?= ucwords($record->name) ?>" src="/images/icons/no-charm-box.png" alt="Loading..."/>
+					<br/>
+					<nobr><input id="charm_-1" style="display: none;" type="radio" name="data[options][charmID]" <?= empty($defaultCharmID) ? "checked='checked'" : "" ?> value="-1">
+						No charm
+					</nobr>
+				</div>
+				</div>
+
+		<? 
+		$img_charms = !empty($image) ? $image->listCharms() : array();
+		if(count($img_charms))
+		{
+		?>
+			<? 
+			$found = array();
+			foreach($img_charms as $record) {
+				$found[$record->id] = true;
+				?>
+				<div class="thin_padded center" style="float: left; height: 70px;"
+					onClick="selectCharm('<?= $record->id ?>','charm'); check_tassel(); updateBuild('charm'); update_build_review(); update_build_pricing(); <?= in_array($build['Product']['code'],array('B','BNT')) ? "setProduct('BC','charm');":"" ?>"
+				>
+
+				<div class="charm_div" id="charm_div_<?= $record->id ?>">
+					<img id="charm_image_<?= $record->id ?>" title="<?= ucwords($record->name) ?>" src="" alt="Loading..."/>
+					<br/>
+					<nobr><input id="charm_<?= $record->id ?>" style="display: none;" type="radio" name="data[options][charmID]" <?= $defaultCharmID == $record->id ? "checked='checked'" : "" ?> value="<?= $record->id ?>" 
+					/><?= ucwords($record->name); ?></nobr>
+				</div>
+				</div>
+			<? } ?>
+		<? } ?>
+
+			<?
+			foreach($charms as $record) {
+				if(!empty($found[$record->charm_id])) { continue; }
+				?>
+				<div class="thin_padded center" style="float: left; height: 70px;"
+					onClick="$('charm_<?= $record->charm_id ?>').checked='checked'; check_tassel(); updateBuild('charm'); update_build_review(); update_build_pricing(); <?= in_array($build['Product']['code'], array('B','BNT')) ? "setProduct('BC','charm');":"" ?>"
+				>
+				<div class="charm_div" id="charm_div_<?= $record->charm_id ?>">
+					<img height="50" title="<?= ucwords($record->name) ?>" id="charm_image_<?= $record->charm_id ?>" src="" alt="Loading..." onClick="selectCharm('<?= $record->charm_id ?>','charm'); check_tassel(); updateBuild('charm'); update_build_review(); update_build_pricing(); <?= in_array($build['Product']['code'], array('B','BNT')) ? "setProduct('BC','charm');":"" ?>"/>
+					<br/>
+					<nobr><input style="display: none;" id="charm_<?= $record->charm_id ?>" type="radio" name="data[options][charmID]" <?= $defaultCharmID == $record->charm_id ? "checked='checked'" : "" ?> value="<?= $record->charm_id ?>" 
+					/><?= ucwords($record->name); ?></nobr>
+				</div>
+				</div>
+			<? } ?>
+
+		<style>
+		div.charm_div
+		{
+			float: left;
+			cursor: pointer;
+			border: solid 1px #CCC;
+			margin: 2px auto;
+		}
+
+		div.selected_charm
+		{
+			border: solid #66CC66 4px;
+		}
+		</style>
+
+		<script>
+		function selectCharm(charm_id,step)
+		{
+			$('charm_'+charm_id).checked = 'checked';
+			j('.charm_div').removeClass("selected_charm");
+			j('#charm_div_'+charm_id).addClass("selected_charm");
+			if(charm_id == '-1')
+			{
+				var prod =$('prod').value;
+				if (prod == 'BC') {
+					setProduct('B',step);
+				}
+			}
+		}
+		<? if(!empty($defaultCharmID)) { ?>
+		selectCharm('<?= $defaultCharmID ?>');
+		<? } else { ?>
+		selectCharm('-1');
+		<? } ?>
+		</script>
+
+
+
+</div>
+<div class="clear"></div>
+

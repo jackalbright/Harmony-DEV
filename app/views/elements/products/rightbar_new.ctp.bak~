@@ -1,0 +1,35 @@
+<?
+if(!isset($product_option_field)) { $product_option_field = ""; }
+
+?>
+<div style="background-color: #EEEEEE; border: #CCC solid 1px; padding: 5px;">
+
+<?= $hd->product_element("products/select_button", $product['Product']['prod'], array('product'=>$product,'parent_product'=>$parent_product,'related'=>$related_products,'rightbar_template'=>true,'product_option_field'=>$product_option_field,'default_product_option_value'=>$default_product_option_value)); ?>
+<div class="clear"></div>
+<br/>
+<a class="bold" href="Javascript:void(0);" onClick="selectTab('pricing');">Pricing Calculator</a>
+<div class="aslowas">
+As low as <?= sprintf("$%.02f", $minimum_price); ?> ea / <?= $minprice_qty ?>
+</div>
+<br/>
+<div class="minimum bold">
+Minimum: <?= $product['Product']['minimum']?>
+</div>
+
+</div>
+<?
+#echo $this->element("products/calculator");
+#echo $ajax->Javascript->event('window','load',
+#	$ajax->remoteFunction( array('url'=>"/products/calculator/".$product['Product']['code'], 'update'=>"pricing_calculator_holder")));
+#<div id="pricing_calculator_holder">Calculator loading.... Please wait.</div>
+?>
+
+<? if(count($product['Testimonials'])) { ?>
+<br/>
+<div id="testimonials">
+<div class="sidebar_header">Reviews:</div>
+	<div class="sidebar_content">
+	<?= $this->element("products/testimonials", array('testimonials'=>$product['Testimonials'])); ?>
+	</div>
+</div>
+<? } ?>

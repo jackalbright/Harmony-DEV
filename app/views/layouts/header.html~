@@ -1,0 +1,9 @@
+<html>
+<head>
+	<base href="http://www.harmonydesigns.com/"/>
+	<title><?= $subject ?></title>
+</head>
+<body>
+<div>
+	<img src="http://<?=$_SERVER['HTTP_HOST']?>/images-shared/large-logo.gif">
+</div>

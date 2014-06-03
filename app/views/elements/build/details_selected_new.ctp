@@ -1,0 +1,174 @@
+<div id="build_preview_options">
+<?
+$discounted = ($build['retail_price_list']['total'] > $build['quantity_price_list']['total']);
+?>
+
+<? if(empty($summary)) { ?>
+<div class="preview_option">
+<div class="right_align">
+<? if($current_step != 'cart') { ?>
+<input type="image" name="action" src="/images/buttons/Next.gif"/>
+<? } else { ?>
+	<? if(!empty($build['cart_item_id'])) { ?>
+		<input type="image" name="action" src="/images/buttons/Update-grey.gif"/>
+	<? } else { ?>
+		<input type="image" name="action" src="/images/buttons/Add-to-Cart.gif"/>
+	<? } ?>
+<? } ?>
+</div>
+
+<? if(isset($build['quantity'])) { ?>
+	<div class="preview_option_title"><a href="/products/pricing_chart/<?= $build['Product']['code'] ?>" rel="shadowbox;player=iframe;width=500;height=500">Pricing</a></div>
+	<div class="preview_option_quantity preview_option_value">
+		<table cellpadding=0 cellspacing=2>
+		<? if(!empty($build['quantity_price_list'])) { ?>
+			<tr>
+				<td>&nbsp;</td>
+				<td> <?= sprintf("$%.02f", $build['quantity_price_list']['base']); ?> </td>
+				<td> base </td>
+			</tr>
+			<?
+			foreach($build['quantity_price_list'] as $option => $option_cost)
+			{
+				if ($option == 'base' || $option == 'total') { continue; }
+			?>
+			<tr>
+				<td>+</td>
+				<td>
+					<?= sprintf("$%.02f", $option_cost); ?>
+				</td>
+				<td> 
+					<a href="/build/step/<?= $option ?>"><?= $option ?></a> (optional)
+				</td>
+			</tr>
+			<? } ?>
+			</tr>
+			<? if ($build['quantity_price_list']['base'] < $build['quantity_price_list']['total']) { ?>
+			<tr>
+				<td>&nbsp;</td>
+				<td> <?= sprintf("$%.02f", $build['quantity_price_list']['total']); ?> </td>
+				<td> unit price </td>
+			</tr>
+			<? } ?>
+		<? } ?>
+		<tr>
+			<td>&nbsp;</td>
+			<td>
+				<input type="text" name="quantity" value="<?= $build['quantity'] ?>" size="4"/>
+			</td>
+			<td>
+				qty. (min: <?= $build["Product"]['minimum'] ?>)
+			</td>
+		</tr>
+		<? if (!empty($build['quantity_price'])) { ?>
+		<tr>
+			<td colspan=3><hr/>
+			</td>
+		</tr>
+
+		<? if($discounted) { ?>
+		<tr>
+			<td>&nbsp;</td>
+			<td class="bold">
+				<div style="text-decoration: line-through;"><?= sprintf("$%.02f", $build['quantity'] * $build['retail_price_list']['total']); ?></div>
+			</td>
+			<td class="bold">
+			list price
+			</td>
+		</tr>
+		<? } ?>
+		<tr>
+			<td>&nbsp;</td>
+			<td>
+				<b style="color: red;"><?= sprintf("$%.02f", $build['quantity'] * $build['quantity_price_list']['total']); ?></b>
+			</td>
+			<td>
+				your cost
+			</td>
+		</tr>
+		<? if ($discounted) { ?>
+		<tr>
+			<td>&nbsp;</td>
+			<td align="right">
+				(<?= sprintf("%u%%", ($build['retail_price_list']['total'] - $build['quantity_price_list']['total']) / $build['retail_price_list']['total']*100); ?></b>
+			</td>
+			<td>
+				off list price)
+			</td>
+		</tr>
+		<? } ?>
+		<? } ?>
+		<? if(!empty($stamp_surcharge['StampSurcharge']) && preg_match("/real/", $build["Product"]['image_type'])) { ?>
+		<tr>
+			<td colspan=3>
+		<i>Note: 
+		Prices may be slightly higher for <a href="/info/about-us.php#StampPrices">rare and high value stamps.</a></i>
+			</td>
+		</tr>
+		<? } ?>
+		</table>
+	</div>
+</div>
+<? } ?>
+
+<? } ?>
+
+<? if(empty($no_summary)) { ?>
+
+<?
+$steps = array();
+foreach($options as $option)
+{
+	$option_name = $option['Part']['part_code'];
+	$step_file = $option['Part']['part_code'];
+	$step_title = $option['Part']['part_name'];
+	$steps[$step_file] = $step_title;
+}
+$steps['comments'] = 'Comments';
+
+foreach($steps as $step_file => $step_title) { 
+	$step_filename = dirname(__FILE__)."/steps/{$step_file}.ctp";
+	if (!file_exists($step_filename) && !file_exists($product_step_filename)) { continue; }
+?>
+
+<div class="preview_option preview_option_<?=$step_file ?> <?= $current_step == $step_file ? "preview_option_selected" : "" ?>">
+
+<table width="100%" cellpadding=0 cellspacing=0>
+<tr>
+<td align="left">
+		<div class="preview_option_title"><?= $step_title ?></div>
+</td>
+<td align="right">
+		<a href="/build/step/<?= $step_file ?>">Change</a>
+</td>
+</tr>
+</table>
+	<div class="preview_option_value_<?=$step_file?> preview_option_value">
+	<? if (isset($build['options'][$step_file])) { ?>
+		<?= $this->element("build/details/$step_file"); ?>
+	<? } else { ?>
+		<i>Not specified</i>
+		<br/>
+	<? } ?>
+	</div>
+</div>
+
+<? } ?>
+
+<? } ?>
+
+<? if(empty($summary)) { ?>
+<div class="right_align">
+<? if($current_step != 'cart') { ?>
+<input type="image" name="action" src="/images/buttons/Next.gif"/>
+<? } else { ?>
+	<? if(!empty($build['cart_item_id'])) { ?>
+		<input type="image" name="action" src="/images/buttons/Update-grey.gif"/>
+	<? } else { ?>
+		<input type="image" name="action" src="/images/buttons/Add-to-Cart.gif"/>
+	<? } ?>
+<? } ?>
+</div>
+<? } ?>
+
+</div>

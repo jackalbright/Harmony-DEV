@@ -1,0 +1,284 @@
+<div class="sidebar_block" id="">
+	<h3> <?= $parent_product['Product']['short_name'] ?> Pricing &amp; Shipping Calculator </h3>
+	<br/>
+<table width="100%">
+<tr>
+<td width="50%" valign="top">
+	<? if(in_array($prod, array('B','BC','BNT'))) { ?>
+	<p class="">
+		If you would like printing on the back, please request a <a href="/quote_requests/add/<?= $prod ?>">written price quote</a>
+
+	</p>
+	<? } ?>
+
+	<div class="">
+
+	<script>
+	//var product_pricing = new Array();
+
+	<? foreach($product['ProductPricing'] as $pricing) { ?>
+	//product_pricing[<?= $pricing['quantity'] ?>] = <?= sprintf("%.02f", $pricing['price']) ?>;
+	<? } ?>
+
+	</script>
+
+	<? if (!empty($isNotAjax)) { ?>
+		<?= $form->create("Product", array('url'=>"/products/calculator/$prod")); ?>
+	<? } else { ?>
+		<? echo $ajax->form("calculator/$prod",'post', array('model'=>'Product','enctype'=>'multipart/form-data','name'=>'pricingForm','id'=>'pricingForm','update'=>'pricing_calculator_holder')) ?>
+	<? } ?>
+	<? #,'onSubmit'=>"assertMinimum('".$product['ProductPricing'][0]['quantity']."'); return false;")); 
+	?>
+
+	<? if ($product_option_field != "productCode") { ?>
+		<input type="hidden" name="productCode" id="productCode" value="<?= $prod ?>"/>
+	<? } ?>
+
+	<table border=0 id="pricing_calculator" width="100%">
+	<? if (count($related_products) > 1) { ?>
+	<tr>
+		<th>
+				<label class="" for="productCode">Select a style:</label>
+		</th>
+		<td colspan=3>
+				<select style="width: 300px;" id="<?= $product_option_field ?>" name="<?= $product_option_field ?>" class="required" XonChange="selectTab(this.value, 'gtab'); $('<?= $product_option_field ?>_hidden').value = this.value;">
+					<? foreach($related_products as $rp) { ?>
+					<option <?= $rp['Product']['code'] == $prod ? "selected='selected'" : "" ?> value="<?= $rp['Product']['code'] ?>"><?= $rp['Product']['pricing_name'] ?><?= !empty($rp['Product']['pricing_description']) ? " &mdash; ".$rp['Product']['pricing_description'] : "" ?></option>
+					<? } ?>
+				</select>
+		</td>
+	</tr>
+	<? } ?>
+
+
+	<tr>
+		<th valign=top style="width: 25%">
+			Quantity:
+		</th>
+		<td colspan=1 align="left" width="25%">
+			<input id='quantity_calc' align="right" type="text" name="data[Product][quantity]" value="<?= !empty($quantity) ? $quantity : null ?>" size="4" onChange="var hidden = $('quantity_hidden'); var addtocart = $('quantity'); if(hidden) { hidden.value = this.value; } else if (addtocart) { addtocart.value = this.value; }"/>
+			<!-- return assertMinimum('<?= $product['ProductPricing'][0]['quantity'] ?>');"/> -->
+			<br/>
+			Min: <?= $product['Product']['minimum'] ?>
+		</td>
+		<? if(!empty($each_total)) { ?>
+		<td width="25%">
+			x $<span id="unit_price"><?= sprintf("%.02f", $each_total); ?></span>
+			<br/>
+			Price ea.
+		</td>
+		<? if(!empty($subtotal)) { ?>
+		<td align="right" width="25%">
+			=
+			<? if (!empty($savings_total) && $savings_total > 0) { ?>
+			<span style="text-decoration: line-through; "><?= sprintf("$%.02f", $subtotal + $savings_total); ?></span>
+			<? } ?>
+			<span id="subtotal" style="<? if(!empty($savings_total) && $savings_total > 0) { echo "color: red;"; } ?>"><?= sprintf("$%.02f", $subtotal); ?></span>
+			<br/>
+			<? if ($savings_total > 0) { echo sprintf(" (%u%% off)", ($savings_total/$subtotal*100)); } ?>
+		</td>
+		<? } ?>
+	</tr>
+	<? } ?>
+	<tr>
+		<td colspan=4>
+			<? if(!empty($next_tier)) { ?>
+				Save more when you order <?= $next_tier ? "$next_tier or " : ""?>more.
+			<? } ?>
+		</td>
+	</tr>
+
+	<? if (false && !$product['Product']['is_stock_item']) { ?>
+	<? $i = 0; foreach($product['ProductPart'] as $part) { 
+		if ($part['optional'] != 'yes' || $part['Part']['price'] <= 0) { continue; }
+	?>
+	<tr>
+		<th valign="top">
+		<? if ($i == 0) { ?>
+		Options:
+		<? } else { ?>
+		&nbsp;
+		<? } ?>
+		</th>
+			<td>
+				<?= $part['Part']['part_name'] ?>: 
+				<input type="radio" name="data[Product][options][<?= $part['Part']['part_code'] ?>]" value="1" <?= !empty($this->data["Product"]['options'][$part['Part']['part_code']]) ? "checked='checked'" : "" ?>/> Yes
+				<input type="radio" name="data[Product][options][<?= $part['Part']['part_code'] ?>]" value="0" <?= empty($this->data["Product"]['options'][$part['Part']['part_code']]) ? "checked='checked'" : "" ?>/> No
+			</td>
+		</tr>
+
+	<? $i++; } ?>
+
+	<? } ?>
+
+	<? if (!$product['Product']['is_stock_item']) { ?>
+	<? $i = 0; foreach($product['ProductPart'] as $part) { 
+	#print_r($part);
+		if ($part['optional'] != 'yes' || $part['Part']['price'] <= 0) { continue; }
+		if (empty($this->data["Product"]["options"][$part['Part']['part_code']])) { continue; } # Only count stuff we already picked...
+	?>
+	<? if ($i == 0) { ?>
+	<tr class="">
+		<th valign=top>Base price:</th>
+		 <td valign=top colspan=1 align="right">
+			$<span id="base_unit_price"><?= sprintf("%.02f base price each", $base_pricing); ?></span>
+			<? if($base_discount_percent > 0) { ?>
+			<div id="" style="color: #FF9900;">
+			<?= sprintf("(%u%% off)", $base_discount_percent) ?>!
+			</div>
+			<? } ?>
+		</td>
+	</tr>
+	<? } ?>
+	<tr class="<?= $i++ % 2 == 0 ? "" : "" ?>">
+		<td align="right">+</td>
+		<td valign=top align="right">
+			<?= sprintf("$%.02f", $part_price[$part["Part"]['part_code']]); ?>
+			<?= strtolower($part['Part']['part_name']) ?>
+			(optional)
+		</td>
+	</tr>
+	<? } } ?>
+	<? if(!empty($setup)) { ?>
+	<tr>
+		<th valign=top>
+			Setup:
+		</th>
+		<td colspan=1 align="right">
+			$<span id="setup"><?= sprintf("%.02f", $setup); ?></span>
+			<input type="hidden" name="customized" value="<?= !empty($customized) ?>"/>
+		</td>
+	</tr>
+	<? if(!empty($subtotal)) { ?>
+	<tr style="">
+		<th valign=top style="padding-top: 10px; padding-bottom: 10px;">
+			Subtotal:
+		</th>
+		<td colspan=1 valign="top" align="right" style="padding-top: 10px; font-weight: bold; padding-bottom: 10px;">
+
+			<? if ($savings_total > 0) { ?>
+			<span style="text-decoration: line-through; "><?= sprintf("$%.02f", $subtotal + $savings_total); ?></span>
+			<? } ?>
+			<span id="subtotal" style="<? if($savings_total > 0) { echo "color: red;"; } ?>"><?= sprintf("$%.02f", $subtotal); ?></span>
+			<br/>
+			<? if ($savings_total > 0) { echo sprintf(" (%u%% off)", ($savings_total/$subtotal)); } ?>
+		</td>
+	</tr>
+	<? } ?>
+	<? } ?>
+	<? if (!empty($savings_total) && $savings_total > 0) { ?>
+	<tr>
+		<td colspan=4 align="left">
+			<div id="" style="" class="alert2">
+			</div>
+		</td>
+	</tr>
+	<? } ?>
+	<tr>
+		<th valign=top>Ship to Zip:</th>
+		<td colspan=3 valign="top">
+			<div class="right">
+				<input type="image" align="top" src="/images/buttons/small/Calculate-grey.gif" onClick="showPleaseWait();"/>
+			</div>
+			<input name="data[Product][zipCode]" value="<?= !empty($this->data['Product']['zipCode']) ? $this->data['Product']['zipCode'] : "" ?>" size="5"/>
+		</td>
+	</tr>
+
+	<? if(!empty($this->data['Product']['zipCode'])) { ?>
+	<tr>
+		<th valign="top">Shipping:</th>
+		<td colspan=3>
+			<? $i = 0; foreach($shippingOptions as $so) { ?>
+			<table width="100%">
+				<?
+					$old_shipcost = $so['shippingPricePoint']['cost'];
+					$shipcost = $so[0]['cost'];
+					$original_cost = !empty($so[0]['original_cost']) ? $so[0]['original_cost'] : $so[0]['cost'];
+					$days = $so['shippingMethod']['dayMax'];
+					$num2name = array('','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten');
+					if($days == 1)
+					{
+						$daysname = 'Overnight';
+					}
+					else if($days == 5)
+					{
+						$daysname = 'Standard';
+					} else {
+						$daysname = $num2name[$days]. ' Day';
+					}
+				?>
+				<tr>
+					<td style="" >
+
+					<label>
+					<input type="radio" name="shippingMethodID" value="<?= $so['shippingMethod']['shippingMethodID'] ?>" <?= $i++ == 0 ? "checked='checked'" : "" ?> onClick="$$('.grandTotal').each(function(d) { d.addClassName('hidden'); }); $('grandTotal_<?= $so['shippingMethod']['shippingMethodID'] ?>').removeClassName('hidden');"/>
+					<span style="color: #009900; font-weight: bold;"> <?= $daysname ?> Shipping </span><br/>
+					<div align="right">
+						<? if($shipcost <= 0) { ?>
+							<span style="text-decoration: line-through;"><?= sprintf("$%.02f", $original_cost); ?></span><br/>
+							<span style="font-weight: bold; color: #FF0000;">FREE</span>
+						<? } else { ?>
+							<?= sprintf("$%.02f", $shipcost); ?>
+						<? } ?>
+					</div>
+					</label>
+					</td>
+				</tr>
+			</table>
+			<? } ?>
+
+	</td>
+	</tr>
+
+	<tr>
+		<th valign="top">Grand total:</th>
+		<td colspan=3 align="right">
+			<? $i = 0; foreach($shippingOptions as $so) { $shipcost = $so[0]['cost']; ?>
+			<div style="font-weight: bold; font-size: 1.1em;" class="grandTotal <?= $i++ > 0 ? "hidden" : "" ?>" id="grandTotal_<?= $so['shippingMethod']['shippingMethodID'] ?>">
+				<?= sprintf("$%.02f", $subtotal + $shipcost); ?>
+			</div>
+			<? } ?>
+		</td>
+	</tr>
+
+	<? } ?>
+
+
+	<!--
+	<? if (!empty($grand_totals)) { ?>
+	<tr style="background-color: #88DD88; color: #FF3300;">
+		<th valign=top>
+			Grand total:
+		</th>
+		<td valign=top>
+			<? $i = 0; foreach($grand_totals as $method => $grand_total) { ?>
+				<? if ($grand_total > 0) { ?>
+					<div id="grandtotal_<?=$method ?>" class="grandtotal <?= $i++ > 0 ? "hidden" : "" ?>">
+					$<span class=""><?= sprintf("%.02f", $grand_total); ?></span>
+					</div>
+				<? } ?>
+			<? } ?>
+		</td>
+	</tr>
+	<? } ?>
+	-->
+
+	</table>
+	</form>
+
+	<div class="clear"></div>
+
+			<script>
+				hidePleaseWait();
+			</script>
+	</div>
+</td>
+<td valign="top" style="border-left: solid #CCC 1px; padding: 5px;">
+	<?= $parent_product['Product']['free_with_your_order']; ?>
+	<? if(empty($customer['is_wholesale']) && !empty($config['free_ground_shipping_minimum'])) { ?><div class="alert2">Free standard shipping (continental U.S.) with web orders <?= sprintf("$%d+", $config['free_ground_shipping_minimum']); ?></div><? } ?>
+</td>
+</tr>
+</table>
+
+</div>
+

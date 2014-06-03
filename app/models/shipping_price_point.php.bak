@@ -1,0 +1,183 @@
+<?php
+class ShippingPricePoint extends AppModel {
+
+	var $name = 'ShippingPricePoint';
+	var $useTable = 'shippingPricePoint';
+	var $primaryKey = 'shippingMethod';
+
+	# For now, US only...
+	function calculate_shipping_options($destination, $prodcode, $quantity = 1)
+	{
+		return $this->calculate_shipping_options_list($destination, array($prodcode=>$quantity));
+	}
+
+	function calculate_shipping_options_list($destination, $raw_product_list)
+	{
+		$productModel = ClassRegistry::init('Product');
+		$product = null;
+
+		$weight = 0;
+		
+		$product_list = $raw_product_list;
+		#print_r($raw_product_list);
+		if (!empty($raw_product_list[0]['cart_item_id']))
+		{
+			$product_list = array();
+			foreach($raw_product_list as $item)
+			{
+				$code = $item['productCode'];
+				$qty = $item['quantity'];
+				$product_list[$code] = $qty;
+			}
+		}
+		#print_r($product_list);
+
+		foreach($product_list as $prodcode => $quantity)
+		{
+			if (is_array($prodcode))
+			{
+				$product = $prodcode;
+			} else if (is_numeric($prodcode)) {
+				$product = $productModel->find("product_type_id = '$prodcode'");
+			} else {
+				$product = $productModel->find("code = '$prodcode'");
+			}
+			#$weight += $product['Product']['shipWeight']*$quantity;
+			$weight += $product['Product']['weight']*$quantity;
+			# NO LONGER USING 'shipWeight' ......
+		}
+		echo("WEYT=$weight, *".$product['Product']['weight']);
+
+		return $this->calculate_shipping_options_by_weight($destination, $weight);
+	}
+
+	function calculate_shipping_options_by_weight($destination, $weight)
+	{
+		#$packageWeightMultiplier = 0.2; 
+		$packageWeightMultiplier = 0; 
+		# Some products are heavier than others, so 20% of it's weight in packaging is bogus.... weights are adjusted individually for packaging...
+
+		#print_r($destination);
+		#print_r($destination);
+		#echo "D=$destination";
+
+
+		#echo "PROD=".  print_r($product,true);
+
+		#$packageWeightMultiplier = 0;
+		$total_weight = (1+$packageWeightMultiplier) * $weight;
+		echo "TW=$total_weight, ";
+		$pound_weight = $total_weight * 0.00220462262;
+		#$total_shippingWeight = ceil($pound_weight);
+		$total_shippingWeight = $pound_weight;
+
+		echo "WEIGHT=$total_shippingWeight, ";
+
+		# XXX TODO IF WEIGHT IS MORE THAN MAX, SPLIT INTO EQUAL PACKAGES, ADD SUMMARY TO COST....
+		#
+		$maxWeightRecord = $this->find(null, "MAX(weight) AS max_weight");
+		$maxWeight = $maxWeightRecord[0]['max_weight'];
+
+		$boxCount = ceil($total_shippingWeight / $maxWeight);
+
+		$shippingOptions = array();
+
+		#if ($shippingWeight > $maxWeight)
+		#{
+			$remainingWeight = $total_shippingWeight;
+			while($remainingWeight > 0)
+			{
+				$shippingWeight = $maxWeight < $remainingWeight ? $maxWeight : $remainingWeight;
+				#echo "PART_WEIGHT=$partWeight<br/>";
+				$handlingCharge = $this->calculateHandlingCharge($shippingWeight);
+				$internationalSurcharge = 3.50;
+
+				$rounded_shippingWeight = ceil($shippingWeight);
+
+				$isoCode = null;
+				$zipCode = null;
+				if (!empty($destination['ContactInfo']) && is_array($destination['ContactInfo'])) { 
+					#if (empty($destination["ContactInfo"]['Zip_Code'])) { return array(); }
+					$zipCode = $destination["ContactInfo"]['Zip_Code'];
+					$isoCode = $destination["ContactInfo"]['Country'];
+				} else if (!empty($destination) && is_array($destination)) {
+					#print_r($destination);
+					list($zipCode, $isoCode) = $destination;
+				} else {
+					$zipCode = $destination;
+				}
+
+				$query = "";
+
+				#echo "ZC=$zipCode, ISO=$isoCode";
+
+				if (!$isoCode || $isoCode == 'US' || $isoCode == 'PR')
+				{
+					$query = "SELECT *,shippingPricePoint.cost+$handlingCharge as cost FROM `shippingZoneUS`, `shippingPricePoint`, `shippingMethod` WHERE shippingZoneUS.zipStart <= '$zipCode' and shippingZoneUS.zipEnd >= '$zipCode' and shippingZoneUS.shippingMethod = shippingMethod.shippingMethodID and shippingMethod.available = 'yes' and shippingMethod.shippingMethodID = shippingPricePoint.shippingmethod and shippingZoneUS.zoneNumber = shippingPricePoint.zoneNumber and shippingPricePoint.weight = $rounded_shippingWeight order by shippingPricePoint.cost";
+				} else if ($isoCode == 'CA') { 
+					$shippingCode = substr($zipCode, 0,3);
+					$query = "SELECT *, shippingPricePoint.cost+$handlingCharge+$internationalSurcharge as cost FROM `shippingZoneCA`, `shippingPricePoint`, `shippingMethod` WHERE shippingZoneCA.codeMin <= '$shippingCode' and shippingZoneCA.codeMax >= '$shippingCode' and shippingZoneCA.shippingMethod = shippingMethod.shippingMethodID and shippingMethod.available = 'yes' and shippingMethod.shippingMethodID = shippingPricePoint.shippingmethod and shippingZoneCA.zone = shippingPricePoint.zoneNumber and shippingPricePoint.weight = $rounded_shippingWeight order by shippingMethod.dayMin desc";
+				} else {
+					$query = "SELECT *, shippingPricePoint.cost+$handlingCharge+$internationalSurcharge as cost FROM `shippingZoneInt`, `shippingPricePoint`, `shippingMethod` WHERE shippingZoneInt.country = '$isoCode' and shippingZoneInt.shippingMethod = shippingMethod.shippingMethodID and shippingMethod.available = 'yes' and shippingMethod.shippingMethodID = shippingPricePoint.shippingmethod and shippingZoneInt.zone = shippingPricePoint.zoneNumber and shippingPricePoint.weight = $rounded_shippingWeight order by shippingMethod.dayMin desc";
+				}
+
+				$shippingOptionsPart = $this->query($query);
+				error_log("Q=$query");
+				echo("Q=$query");
+				#print_r($shippingOptionsPart);
+				for ($i = 0; $i < count($shippingOptionsPart); $i++) # 2-day, groound, etc...
+				{
+					$option = $shippingOptionsPart[$i];
+					foreach($option as $key => $tabledata)
+					{
+						#echo "KEY=$key<br/>";
+						if ($key === 0)
+						{
+							#if(!isset($shippingOptions[$i][$key]['weight'])) { $shippingOptions[$i][$key]['weight'] = 0; }
+							#$shippingOptions[$i][$key]['weight'] += $tabledata['weight'];
+							if(!isset($shippingOptions[$i][$key]['cost'])) { $shippingOptions[$i][$key]['cost'] = 0; }
+							$shippingOptions[$i][$key]['cost'] += $tabledata['cost'];
+							#echo "COST=".$tabledata['cost']."<br/>";
+						} else {
+							if($key == 'shippingPricePoint')
+							{
+								foreach($tabledata as $tkey => $tval)
+								{
+									if ($tkey == 'weight' || $tkey == 'cost')
+									{
+										if (!isset($shippingOptions[$i][$key][$tkey])) { $shippingOptions[$i][$key][$tkey] = 0; }
+										$shippingOptions[$i][$key][$tkey] += $tval;
+									} else {
+										$shippingOptions[$i][$key][$tkey] = $tval;
+									}
+								}
+							} else {
+								$shippingOptions[$i][$key] = $tabledata;
+							}
+						}
+					}
+				}
+				$remainingWeight -= $shippingWeight;
+				#echo "RW=$remainingWeight<br/>";
+			}
+			#echo "<br/><br/>SC=";
+			#print_r($shippingOptions);
+			
+		#} else {
+		#	$handlingCharge = $this->calculateHandlingCharge($shippingWeight);
+		#	$shippingOptions = $this->query("SELECT *,shippingPricePoint.cost+$handlingCharge as cost FROM `shippingZoneUS`, `shippingPricePoint`, `shippingMethod` WHERE shippingZoneUS.zipStart <= '$zipCode' and shippingZoneUS.zipEnd >= '$zipCode' and shippingZoneUS.shippingMethod = shippingMethod.shippingMethodID and shippingMethod.available = 'yes' and shippingMethod.shippingMethodID = shippingPricePoint.shippingmethod and shippingZoneUS.zoneNumber = shippingPricePoint.zoneNumber and shippingPricePoint.weight = $shippingWeight order by shippingPricePoint.cost");
+		#}
+
+		return $shippingOptions;
+	}
+
+	function calculateHandlingCharge($shippingWeight)
+	{
+		$handlingChargeModel = ClassRegistry::init("HandlingCharge");
+		$handlingChargeRecord = $handlingChargeModel->find("weight <= '$shippingWeight'", array(), "weight DESC");
+		$handlingCharge = $handlingChargeRecord['HandlingCharge']['price'];
+		return $handlingCharge;
+	}
+
+}
+?>

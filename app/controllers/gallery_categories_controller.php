@@ -1,0 +1,153 @@
+<?php
+class GalleryCategoriesController extends AppController {
+
+	var $name = 'GalleryCategories';
+	var $helpers = array('Html', 'Form');
+	var $uses = array("GalleryCategory","GalleryImage","GalleryCategoryImageLink");
+
+	function index() {
+		$this->GalleryCategory->recursive = 0;
+		$this->set('galleryCategories', $this->paginate());
+	}
+
+	function view($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid GalleryCategory.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$this->set('galleryCategory', $this->GalleryCategory->read(null, $id));
+	}
+
+	function add() {
+		if (!empty($this->data)) {
+			$this->GalleryCategory->create();
+			if ($this->GalleryCategory->save($this->data)) {
+				$this->Session->setFlash(__('The GalleryCategory has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The GalleryCategory could not be saved. Please, try again.', true));
+			}
+		}
+		$galleryImages = $this->GalleryCategory->GalleryImage->find('list');
+		$parentCategories = $this->GalleryCategory->ParentCategory->find('list');
+		$this->set(compact('galleryImages', 'parentCategories'));
+	}
+
+	function edit($id = null) {
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid GalleryCategory', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if (!empty($this->data)) {
+			if ($this->GalleryCategory->save($this->data)) {
+				$this->Session->setFlash(__('The GalleryCategory has been saved', true));
+				#$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The GalleryCategory could not be saved. Please, try again.', true));
+			}
+		}
+		if (empty($this->data)) {
+			$this->data = $this->GalleryCategory->read(null, $id);
+		}
+		$galleryImages = $this->GalleryCategory->GalleryImage->find('list');
+		$parentCategories = $this->GalleryCategory->ParentCategory->find('list');
+		$this->set(compact('galleryImages','parentCategories'));
+	}
+
+	function delete($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for GalleryCategory', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if ($this->GalleryCategory->del($id)) {
+			$this->Session->setFlash(__('GalleryCategory deleted', true));
+			$this->redirect(array('action'=>'index'));
+		}
+	}
+
+	function admin_search()
+	{
+		# Return relevent list of categories based on keyword provided.
+	}
+
+	function admin_index() 
+	{ 
+		$this->redirect(array('action'=>'edit',1));
+	}
+
+	function admin_view($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid GalleryCategory.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+
+		$this->set('galleryCategory', $this->GalleryCategory->read(null, $id));
+	}
+
+	function admin_add() {
+		if (!empty($this->data)) {
+			$this->GalleryCategory->create();
+			if ($this->GalleryCategory->save($this->data)) {
+				$this->Session->setFlash(__('The GalleryCategory has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The GalleryCategory could not be saved. Please, try again.', true));
+			}
+		}
+		$galleryImages = $this->GalleryCategory->GalleryImage->find('list');
+		$parentCategories = $this->GalleryCategory->ParentCategory->find('list');
+		$this->set(compact('galleryImages', 'parentCategories'));
+	}
+
+	function admin_edit($id = null) {
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid GalleryCategory', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		#print_r($this->params);
+		#ini_set("memory_limit", "100M");
+		$action = preg_replace("/^admin_/", "", $this->params['action']);
+		$path = "/admin/".$this->params['controller']."/".$action;
+		$crumbs = $this->GalleryCategory->generate_category_breadcrumb_trail($path, $id);
+		$this->breadcrumbs = array_merge($this->breadcrumbs, array_reverse($crumbs));
+
+		if (!empty($this->data)) {
+			if ($this->GalleryCategory->save($this->data)) {
+				$this->Session->setFlash(__('The GalleryCategory has been saved', true));
+				#$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The GalleryCategory could not be saved. Please, try again.', true));
+			}
+		}
+		if (empty($this->data)) {
+			#$this->GalleryCategory->recursive = 1;
+			$this->data = $this->GalleryCategory->read(null, $id);
+		}
+		$idlist = $this->GalleryCategory->get_self_and_ancestor_ids($id);
+
+		#$this->GalleryCategoryImageLink->recursive = 2;
+		$galleryImages = $this->GalleryCategoryImageLink->findAll(array("GalleryCategoryImageLink.browse_node_id"=>$idlist), "*, CONCAT(GalleryImage.catalog_number, ' - ', GalleryImage.stamp_name) AS mixed_name", " GalleryImage.catalog_number ");
+
+		$parentCategories = $this->GalleryCategory->ParentCategory->find('list');
+		$subCategories = $this->GalleryCategory->findAll("GalleryCategory.parent_node = '$id'", null, "GalleryCategory.browse_name");
+		$stamp_map = Set::combine($galleryImages, "{n}.GalleryImage.catalog_number", "{n}.0.mixed_name");
+		$this->set("all_categories_options", $this->GalleryCategory->get_all_categories_options());
+		$this->set("stamp_map", $stamp_map);
+		$this->set(compact('galleryImages','parentCategories','subCategories'));
+		$this->GalleryCategory->GalleryFilterKeywords->recursive = -2;
+		$this->set("galleryFilterKeywords", $this->GalleryCategory->GalleryFilterKeywords->find('list',array('fields'=>array('name'))));
+	}
+
+	function admin_delete($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for GalleryCategory', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if ($this->GalleryCategory->del($id)) {
+			$this->Session->setFlash(__('GalleryCategory deleted', true));
+			$this->redirect(array('action'=>'index'));
+		}
+	}
+
+}
+?>

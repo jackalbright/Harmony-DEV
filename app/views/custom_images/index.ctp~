@@ -1,0 +1,90 @@
+<? $this->element("steps/steps",array('step'=>'image')); ?>
+<div class="customImage form">
+	<? if (!$customer_id && !empty($images)) { ?>
+			<p style="color: #009900;">
+				<a class="alert2" href="/account/login?goto=/custom_images">Signup</a> to save your art for later. 
+				Or <a class="alert2" href="/account/login?goto=/custom_images">Login</a> to view saved images.
+			</p>
+	<? } ?>
+
+	<?
+	$template = $config['default_custom_image_layout'];
+	if(!empty($_REQUEST['template']))
+	{
+		$template = $_REQUEST['template'];
+	}
+	if(empty($template)) { $template = 'standard'; }
+	?>
+
+	<?= $this->element("products/get_started",array()); ?>
+
+	<table width="100%" style="border: solid 1px #CCC; background-color: white;">
+	<tr>
+		<? if(false && !empty($product)) { ?>
+			<? if($product['code'] == 'RL') { ?>
+				<td valign="top" style="" rowspan=3> &nbsp;
+					<img src="/product_image/blank/<?= $product['code'] ?>/550.png?template=<?= $template ?>"/>
+				</td>
+			</tr>
+			<tr>
+			<? } else { ?>
+				<td valign="top" width="250" style="" rowspan=2> &nbsp;
+					<img src="/product_image/blank/<?= $product['code'] ?>/250.png?template=<?= $template ?>"/>
+				</td>
+			<? } ?>
+		<? } ?>
+		<td valign="top">
+		<?php echo $form->create('CustomImage',array('url'=>'/custom_images/add', 'type'=>'file','onSubmit'=>'return verifyRequiredFields(this);')); ?>
+			<input type="hidden" id="template" name="data[CustomImage][template]" value="<?= $template ?>"/>
+
+			<? /* ?>
+			<? if(empty($customer)) { ?>
+				<a href="/custom_images?login=1">Login</a> to view your saved images
+			<? } ?>
+
+
+			<div valign="top">
+				<div style="width: 80%; padding: 5px;">
+					<label>Step 1. Choose Your Image</label>
+					<input type="file" id="file" name="data[CustomImage][file]" onChange="$('upload').removeClassName('hidden');" onChangeOLD="parent.showPleaseWait(); $('CustomImageAddForm').submit();" style=""/>
+
+					<br/>
+					<br/>
+
+					<div class="hidden" id="upload">
+
+					<div class="bold">Step 2.
+						<br/><input align="top" type="image" name="submit" src="/images/buttons/Upload-Image.gif" onClick="showPleaseWait();"/>
+					</div>
+
+					</div>
+				</div>
+			</div>
+			<? */ ?>
+		</td>
+		<? if($product['code'] == 'RL') { ?></tr><tr><? } ?>
+		<td valign="top" style="width: 400px; ">
+			<? /* ?>
+			<div class="">
+					<div align=left>
+						<? if(!empty($snippets['upload_tips'])) { ?>
+						<div style="color: #666;" class=""><h4>Tips</h4></div>
+
+							<?= $snippets['upload_tips']; ?>
+						<? } ?>
+
+					</div>
+			</div>
+			<? */ ?>
+		</td>
+	</tr>
+	<tr>
+		<td colspan=2>
+			<div style="">
+				<?= $this->element("custom_images/album",array('inline'=>false)); ?>
+			</div>
+		</td>
+	</tr>
+	</table>
+	<?php echo $form->end(); ?>
+</div>

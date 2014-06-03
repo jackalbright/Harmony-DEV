@@ -1,0 +1,18 @@
+<table width="100%">
+<tr>
+<td width="50%" valign="top">
+
+				<table width="100%">
+					<?= $this->element("cart/shipping_select",array('checkout'=>1)); ?>
+				</table>
+
+</td>
+<td valign="top">
+	<div style="float: right;">
+	<?= $this->element("checkout/order_summary"); ?>
+	</div>
+	<div class="clear"></div>
+</td>
+</tr>
+</table>
+

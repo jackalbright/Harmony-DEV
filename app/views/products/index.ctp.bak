@@ -1,0 +1,7 @@
+<div class="notice_header_medium">Low minimums • Free setup &bull; Free typesetting &bull; Free personalization &bull; Made in USA</div>
+<br/>
+
+<? if (isset($popular_products)) { echo $this->element("products/product_grid", array('title'=>'Popular Items', 'products'=>$popular_products,'details_link'=>1,'items_per_row'=>5,'live'=>0,'link_href'=>'#all','link_label'=>'View All Products')); } ?>
+<? if (isset($stock_products)) { echo $this->element("products/product_grid", array('title'=>'Stock Items', 'products'=>$stock_products,'details_link'=>1,'items_per_row'=>5,'live'=>0)); } ?>
+<? if (isset($all_products)) { echo $this->element("products/product_grid", array('title'=>'All Items', 'products'=>$all_products,'details_link'=>1,'items_per_row'=>5,'live'=>0,'a_name'=>'all')); } ?>
+

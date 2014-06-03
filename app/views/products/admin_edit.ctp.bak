@@ -1,0 +1,82 @@
+<div class="products form">
+<?php echo $form->create('Product');?>
+	<fieldset>
+ 		<legend><?php __(isset($this->data) ? 'Edit Product' : "Add Product");?></legend>
+	<table>
+	<?php
+		echo $form->input('product_id');
+
+		echo $html->tableCells(array(
+			array(
+				$form->input('name'),
+				$form->input('prod'),
+				array( 
+					$form->input('image_type',array('options'=>$image_types,'multiple'=>'checkbox')), 
+					array('rowspan'=>'2')
+				),
+			),
+			array(
+				$form->input('size'),
+				$form->input('minimum'),
+			),
+			array(
+				$form->input('normal_ship_time_days'),
+				$form->input('weight'),
+				$form->input('weight_count'),
+			),
+			array(
+				$form->input('max_per_10_days'),
+				$form->input('is_stock_item'),
+				$form->input('pricing_name'),
+			),
+			array(
+				$form->input('main_intro'),
+				$form->input('main_desc'),
+				$form->input('secondary_desc'),
+			),
+			array(
+				array($form->input('meta_keywords'), array('rowspan'=>2)),
+				array($form->input('meta_desc'), array('rowspan'=>2)),
+				array($form->input('page_title'), array('class'=>'')),
+			),
+
+			array(
+				array($form->input('body_title'), array('class'=>'')),
+			)
+			
+
+		));
+		#$form->input('plural_name'),
+		#$form->input('rank'),
+		#$form->input('image_type'),
+	?>
+	</table>
+	</fieldset>
+<?php echo $form->end('Submit');?>
+</div>
+
+<?= $this->element("admin/products/pricing_list", $this->viewVars); ?>
+
+<table border=1 width="100%">
+<tr>
+	<td>
+		<?= $this->element("admin/products/product_diagram", $this->viewVars); ?>
+	</td>
+	<td>
+		<?= $this->element("admin/products/sample_gallery", $this->viewVars); ?>
+	</td>
+</tr>
+</table>
+
+<div class="actions">
+	<ul>
+		<li><?php echo $html->link(__('Delete', true), array('action'=>'delete', $form->value('Product.product_id')), null, sprintf(__('Are you sure you want to delete # %s?', true), $form->value('Product.product_id'))); ?></li>
+		<li><?php echo $html->link(__('List Products', true), array('action'=>'index'));?></li>
+		<li><?php echo $html->link(__('List Product Customization Options', true), array('controller'=> 'product_customization_options', 'action'=>'index')); ?> </li>
+		<li><?php echo $html->link(__('New Product Customization Option', true), array('controller'=> 'product_customization_options', 'action'=>'add')); ?> </li>
+		<li><?php echo $html->link(__('List Product Pricings', true), array('controller'=> 'product_pricings', 'action'=>'index')); ?> </li>
+		<li><?php echo $html->link(__('New Product Pricing', true), array('controller'=> 'product_pricings', 'action'=>'add')); ?> </li>
+		<li><?php echo $html->link(__('List Product Testimonials', true), array('controller'=> 'product_testimonials', 'action'=>'index')); ?> </li>
+		<li><?php echo $html->link(__('New Product Testimonial', true), array('controller'=> 'product_testimonials', 'action'=>'add')); ?> </li>
+	</ul>
+</div>

@@ -1,0 +1,37 @@
+<div>
+
+<?
+$url = "/account/address_edit";
+?>
+
+<?= $form->create("ContactInfo", array('url'=>$url, 'onSubmit'=>'return verifyRequiredFields();', 'id'=>'ContactInfoForm')); ?>
+
+<?= $form->hidden("Contact_ID"); ?>
+<?= $form->input("In_Care_Of", array('label'=>'Full Name','type'=>'text','size'=>15)); ?>
+<?= $form->input("Company", array('label'=>'Company (optional)','type'=>'text','size'=>15)); ?>
+<?= $form->input("Address_1", array('label'=>'Address','size'=>15)); ?>
+<?= $form->input("Address_2", array('label'=>'Address 2','size'=>15)); ?>
+<?= $form->input("is_po_box", array('label'=>'This is a PO Box (cannot ship via FedEx)')); ?>
+<br/>
+<?= $form->input("City", array('size'=>15)); ?>
+<?= $form->input("State", array('size'=>4)); ?>
+<?= $form->input("Zip_Code", array('size'=>6)); ?>
+<?
+		$countries_map = array();
+		foreach($countries as $country)
+		{
+			$countries_map[$country['Country']['iso_code']] = $country['Country']['name'];
+		}
+		asort($countries_map);
+?>
+<?= $form->input("Country", array('options'=>$countries_map,'style'=>'width: 250px;','default'=>'US')); ?>
+	<div class="center">
+		<input type="image" src="/images/buttons/Save-grey.gif"/>
+	</div>
+
+</form>
+
+<div>
+</div>
+
+</div>

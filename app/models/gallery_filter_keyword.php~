@@ -1,0 +1,26 @@
+<?php
+class GalleryFilterKeyword extends AppModel {
+
+	var $name = 'GalleryFilterKeyword';
+	var $useDbConfig = 'default_legacy';
+	var $primaryKey = 'filter_id';
+
+	var $hasMany = array(
+		'GalleryFilter'=>array(
+			'className'=>"GalleryFilter",
+			"foreignKey"=>"filter_id",
+		),
+	);
+
+	var $hasAndBelongsToMany = array(
+		'GalleryCategory'=>array(
+			'className'=>"GalleryCategory",
+			"joinTable"=>"gallery_filters",
+			"associationForeignKey"=>"browse_node_id",
+			"foreignKey"=>"filter_id",
+		),
+
+	);
+
+}
+?>

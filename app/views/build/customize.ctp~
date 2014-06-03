@@ -1,0 +1,92 @@
+<?
+	$this->set("enable_tracking", "build");
+	$this->set("cropper",true);
+	$this->set("shadowbox",true);
+?>
+<? $prod = $build['Product']['code']; ?>
+<? $this->element("steps/steps",array('step'=>'options')); ?>
+<? $template = !empty($build['template']) ? $build['template'] : null; ?>
+<div id="build">
+	<script>
+	function setProduct(code)
+	{
+		var url = "/build/customize/"+code;
+		if(arguments.length > 1) { url += "?step="+arguments[1]; }
+		document.location.href = url;
+	}
+	</script>
+
+	<form id="build_form" name="build_form" method="POST" enctype="multipart/form-data" action="/cart/add_consolidated"/>
+	<input type="hidden" name="data[cart_item_id]" value="<?= !empty($build['cart_item_id']) ? $build['cart_item_id'] : "" ?>"/>
+	<input type="hidden" name="data[productCode]" value="<?= $build['Product']['code'] ?>"/>
+	<input id="CustomImageID" type="hidden" name="data[options][customImageID]" value="<?= !empty($build['CustomImage']) ? $build['CustomImage']['Image_ID'] : "" ?>"/>
+
+	<input id="CatalogNumber" type="hidden" name="data[options][catalogNumber]" value="<?= !empty($build['GalleryImage']) ? $build['GalleryImage']['catalog_number'] : "" ?>"/>
+
+	<a name="formtop">&nbsp;</a>
+
+	<table style="" align="center" border=0 cellspacing=0 cellpadding=0 width="100%" style="">
+	<tr>
+		<td style="width: 300px;" valign="top" align="right">
+			<div class="" align="center" style="padding: 10px 0px 0px 0px; border: solid #CCC 1px; margin: 5px;">
+				<? if(!empty($build['CustomImage']) && empty($build['Product']['is_stock_item'])) { # New adjust on left. ?>
+				<? if(empty($this->params['isAjax']) && empty($build['Product']['is_stock_item'])) { ?>
+					<?= $this->element("build/options/adjust"); ?>
+				<? } ?>
+					<div id="pleasewaitbelow" style="background-color: #7777CC; width: 150px; margin: 10px; padding: 5px; " class="bold" align="center">
+						Please wait while your preview loads below...
+						<br/>
+						<br/>
+						<img src="/images/icons/loading.gif"/>
+						<br/>
+						<br/>
+				
+					</div>
+					<div id="build_img_container">
+						<?= $this->requestAction("/build/preview_adjust",array('return')); ?>
+					</div>
+				<? } else { # Stamp images. ?>
+					<?= $this->element("build/preview",array('live'=>1,'crop'=>1)); ?>
+				<? } ?>
+			</div>
+			<!--
+			<div align="center" style="font-weight: bold; padding: 0px 10px 20px 10px; color: #F15922;"> Need a different layout?<br/>Call 888.293.1109 </div>
+			-->
+			<div class="center">
+				<a style="color: #009900; font-weight: bold;" href="/info/testimonials.php">Read Reviews</a> <a href="/info/testimonials.php"><img src="/images/icons/5stars.png"/></a>
+			</div>
+			<br/>
+
+			<div class="" align="left">
+			<?= !empty($build['Product']['build_notes']) ? $build['Product']['build_notes'] : null; ?>
+			<?= !empty($build_notes) ? $build_notes : null; ?>
+			</div>
+		</td>
+		<td valign="top" style="">
+		<div style="margin: 5px; border: solid #ccc 1px;">
+			<?= $this->element("build/options"); ?>
+		</div>
+		</td>
+		<? /* ?>
+		<td width="200" rowspan="2" colspan=1 align="left" class="left_border top_border grey_border" valign="top">
+			<?= $this->element("build/sidebar"); ?>
+		</td>
+		<? */ ?>
+	</table>
+
+	</form>
+
+	<script>
+		/*
+		<? if(!empty($_REQUEST['step'])) { ?>
+		showBuildStep('<?= $_REQUEST['step'] ?>',true);
+		<? } ?>
+		*/
+		/*hidePleaseWait();*/
+	</script>
+
+	<?= $this->element("clients/clientlist",array('cols'=>4,'notop'=>true)); ?>
+
+
+
+</div>

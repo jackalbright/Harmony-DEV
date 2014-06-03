@@ -1,0 +1,291 @@
+<?php
+class ProductImageController extends AppController {
+
+	var $name = 'ProductImage';
+	var $helpers = array('Html', 'Form');
+	var $uses = array("Product", "GalleryImage", "CustomImage","Charm","CharmCategory","CharmCategoryCharm","Tassel","Part","ShippingPricePoint","TrackingProductCalculatorRequest","Faq","FaqTopic","ContentSnippet");
+
+	function beforeFilter()
+	{
+		
+		parent::beforeFilter();
+
+		switch($this->action)
+		{
+			case 'admin_add':
+			case 'admin_edit':
+			case 'add':
+			case 'edit':
+		}
+	}
+
+	function beforeRender()
+	{
+		parent::beforeRender();
+
+		switch($this->action)
+		{
+			case 'admin_add':
+			case 'admin_edit':
+			case 'add':
+			case 'edit':
+		}
+	}
+
+	function _gd_load_image($path)
+	{
+		ini_set("memory_limit","200M");
+		error_log("P=$path");
+		if (!file_exists($path)) { return null; }
+		$t = exif_imagetype($path);
+		$img = null;
+		if ($t == IMAGETYPE_GIF)
+		{
+			$img = imagecreatefromgif($path);
+			
+		} else if ($t == IMAGETYPE_JPEG) { 
+			$img = imagecreatefromjpeg($path);
+
+		} else if ($t == IMAGETYPE_PNG) {
+			$img = imagecreatefrompng($path);
+		}
+		return $img;
+	}
+
+	function _gd_getimagesize($src)
+	{
+		$w = imagesx($src);
+		$h = imagesy($src);
+		return array($w, $h);
+	}
+
+	function view($prod = '', $imgtype = '', $imgid = '', $scale = '')
+	{
+		# Get image orientation, if applicable.
+		# Get product folder, appropriate for orientation needed
+		# load product config file
+		# load product image
+		#  load image 
+		# past image on top of product.
+		# print modified image.
+
+		$image_path = "";
+
+		if($imgtype == 'Custom')
+		{
+			$image = $this->CustomImage->read(null, $imgid);
+			if (!empty($image['CustomImage']['Image_Location']))
+			{
+				$image_path = APP ."/webroot/".$image['CustomImage']['Image_Location'];
+			}
+			# Custom image.
+		} else if ($imgtype == 'Gallery') { # Catalog image...
+			$image = $this->GalleryImage->find(" catalog_number = '$imgid' ");
+			if (!empty($image['GalleryImage']['image_location']))
+			{
+				$image_path = APP ."/../".$image['GalleryImage']['image_location'];
+			}
+		}
+		$orient = $this->get_image_orientation($image_path);
+		$product_image_path = $this->get_product_image_path($prod, $orient); # Need to pass info about custom image, orientation etc.
+
+		$overlay_path = dirname($product_image_path)."/$prod-overlay.gif";
+
+
+		error_log("PROOF=$product_image_path");
+		#$src = imagecreatetruecolor(80, 40);
+		$proof = $this->_gd_load_image($product_image_path);
+		$proof_x = imagesx($proof);
+		$proof_y = imagesy($proof);
+
+		# Get coordinates of where image should go....
+		$product_config = $this->get_product_config($prod, $orient);
+		error_log("PC=".print_r($product_config,true));
+		list($proof_image_x, $proof_image_y, $proof_image_w, $proof_image_h) = $product_config['image'];
+
+		error_log("$proof_image_x, $proof_image_y, $proof_image_w, $proof_image_h");
+
+		error_log("IMG=$image_path");
+
+		if ($image_path && file_exists($image_path))
+		{
+			# Load size of image.
+
+			# place black background of 10 pixels etc more.
+			# Adjust size and coordinate for image....
+
+			# place image above....
+
+			$img = $this->_gd_load_image($image_path);
+			$is_gif = preg_match("/[.]gif$/", $image_path);
+
+			if ($img)
+			{
+				error_log("IMG2");
+				list ($img_w, $img_h) = $this->_gd_getimagesize($img);
+				$img_w2h = $img_w/$img_h;
+	
+				# Try image by fitting height. If width too long, fit by width.
+				$new_img_h = $proof_image_h;
+				$new_img_w = floor($new_img_h * $img_w2h);
+				$new_img_h2w = $new_img_h / $new_img_w;
+	
+				if ($new_img_w > $proof_image_w)
+				{
+					$new_img_w = $proof_image_w;
+					$new_img_h = floor($new_img_w / $img_w2h);
+				}
+	
+				# Got an appropraite image size.... Now scale the image.
+				$border_w = ceil($proof_image_w*.05); # Adjust according to stuff....
+				#$border_h = ceil($border_w*$new_img_h2w);
+	
+				$scaled_img_w = $new_img_w-$border_w*2; 
+				$scaled_img_h = $new_img_h-$border_w*2;
+	
+				# XXX TODO
+	
+				# Now center it.
+				$offset_x = ($proof_image_w - $new_img_w) / 2;
+				$offset_y = ($proof_image_h - $new_img_h) / 2;
+	
+				# Place background there.... 
+				list($r,$g,$b) = array(0x06, 0x06, 0x06);
+				$color = imagecolorallocate($proof, $r, $g, $b);
+				#error_log("$proof_image_w+$offset_x, $proof_image_h+$offset_y");
+				#imagefilledrectangle($proof, 0, 0, 20, 20, $color);
+	
+				$testingbgcolor = imagecolorallocate($proof, 0x00, 0xFF, 0x00);
+	
+				# Black bg for testing purposes...
+				#imagefilledrectangle($proof, $proof_image_x, $proof_image_y, $proof_image_x+$proof_image_w, $proof_image_y+$proof_image_h, $testingbgcolor);
+	
+				# imagefilledrectangle  ( resource $image  , int $x1  , int $y1  , int $x2  , int $y2  , int $color  )
+				$rx1 = $proof_image_x+$offset_x;
+				$ry1 = $proof_image_y+$offset_y; 
+				$rx2 = $rx1 + $new_img_w;
+				$ry2 = $ry1 + $new_img_h;
+				imagefilledrectangle($proof, $rx1, $ry1, $rx2, $ry2, $color);
+	
+				$scaled_img = $this->_gd_scale_image($img, $scaled_img_w, $scaled_img_h, $is_gif);
+	
+				# Place user's img there....
+				$scaled_img_x = $rx1 + $border_w;
+				$scaled_img_y = $ry1 + $border_w;
+	
+				imagecopy($proof, $scaled_img, $scaled_img_x, $scaled_img_y, 0, 0, $scaled_img_w, $scaled_img_h);
+
+
+				$overlay = $this->_gd_load_image($overlay_path);
+
+				# Place overlay, if it exists....
+				if (!empty($overlay))
+				{
+					error_log("OV=$overlay");
+					imagecopy($proof, $overlay, 0,0,0,0, $proof_x, $proof_y);
+				}
+			}
+
+		}
+
+		# Scale image down to what we specify.
+		if ($scale) # W,H; W; ,H; W,
+		{
+			$scalewh = preg_split("/[,x]/", $scale);
+			$scale_w = $scalewh[0];
+			$scale_h = count($scalewh) >= 2 ? $scalewh[1] : null;
+			$final_img = $this->_gd_scale_image($proof, $scale_w, $scale_h);
+		} else {
+			$final_img = $proof;
+		}
+		
+		// Copy
+		
+		// Output and free from memory
+		header('Content-Type: image/png');
+		imagepng($final_img);
+		
+		imagedestroy($final_img);
+		if (!empty($src))
+		{
+			imagedestroy($src);
+		}
+		exit(0);
+	}
+
+	function _gd_scale_image($img, $w, $h, $make_trans = false)
+	{
+		$origw = imagesx($img);
+		$origh = imagesy($img);
+
+		$w2h = $origw / $origh;
+
+		if (!$w && !$h)
+		{
+			$w = $origw;
+			$h = $origh;
+		} else if (!$w) {
+			$w = $w2h * $h;
+		} else if (!$h) {
+			$h = $w / $w2h;
+		}
+
+		$newimg = imagecreatetruecolor($w,$h);
+
+		if ($make_trans)
+		{
+			# Preserve transparency....
+			$trans = imagecolortransparent($img);
+			imagepalettecopy($img, $newimg);
+			imagefill($newimg, 0, 0, $trans);
+			imagecolortransparent($newimg, $trans);
+			imagetruecolortopalette($newimg, true, 256);
+		}
+
+
+		imagecopyresampled($newimg, $img, 0,0,0,0, $w, $h, $origw, $origh);
+		return $newimg;
+	}
+
+	function get_product_config($code, $orient)
+	{
+		$dir = $this->get_product_image_dir($code, $orient);
+		$configfile = "$dir/original/$code.inc";
+		$config = include($configfile);
+		return $config;
+	}
+
+	function get_image_orientation($image_path)
+	{
+		if (!file_exists($image_path)) { return null; }
+		list($w,$h) = getimagesize($image_path);
+		return $w >= $h ? "horizontal" : "vertical";
+	}
+
+	function get_product_image_dir($code, $orient = 'horizontal')
+	{
+		$basedir = dirname(__FILE__)."/../../images/products/blanks";
+	        $vertical_dir = "$basedir/$code/vertical";
+		$horiz_dir = "$basedir/$code/horizontal";
+		$dir = "";
+		if (!$orient) { $orient = 'horizontal'; }
+
+		$orient_dir = "$basedir/$code/$orient";
+		$other_orient_dir = $orient == 'horizontal' ? "$basedir/$code/vertical" : "$basedir/$code/horizontal";
+		if (file_exists($orient_dir)) { $dir = $orient_dir; }
+		else if (file_exists($other_orient_dir)) { $dir = $other_orient_dir; }
+		else { $dir = $horiz_dir; }
+		error_log("DIR=$dir");
+
+		return $dir;
+	}
+
+	function get_product_image_path($code, $orient = 'horizontal')
+	{
+		$dir = $this->get_product_image_dir($code, $orient);
+		$srcfile = "$dir/original/$code.png";
+		return $srcfile;
+	}
+
+}
+?>

@@ -1,0 +1,15 @@
+#specialty_links
+{
+	border: solid #CCC 1px;
+}
+
+#specialty_links .inner
+{
+	padding: 5px;
+}
+
+#specialty_links li
+{
+	padding-top: 5px;
+	margin-left: 5px;
+}

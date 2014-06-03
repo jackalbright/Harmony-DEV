@@ -1,0 +1,44 @@
+<?php
+class GalleryImage extends AppModel {
+
+	var $name = 'GalleryImage';
+	var $useDbConfig = 'default_legacy';
+	var $useTable = 'stamp';
+	var $primaryKey = 'stampID';
+
+	#var $belongsTo = array(
+	var $hasMany = array(
+			'Products' => array('className' => 'Product', # ones that can work with this stamp....
+						'foreignKey' => false,
+						'dependent' => false,
+						#'joinTable' => false,
+						'conditions' => 'Products.buildable = "yes" AND Products.available = "yes" AND 
+							( 
+								(GalleryImage.reproducible = "Yes" AND Products.stamp != "Custom") OR 
+								(GalleryImage.reproducible = "Only" AND Products.stamp != "real" AND Products.stamp != "Custom") OR 
+								(GalleryImage.reproducible != "Custom" AND GalleryImage.reproducible != "Only" AND Products.stamp != "Repro" AND Products.stamp != "Custom")
+							)',
+						'fields' => '',
+						'order' => 'Products.popularity, Products.name',
+							#'Products.stamp, Products.sort_index',
+						'limit' => '',
+						'offset' => '',
+						'exclusive' => '',
+						'finderQuery' => '',
+						'counterQuery' => ''
+			),
+		);
+
+	var $hasAndBelongsToMany = array(
+		'GalleryCategories'=>array(
+			'className'=>'GalleryCategory',
+			'joinTable'=>'browse_link',
+			'associationForeignKey'=>'browse_node_id',
+			'foreignKey'=>'catalog_number',
+		),
+	);
+
+	#var $hasAndBelongsToMany = array( );
+
+}
+?>

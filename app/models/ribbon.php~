@@ -1,0 +1,9 @@
+<?php
+class Ribbon extends AppModel {
+
+	var $name = 'Ribbon';
+	var $useTable = 'ribbon';
+	var $primaryKey = 'ribbon_id';
+
+}
+?>

@@ -1,0 +1,138 @@
+<?php
+class TestimonialsController extends AppController {
+
+	var $name = 'Testimonials';
+	var $helpers = array('Html', 'Form');
+	var $paginate = array(
+		'order'=>'testimonial_id',
+	);
+
+	function index() {
+		$this->Testimonial->recursive = 0;
+		$this->set('testimonials', $this->paginate());
+	}
+
+	function view($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid Testimonial.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$this->set('testimonial', $this->Testimonial->read(null, $id));
+	}
+
+	function add() {
+		if (!empty($this->data)) {
+			$this->Testimonial->create();
+			if ($this->Testimonial->save($this->data)) {
+				$this->Session->setFlash(__('The Testimonial has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The Testimonial could not be saved. Please, try again.', true));
+			}
+		}
+	}
+
+	function edit($id = null) {
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid Testimonial', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if (!empty($this->data)) {
+			if ($this->Testimonial->save($this->data)) {
+				$this->Session->setFlash(__('The Testimonial has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The Testimonial could not be saved. Please, try again.', true));
+			}
+		}
+
+
+		if (empty($this->data)) {
+			$this->data = $this->Testimonial->read(null, $id);
+		}
+	}
+
+	function delete($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for Testimonial', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if ($this->Testimonial->del($id)) {
+			$this->Session->setFlash(__('Testimonial deleted', true));
+			$this->redirect(array('action'=>'index'));
+		}
+	}
+
+
+	function admin_index() {
+		$this->Testimonial->recursive = 0;
+		$this->set('testimonials', $this->paginate());
+	}
+
+	function admin_view($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid Testimonial.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$this->set('testimonial', $this->Testimonial->read(null, $id));
+	}
+
+	function admin_add() {
+		if (!empty($this->data)) {
+			$this->Testimonial->create();
+			if ($this->Testimonial->save($this->data)) {
+				$this->Session->setFlash(__('The Testimonial has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The Testimonial could not be saved. Please, try again.', true));
+			}
+		}
+	}
+
+	function admin_edit($id = null) {
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid Testimonial', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if (!empty($this->data)) {
+			if ($this->Testimonial->save($this->data)) {
+				$this->Session->setFlash(__('The Testimonial has been saved', true));
+				#$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The Testimonial could not be saved. Please, try again.', true));
+			}
+		}
+
+		$this->Product->recursive = -2;
+		$this->SpecialtyPage->recursive = -2;
+		$this->set("products", $this->Testimonial->Products->find('list',array('conditions'=>'parent_product_type_id IS NULL', 'order'=>'name')));
+		$this->set("specialtyPages", $this->Testimonial->SpecialtyPages->find('list',array('fields'=>array('body_title'), 'order'=>'body_title, page_url')));
+		#echo 'PROD='.print_r($this->viewVars['products']);
+
+		if (empty($this->data)) {
+			$this->data = $this->Testimonial->read(null, $id);
+		}
+	}
+
+	function admin_product_sort($product_id = null)
+	{
+		$this->layout = 'ajax';
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid Product', true));
+		} else {
+		}
+	}
+
+	function admin_delete($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for Testimonial', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if ($this->Testimonial->del($id)) {
+			$this->Session->setFlash(__('Testimonial deleted', true));
+			$this->redirect(array('action'=>'index'));
+		}
+	}
+
+}
+?>

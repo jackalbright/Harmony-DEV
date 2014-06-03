@@ -1,0 +1,5 @@
+<?= $this->element("build/pricing_chart_small"); ?>
+
+<script>
+/*hidePleaseWait();*/
+</script>

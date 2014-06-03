@@ -1,0 +1,10 @@
+<?php
+class ShippingZoneInt extends AppModel {
+
+	var $name = 'ShippingZoneInt';
+	var $useDbConfig = 'default_legacy';
+	var $useTable = 'shippingZoneInt';
+	var $primaryKey = 'zoneID';
+
+}
+?>

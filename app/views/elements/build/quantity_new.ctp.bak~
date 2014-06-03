@@ -1,0 +1,168 @@
+<div id="quantity_container">
+
+<?
+$discounted = ($build['retail_price_list']['total'] > $build['quantity_price_list']['total']);
+
+?>
+<table cellpadding=3 cellspacing=0>
+<? if(isset($build['quantity'])) { ?>
+<tr>
+	<td valign="top">
+		<div class="preview_option_quantity preview_option_value">
+			<table cellpadding=0 cellspacing=2>
+			<? if(!empty($build['quantity_price_list'])) { ?>
+				<tr>
+					<td>&nbsp;</td>
+					<td> <?= sprintf("$%.02f", $build['quantity_price_list']['base']); ?> </td>
+					<td> Base price ea.</td>
+				</tr>
+				<?
+				foreach($build['quantity_price_list'] as $option => $option_cost)
+				{
+					if ($option == 'base' || $option == 'total') { continue; }
+					$option_name = $option;
+					if (!empty($options))
+					{
+						foreach($options as $opt)
+						{
+							if ($opt['Part']['part_code'] == $option && !empty($opt['Part']['part_name']))
+							{
+								$option_name = $opt['Part']['part_name'];
+							}
+							
+						}
+					}
+				?>
+				<tr>
+					<? if ($option_cost < 0) { ?>
+					<td>-</td>
+					<td>
+						<?= sprintf("$%.02f", -$option_cost); ?>
+					</td>
+					<? } else { ?>
+					<td>+</td>
+					<td>
+						<?= sprintf("$%.02f", $option_cost); ?>
+					</td>
+					<? } ?>
+					<td> 
+						<? if ($option_cost < 0) { ?>
+						No 
+						<? } ?>
+						<? if(in_array($option, $option_list)) { ?>
+						<?= $option_name ?> (optional) 
+						<? } else { ?>
+						<?= $option_name ?>
+						<? } ?>
+					</td>
+				</tr>
+				<? } ?>
+				</tr>
+				<? if ($build['quantity_price_list']['base'] < $build['quantity_price_list']['total']) { ?>
+				<tr>
+					<td>&nbsp;</td>
+					<td> <?= sprintf("$%.02f", $build['quantity_price_list']['total']); ?> </td>
+					<td> unit price ea.</td>
+				</tr>
+				<? } ?>
+			<? } ?>
+			<tr>
+				<td valign="middle">x</td>
+				<td valign="middle">
+					<input id="quantity" type="text" name="data[quantity]" value="<?= $build['quantity'] ?>" size="4"/>
+				</td>
+				<td valign="top">
+					qty. (min: <?= $build["Product"]['minimum'] ?>)
+					<br/>
+					<a id="update_button" href="Javascript:void(0);" onClick="update_build_pricing();" onUpdate="hidePleaseWait();"><img src="/images/buttons/small/Update-Qty-grey.gif"/></a>
+	
+				</td>
+			</tr>
+			<? if (!empty($build['quantity_price'])) { ?>
+			<tr>
+				<td>&nbsp;</td>
+				<td colspan=1><hr/></td>
+				<td colspan=1>&nbsp;</td>
+			</tr>
+	
+			<? if($discounted) { ?>
+			<tr>
+				<td>&nbsp;</td>
+				<td class="bold">
+					<div style="text-decoration: line-through;"><?= sprintf("$%.02f", $build['quantity'] * $build['retail_price_list']['total']); ?></div>
+				</td>
+				<td class="bold">
+				list price
+				</td>
+			</tr>
+			<? } ?>
+			<tr>
+				<td>&nbsp;</td>
+				<td>
+					<b style="color: red;"><?= sprintf("$%.02f", (!empty($build['proof_only']) ? $proof_cost : $build['quantity'] * $build['quantity_price_list']['total']) ); ?></b>
+				</td>
+				<td>
+					your cost
+					<? if(!empty($build['proof_only'])) { ?><b>PROOF ONLY</b><? } ?>
+				</td>
+			</tr>
+			<? if ($discounted) { ?>
+			<tr>
+				<td>&nbsp;</td>
+				<td align="right">
+					(<?= sprintf("%u%%", ($build['retail_price_list']['total'] - $build['quantity_price_list']['total']) / $build['retail_price_list']['total']*100); ?></b>
+				</td>
+				<td>
+					off list price)
+				</td>
+			</tr>
+			<? } ?>
+			<? } ?>
+			<? if(false  && !empty($stamp_surcharge['StampSurcharge']) && preg_match("/real/", $build["Product"]['image_type'])) { ?>
+			<tr>
+				<td colspan=3>
+			<i>Note: 
+			Prices may be slightly higher for <a href="/info/about-us.php#StampPrices">rare and high value stamps.</a></i>
+				</td>
+			</tr>
+			<? } ?>
+			</table>
+	
+		</div>
+	</td>
+</tr>
+<tr>
+	<td valign="top" class="">
+		<div class="relative">
+		<input type="checkbox" name="data[proof]" value="yes"/> Please email me a proof. (This may delay your order 24-48 hours) <a href="Javascript:void(0)" onClick="showPopup('proof_info');">More proof information</a>
+			<div id="proof_info" class="hidden popup" style="width: 250px;">
+			With your order, you receive one free email proof plus one free email revision.  If you would like a proof without ordering, the cost is $25 each.  This charge is reimbursed if an order is placed within 10 days. 
+				(<a href="Javascript:void(0)" onClick="hidePopup('proof_info');">Close</a>)
+			</div>
+		</div>
+	</td>
+</tr>
+<? } ?>
+<tr>
+	<td align="center">
+
+					<? if(empty($build['cart_item_id'])) { ?>
+						<input type="image" src="/images/buttons/Add-to-Cart.gif" onClickX="return confirmCompletedBuildForm();"/>
+					<? } else { ?>
+						<input type="image" src="/images/buttons/Update-Cart.gif"/>
+					<? } ?>
+
+					<? if($malysoft || $hdtest) { ?>
+					<div>
+						<br/>
+						<a href="/build/save" onClick="saveBuild();">
+							<img src="/images/buttons/Save-For-Later-grey.gif"/>
+						</a>
+					</div>
+					<? } ?>
+	</td>
+</tr>
+</table>
+
+
+</div>

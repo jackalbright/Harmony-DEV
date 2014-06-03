@@ -1,0 +1,427 @@
+<script>
+var zipChangeId = 0;
+</script>
+<?
+$payment_method = !empty($this->data['payment_method']) ? $this->data['payment_method'] : (!empty($this->data['Customer']['payment_profile_id']) ? $this->data['Customer']['payment_profile_id'] : 'card');
+?>
+<div class="right">
+	<?= $this->element('checkout/links'); ?>
+</div>
+<? if(empty($customer) || !empty($customer['guest'])) { ?>
+<div class="left">
+<?= $html->link("Sign in if you are an existing customer", array('controller'=>'account','action'=>'login'),array('class'=>'bold')); ?>
+</div>
+<? } ?>
+<div class="clear"></div>
+<div class="form">
+	<?= $form->create('Purchase', array('url'=>$this->here,'id'=>'checkoutForm','onSubmit'=>"if(validateForm(this)) { $('place_order').addClassName('hidden'); $('processing').removeClassName('hidden'); showPleaseWait(); } else { return false; }")); ?>
+	<table border=0 width="100%">
+	<tr>
+		<td width="60%" valign="top">
+			<h3 style="background-color: #AAA; padding: 5px;">Shipping Address</h3>
+			<div id="shipping_info" style="padding: 10px;">
+				<? if(empty($customer_id) || empty($this->data['ShippingAddress']) || empty($this->data['ShippingAddress']['Zip_Code']) || empty($this->data['ShippingAddress']['Address_1'])) { ?>
+					<?= $this->element("../checkout/form_address_edit", array('address_type'=>'shipping')); ?>
+				<? } else { ?>
+					<?= $this->element("../checkout/form_address_view", array('address_type'=>'shipping','address_id'=>$shipping_id,'address'=>array('ContactInfo'=>$this->data['ShippingAddress']))); ?>
+				<? } ?>
+				<?#= $this->requestAction("/checkout/form_address_view/shipping",array('return')); ?>
+			</div>
+		</td>
+		<td valign="top">
+			<h3 style="background-color: #AAA; padding: 5px;">Billing Address</h3>
+			<div id="billing_info" style="padding: 10px; <?##=  $shipping_id != '' && $shipping_id == $billing_id ? "display: none;" :""?>">
+				<? if(empty($customer_id) || empty($this->data['BillingAddress']) || empty($this->data['BillingAddress']['Zip_Code'])) { ?>
+					<?= $this->element("../checkout/form_address_edit", array('address_type'=>'billing')); ?>
+				<? } else { ?>
+					<?= $this->element("../checkout/form_address_view", array('address_type'=>'billing','address_id'=>$billing_id,'address'=>array('ContactInfo'=>$this->data['BillingAddress']))); ?>
+				<? } ?>
+				<?#= $this->requestAction("/checkout/form_address_view/billing",array('return')); ?>
+			</div>
+	</td>
+	</tr>
+	<tr>
+		<td valign="top">
+			<h3 style="background-color: #AAA; padding: 5px;">Shipping Options</h3>
+			<div id="shipping_method" style="">
+
+				<?
+					$zipCode = !empty($this->data['ShippingAddress']['Zip_Code']) ? $this->data['ShippingAddress']['Zip_Code'] : null;
+					$country = !empty($this->data['ShippingAddress']['Country']) ? $this->data['ShippingAddress']['Country'] : "US";
+				?>
+				<? if(!empty($zipCode)) { ?>
+					<?= $this->requestAction("/checkout/shipping_options/zipCode:$zipCode/country:$country",array('return')); ?>
+				<? } else { ?>
+					Enter your postal code above to see shipping options
+				<? } ?>
+			</div>
+		</td>
+		<td valign="top">
+		<h3 style="background-color: #AAA; padding: 5px;">Payment Information</h3>
+		<div style="padding: 10px;">
+
+			<? 
+				$authnet_cards = !empty($authnet_profile) ? $authnet_profile->xpath("paymentProfiles") : array();
+				#print_r($authnet_cards);
+				$cardNumber = null;
+				$payment_id = null;
+				foreach($authnet_cards as $card)
+				{
+					$payment_id = (string)$card->customerPaymentProfileId;
+					$cardNumber = (string) $card->payment->creditCard->cardNumber;
+					if(!empty($payment_id) && !empty($cardNumber))
+					{
+						$cards[$payment_id] = "Card ending in ".$cardNumber;
+						break;
+					}
+				}
+				#print_r($cards);
+			?>
+			<? if(!empty($cardNumber)) { ?>
+			<div style="">
+				<label>
+				<input type="radio" name="data[payment_method]" value="<?= $payment_id ?>" id="paymentExistingCard" <?= is_numeric($payment_method) ? "checked='checked'":"" ?> onClick="selectPaymentMethod(this.value);"/>
+				Pay with credit card <span id="card_ending_in"><?= !empty($cardNumber) ? "ending in {$cardNumber}": null ?></span></label>
+				<br/>
+			</div>
+			<? } ?>
+			<div style="">
+				<label>
+				<input type="radio" name="data[payment_method]" value="card" id="paymentCard" <?= empty($cards) || $payment_method == 'card' ? "checked='checked'":"" ?> onClick="selectPaymentMethod(this.value);"/>
+				<?= !empty($payment_id) ? "Update/Add new credit card":"Pay with credit card"?></label>
+				<br/>
+			</div>
+			<? /* ?>
+			<div id="card">
+			<? if(false !empty($cards)) { ?>
+				<?= $form->input("payment_profile_id", array('options'=>$cards, 'empty'=>'','label'=>'Choose an existing credit card','onChange'=>'selectCard(this.value);')); ?>
+
+				<br/>
+			<? } ?>
+			<?= $form->hidden("credit_card_id",array('id'=>'credit_card_id')); ?>
+			<script>
+			</script>
+			<? */ ?>
+			<? /* ?>
+			<div id="new_card_link" style="padding: 10px 30px; <?= empty($cards) ? "display: none;":null ?>">
+				<a href="javascript:void(0)" onClick="selectCard();">Update/Add new credit card</a>
+			</div>
+			<? */ ?>
+			<div id="card" style="<?= !empty($cards)  && $payment_method != 'card' ? "display:none;":""?>" class="inline_label">
+				<? if(false && !empty($cards)) { ?>
+					<div class="bold">Enter credit card</div>
+				<? } ?>
+
+			<?= $form->input("CreditCard.NumberPlain", array('size'=>20,'label'=>"Card Number",'onKeyUp'=>'filterInvalidCardDigits();','onChange'=>'selectCard()')); ?>
+			<br/>
+			<label>Expiration</label>
+			<?
+				$default_month = null;#date("m");
+				$default_year = date("Y");
+				if(!empty($this->data['CreditCard']['Expiration']))
+				{
+					if(is_array($this->data['CreditCard']['Expiration']))
+					{
+						$default_month = $this->data['CreditCard']['Expiration']['month'];
+						$default_year = $this->data['CreditCard']['Expiration']['year'];
+					} else {
+						$default_month = date('m', strtotime($this->data['CreditCard']['Expiration']));
+						$default_year = date('Y', strtotime($this->data['CreditCard']['Expiration']));
+					}
+				}
+			?>
+			<? 
+				$months = array();
+				for($i = 1; $i <= 12; $i++)
+				{
+					$monthname = date("M", mktime(0,0,0, $i, 1, 2011));
+					$months[$i] = sprintf("$monthname - %02u", $i);
+				}
+				echo $form->select("CreditCard.Expiration.month",$months, $default_month,array('empty'=>false));
+				$years = array();
+				$current = date("Y");
+				for($i = 0; $i < 10; $i++)
+				{
+					$years[$current+$i] = $current+$i;
+				};
+				echo $form->select("CreditCard.Expiration.year", $years,$default_year,array('empty'=>false));
+				#echo $form->year("Expiration",date("Y")+10,date("Y"),null,null,false);
+			?>
+			<br/>
+			<?= $form->input("CreditCard.Cardholder", array('size'=>20,'label'=>"Name on Card",'onChange'=>'selectCard();')); ?>
+			</div>
+
+			
+			<div>
+			<br/>
+			<input class='left' type="radio" name="data[payment_method]" value="paypal" id="paymentPaypal" <?= $payment_method == 'paypal' ? "checked='checked'":"" ?> onClick="selectPaymentMethod(this.value);"/>
+			<label for="paymentPaypal" class="left">
+				<b>Checkout with</b> <img style="vertical-align: top;" src="/images/icons/paypal-logo-small.png"/>
+			</label>
+			<div class="clear"></div>
+			</div>
+
+
+			<? if(!empty($customer['billme'])) { ?>
+			<br/>
+			<div>
+				<label>
+				<input type="radio" name="data[payment_method]" value="billme" id="paymentBillme" <?= $payment_method == 'billme' ? "checked='checked'":"" ?> onClick="selectPaymentMethod(this.value);"/>
+				<b>Bill Me Later</b>
+				</label>
+				<div id="billme" style="<?= $payment_method != 'billme' ? "display:none;" :"" ?>">
+				<?= $form->input("Purchase.customer_po",array('label'=>'Purchase Order # (optional)')); ?>
+				</div>
+			</div>
+			<? } ?>
+		</div>
+		</td>
+	</tr>
+	<tr>
+		<td valign="top">
+			<h3 style="background-color: #AAA; padding: 5px;">Contact Information &mdash; For shipping-related questions</h3>
+			<table><tr>
+				<td valign="top"> <?= $form->input("Customer.eMail_Address", array('label'=>'Email','class'=>'required')); ?> </td>
+				<td valign="top"> <?= $form->input("Customer.Phone", array('class'=>'required')); ?> </td>
+			</tr></table>
+		</td>
+		<td valign="top">
+			<h3 style="background-color: #AAA; padding: 5px;">&nbsp;</h3>
+			<? if(empty($customer) || !empty($customer['guest'])) { 
+				$guest = isset($this->data['Customer']['guest']) ? $this->data['Customer']['guest'] : 1;
+			?>
+			<?= $form->hidden("Customer.guest", array('value'=>$guest)); ?>
+			<?= $form->input("Customer.create_account", array('label'=>'Create an account','type'=>'checkbox','onClick'=>"j('#password').toggle(); j('#CustomerGuest').val(this.checked?0:1);")); ?>
+			Use your email and create a password to log in and retrieve past orders, reorder, update your account and check out in two clicks.
+			<div id="password" style="<?= empty($this->data['Customer']['create_account']) ? "display:none;" : "" ?>">
+			<table><tr>
+				<td valign="top"><?= $form->input("Customer.Password", array('type'=>'password','label'=>'Enter a password')); ?></td>
+				<td valign="top"><?= $form->input("Customer.Password2", array('type'=>'password','label'=>'Enter password again')); ?></td>
+			</tr></table>
+			</div>
+			<br/>
+			<br/>
+			<? } ?>
+		</td>
+	</tr>
+	</table>
+<?= $this->element("cart/cart",array('checkout'=>1,'review'=>1,'read_only_summary'=>1,'receipt'=>1)); ?>
+
+	<?= $form->end(); ?>
+
+</div>
+
+
+<script>
+function validateForm(form)
+{
+
+	if(!verifyRequiredFields(form)) // Basic 'required' class checks.
+	{
+		return false;
+	}
+
+	// Check credit card or profile id.
+	if(j('#paymentCard').prop('checked'))
+	{
+		// Must use card.
+		// CHECK CARD!
+		if(!verifyField(form, j('#CreditCardNumberPlain').get(0))) { return false; }
+		if(!verifyField(form, j('#CreditCardCardholder').get(0))) { return false; }
+
+		var cardnum = j('#CreditCardNumberPlain').val();
+		if(cardnum.length < 13 || cardnum.length > 16)
+		{
+			alert("Invalid credit card number. Must be between 13 and 16 digits");
+			return false;
+		}
+
+		var expyear = parseInt(j('#CreditCardExpirationYear').val());
+		var expmonth = parseInt(j('#CreditCardExpirationMonth').val());
+		var thisyear = parseInt("<?= date('Y'); ?>");
+		var thismonth = parseInt("<?= date('n'); ?>");
+
+		//console.log("EY="+expyear+" < "+thisyear+"; EM="+expmonth+" < "+thismonth);
+
+		if(expyear < thisyear || (expyear == thisyear && expmonth < thismonth))
+		{
+			alert("Invalid expiration date for credit card");
+			return false;
+		}
+	}
+
+	<? if(empty($customer)) { ?>
+	var pass1 = j('#CustomerPassword');
+	var pass2 = j('#CustomerPassword2');
+	var guest = parseInt(j('#CustomerGuest').val());
+	if(!guest)
+	{
+		if(!pass1.val() || !pass2.val())
+		{
+			alert("Password cannot be left blank");
+			pass1.focus();
+			return false;
+		}
+		if(pass1.val() != pass2.val())
+		{
+			alert("Passwords do not match");
+			pass1.focus();
+			return false;
+		}
+		if(pass1.val().length < 6)
+		{
+			alert("Password is too short. Must be 6 or more characters.");
+			pass1.focus();
+			return false;
+		}
+	}
+	<? } ?>
+
+	return true;
+}
+
+
+
+function billingSameAsShipping()
+{
+	if(!j('#ShippingAddressName0').length)
+	{
+		var shipping_id = j('#ShippingAddressContactID').val();
+		j('#billing_info').load('/checkout/form_address_view/billing/'+shipping_id);
+	} else {
+		j('#shipping_info input, #shipping_info select').each(function(index, value) {
+			//console.log(j(this).attr('id'));
+			var shipping_field_id = j(this).attr('id');
+			if(!shipping_field_id) { return; }
+			var billing_field_id = shipping_field_id.replace(/ShippingAddress/, "BillingAddress");
+	
+			j('#'+billing_field_id).val(j('#'+shipping_field_id).val());
+		});
+	}
+}
+
+function populateBilling(datastring)
+{
+	var data = j.parseJSON(datastring);
+	for(key in data)
+	{
+		var pkey = key.replace(/_/,"");
+		j('#BillingAddress'+pkey).val(data[key]);
+	}
+	var names = data["In_Care_Of"].split(" ");
+	if(names.length >= 2)
+	{
+		j('#BillingAddressName0').val(names[0]);
+		j('#BillingAddressName1').val(names[names.length-1]);
+	}
+}
+
+function populateShipping(datastring)
+{
+	var data = j.parseJSON(datastring);
+	for(key in data)
+	{
+		var pkey = key.replace(/_/,"");
+		//console.log("SETTGING #SHIPingAddress"+pkey);
+		j('#ShippingAddress'+pkey).val(data[key]);
+	}
+	var names = data["In_Care_Of"].split(" ");
+	if(names.length >= 2)
+	{
+		j('#ShippingAddressName0').val(names[0]);
+		j('#ShippingAddressName1').val(names[names.length-1]);
+	}
+	// Re-calc shipping options.
+	loadShipping(j('#ShippingAddressZipCode').val(), j('#ShippingAddressCountry').val());
+}
+
+function clearCreditCard()
+{
+	j('#CreditCardCardholder').val();
+	j('#CreditCardNumberPlain').val();
+}
+
+function selectCard(id)
+{
+	if(id && id != '')
+	{
+		j('#PurchasePaymentProfileId').val(id);
+		j('#new_card').hide();
+		j('#new_card_link').show();
+	} else {
+		j('#PurchasePaymentProfileId').val('');
+		j('#new_card').show();
+		j('#new_card_link').hide();
+	}
+}
+function filterInvalidCardDigits()
+{
+	$('CreditCardNumberPlain').value = $('CreditCardNumberPlain').value.replace(/\D/, "");
+}
+
+function selectPaymentMethod(type)
+{
+	if(type == 'card')
+	{
+		j('#card').show();
+	} else {
+		j('#card').hide();
+		clearCreditCard();
+	}
+	if (type == 'paypal') {
+	} else {
+	}
+	if (type == 'billme') { 
+		j('#billme').show();
+	} else {
+		j('#billme').hide();
+	}
+}
+function refreshAddress(address_type, address_id)
+{
+	var modelClass = (address_type == 'shipping') ? "BillingAddress" : "ShippingAddress";
+	var otherID = j('#'+modelClass+'ContactID').val();
+
+	var otherdiv = j('#'+address_type+'_info');
+	if(otherdiv.find('div.form_address_edit').length && otherID == address_id)
+	{
+		// Could have changed details, refresh.
+		otherdiv.load("/checkout/form_address_edit/"+address_type+"/"+otherID);
+	} else if(otherdiv.find('div.form_address_view').length && otherID == address_id) {
+		// Could have changed details, refresh.
+		otherdiv.load("/checkout/form_address_view/"+address_type+"/"+otherID);
+	} else if(otherdiv.find('div.form_address_select').length) {
+		// Could have changed details, refresh.
+		otherdiv.load("/checkout/form_address_select/"+address_type);
+	}
+}
+function loadShipping()
+{
+	j('#ShippingAddressZipCode').val(
+		j('#ShippingAddressZipCode').val().replace(/\W+/g, "")
+	);
+	var zipCode = j('#ShippingAddressZipCode').val();
+	var country = j('#ShippingAddressCountry').val();
+	clearTimeout(zipChangeId);
+	j('#shipping_method').html('<b>Please wait...</b>');
+	
+	/*
+	if(!zipCode) { 
+		j('#shipping_method').html('Enter your postal code above to see shipping options'); //Clear
+		return;
+	}
+	*/
+
+	j('#shipping_method').load("/checkout/shipping_options/zipCode:"+zipCode+"/country:"+country);
+}
+var zipChangeId = 0;
+function startZip()
+{
+	clearTimeout(zipChangeId);
+}
+function endZip()
+{
+	clearTimeout(zipChangeId);
+	zipChangeId = setTimeout("loadShipping();", 3000);
+}
+</script>

@@ -1,0 +1,93 @@
+#header
+{
+	/*
+	position: relative;
+	*/
+}
+
+.headerslogan
+{
+	font-family: verdana;
+	font-weight: bold;
+	font-size: 18px;
+}
+
+#header div#sloganshadow
+{
+	position: absolute;
+	right: 49px;
+	bottom: 48px;
+	width: 544px;
+	z-index: 1;
+}
+
+.headersloganshadow
+{
+	font-family: verdana;
+	font-weight: bold;
+	font-size: 18px;
+	color: #C8C8C8;
+}
+
+.search
+{
+	position: relative;
+}
+
+.relative
+{
+	position: relative;
+}
+
+#header .relative div#freesample
+{
+}
+
+A.viewcart:link
+{
+	COLOR: #003399;
+	TEXT-DECORATION: none;
+	font-weight: bold;
+}
+A.viewcart:visited
+{
+	COLOR: #003399;
+	TEXT-DECORATION: none;
+	font-weight: bold;
+}
+A.viewcart:hover
+{
+	COLOR: #003399;
+	TEXT-DECORATION: underline;
+	font-weight: bold;
+}
+A.viewcart:active
+{
+	COLOR: #003399;
+	TEXT-DECORATION: none;
+	font-weight: bold;
+}
+div#footertagline
+{
+	font-family: Arial;
+	font-size: 10px;
+	font-style: italic;
+	background-color: #FFFFCA;
+	margin-bottom: 10px;
+	padding: 0 0 0 220px;
+}
+.types
+{
+	font-weight: 800;
+	font-size: 13px;
+	text-align: center;
+}
+.right
+{
+	text-align: right;
+}
+.freesamplecaption
+{
+font-size: 10px;
+text-align: right;
+}

@@ -1,0 +1,67 @@
+		<div style="line-height: 1.5em;">
+					<div style="" class="relative">
+						<p>
+							<?= $product['Product']['main_intro']; ?>
+							<div align="right">
+								<a href="Javascript:void(0);" class="" onClick="showPopup('more_info');">More <?= strtolower($product['Product']['short_name']) ?> info</a>
+							</div>
+						</p>
+						<div class="clear"></div>
+				
+						<div class="product_info_popup hidden" id="more_info">
+							<a class="block right" href="Javascript:void(0);" onClick="hidePopup('more_info');">Close</a>
+							<ul style="padding: 0px 0px 0px 1.2em; margin: 0px;">
+							<? if ($product['Product']['width'] > 0) { ?>
+								<li>Size: 
+								<?
+									if(isset($product['AllRelatedProducts']) && count($product['AllRelatedProducts']))
+									{
+										?><ul>
+										<li>
+										<?= $product['Product']['pricing_name'] ?>: 
+										<? if ($product['Product']['height'] > 0) { ?>
+											<?= $hd->mmToIn($product['Product']['width'], 8, true); ?>" x <?= $hd->mmToIn($product['Product']['height'], 8, true); ?>"
+										<? } else { ?> 
+											<?= $hd->mmToIn($product['Product']['width'], 8, true); ?>" diameter
+										<? } ?>
+										</li>
+										<?
+										foreach($product['AllRelatedProducts'] as $subProduct)
+										{
+											if ($subProduct['width'] > 0 && $subProduct['height'] > 0) { ?>
+											<li>
+												<?= $subProduct['pricing_name'] ?>: 
+												<?= $hd->mmToIn($subProduct['width'], 8, true); ?>" x <?= $hd->mmToIn($subProduct['height'], 8, true); ?>"
+											</li>
+											<? } else if ($subProduct['width'] > 0) { ?>
+											<li>
+												<?= $subProduct['pricing_name'] ?>: 
+												<?= $hd->mmToIn($subProduct['width'], 8, true); ?>" diameter 
+											</li>
+											<? } 
+										}
+										?></ul><?
+									} else {
+										echo $hd->mmToIn($product['Product']['width'], 8, true) ?>" x <?= $hd->mmToIn($product['Product']['height'], 8, true) . '"';
+									}
+								?>
+							<? } ?>
+								<?
+									$normal_ship_time_days = $product['Product']['normal_ship_time_days'];
+									if ($normal_ship_time_days <= 4)
+									{
+										$normal_ship_time = ($normal_ship_time_days * 24) . " hours";
+									} else {
+										$normal_ship_time = $normal_ship_time_days . " days";
+									}
+								
+								?>
+							</ul>
+
+							<?= $product['Product']['main_desc'] ?>
+
+							<a class="block right" href="Javascript:void(0);" onClick="hidePopup('more_info');">Close</a>
+						</div>
+					</div>
+		</div>
+

@@ -1,0 +1,24 @@
+<? if(empty($size)) { $size = "-200x200"; } ?>
+<? if(empty($product) && !empty($_SESSION['Build']['Product'])) { $product = array('Product', $_SESSION['Build']['Product']); } ?>
+<? if (!empty($product) && (!empty($_SESSION['Build']['CustomImage']) || !empty($_SESSION['Build']['GalleryImage']))) { ?>
+		<?
+			$name = "Your custom";
+			$imgtype = "_";
+			$imgid = "_";
+			if (!empty($_SESSION['Build']['CustomImage']))
+			{
+				if (!empty($_SESSION['Build']['CustomImage']['Title'])) { $name = "&quot;".$_SESSION['Build']['CustomImage']['Title']."&quot;"; }
+				$imgtype = "Custom";
+				$imgid = $_SESSION['Build']['CustomImage']['Image_ID'];
+			} else if (!empty($_SESSION['Build']['GalleryImage'])) { 
+				if (!empty($_SESSION['Build']['GalleryImage']['stamp_name'])) { $name = "&quot;".$_SESSION['Build']['GalleryImage']['stamp_name']."&quot;"; }
+				$imgtype = "Gallery";
+				$imgid = $_SESSION['Build']['GalleryImage']['catalog_number'];
+			}
+		?>
+		<a href="/build/step?prod=<?= $product['Product']['code'] ?>"><img style="vertical-align: middle;" src="/images/preview/<?= $product['Product']['code'] ?>/<?= $imgtype ?>/<?= $imgid ?>/<?=$size?>.png"/></a>
+		<div>
+			<a href="/build/step?prod=<?= $product['Product']['code'] ?>"><?= $name ?> <?= $product['Product']['name'] ?></a>
+		</div>
+
+<? } ?>

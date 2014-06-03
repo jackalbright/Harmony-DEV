@@ -1,0 +1,37 @@
+<div class="">
+	<?php echo $form->create('CustomImage',array('id'=>'CustomImageForm', 'name'=>'CustomImageForm','type'=>'file','url'=>'/custom_images/iframe_add','onSubmit'=>'hideFlash();')); ?>
+
+	<table border=0>
+	<tr>
+	<td valign="middle" width="">
+	
+	<div class="fileinputs" style="float: right;" onClick="document.CustomImageForm.file.click();">
+		<input type="file" id="file" class="file" name="data[CustomImage][file]" onChange="$('faketext').value = 'Loading Preview Below...'; hideFlash(); parent.showPleaseWait(); $('CustomImageForm').submit();" style=""/>
+
+		<div class="fakefile">
+			<input type="text" class="" id="faketext" value="Your Image Here"/>
+			<img src="/images/buttons/Upload-Image.gif" align="top"/>
+		</div>
+	</div>
+
+	</td>
+	<td valign="middle" align="center">
+				<b>OR</b>
+				<br/>
+				<a class="nobr" target="_top" href="/custom_images">Use a saved image</a>
+	</td>
+	<td valign="middle" align="center">
+				<b>OR</b>
+				<br/>
+				<a target="_top" href="/gallery/browse"><img src="/images/buttons/Browse-Our-Images-grey.gif" align="middle"/></a>
+	</td>
+	</table>
+
+	</form>
+
+	<? if(!empty($this->data)) { ?>
+	<script>
+		Event.observe(window,'load', function() { parent.loadCustomProductImages(); });
+	</script>
+	<? } ?>
+</div>

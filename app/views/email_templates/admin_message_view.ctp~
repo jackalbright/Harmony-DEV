@@ -1,0 +1,9 @@
+<?
+echo $form->input("EmailMessage.subject", array('value'=>$emailTemplate['EmailTemplate']['subject'],'style'=>'width: 500px;')); 
+?>
+
+<? echo $form->input("EmailMessage.custom_message", array('value'=>$emailTemplate['EmailTemplate']['message'],'style'=>'width: 500px;')); ?>
+
+<script>
+	loadEditor('EmailMessageCustomMessage');
+</script>

@@ -1,0 +1,449 @@
+<?php
+class CustomImagesController extends AppController {
+
+	var $name = 'CustomImages';
+	var $title = 'My Images';
+	var $helpers = array('Html', 'Form');
+	var $build_page = true;
+
+	var $paginate = array(
+		'order'=>'Image_ID DESC'
+	);
+
+	function beforeFilter()
+	{
+		parent::beforeFilter();
+		$this->rightbar_disabled = true;
+	}
+
+	function beforeRender()
+	{
+		$this->Auth->allow('*');
+		#echo "SID=".session_id()."!";
+		#$this->set("rightbar_disabled", true);
+		parent::beforeRender();
+		$this->set("current_build_step", 2);
+		if (!isset($this->build['Product'])) { 
+			$this->set("image_select_first", true);
+		}
+	}
+
+	function index() {
+		$this->body_title = "My Images";
+		$this->body_title_crumbs = false;
+		$this->set("images_per_row", $this->rightbar_disabled ? 5 : 3);
+		$criteria = array();
+		$criteria['session_id'] = $this->Session->id();
+		if ($customer_id = $this->get_customer_id()) { $criteria['CustomImage.customer_id'] = $customer_id; }
+
+		if ($customer_id != "")
+		{
+			$this->Session->setFlash(__("Your images will be saved for later under your account. Simply login in the future to access them.", true));
+		}
+
+		$this->CustomImage->recursive = 0;
+		if (!$this->CustomImage->find('count', array('conditions'=>array('or'=>$criteria)))) { 
+			#$this->Session->setFlash("You currently have no images online. Please <a href='/custom_images/add'>upload an image</a> from your computer to create a new product, or <a href='/account/login'>Login</a> to view previously saved art."); #
+			$this->redirect(array('action'=>"add")); 
+		}
+		$this->set('customImages', $this->paginate("CustomImage", array('or'=>$criteria)));
+	}
+	
+	function select($id)
+	{
+		# XXX TODO MAKE SURE IMAGE BELONGS TO USER!!!!
+		$prod = $this->Session->read('Build.prod');
+		#error_log("CLEARIN...");
+		$this->Session->delete("Build.catalog_number"); # Don't need to use anymore.
+		$this->Session->write("Build.GalleryImage",2); # Don't need to use anymore.
+		$this->Session->delete("Build.GalleryImage"); # Don't need to use anymore.
+
+		$this->Session->write("Build.imageID", $id);
+		$image = $this->CustomImage->read(null, $id);
+		$this->Session->write("Build.CustomImage", $image['CustomImage']);
+
+		# WTF!
+		#$_SESSION['Build']['GalleryImage'] = null;
+		#$_SESSION['Build']['catalog_number'] = null;
+
+		#if ($prod != "")
+		#{##
+			#$this->redirect("/product/build.php?productCode=$prod&imageID=$id");
+		#} else {
+			$this->redirect("/products/select");
+		#}
+	}
+
+	function add() {
+
+		$this->add_or_edit_process();
+
+		$this->action = 'add_or_edit';
+
+	}
+
+	function add_or_edit_process($id = null)
+	{
+		#error_log("ADD_OR_EDIT");
+		$session_id = session_id();
+
+		$customer_id = $this->Session->read("Auth.Customer.customer_id");
+		$this->set("customer_id", $customer_id);
+
+		if (!$id && !empty($this->data)) { $id = $this->data['CustomImage'][$this->CustomImage->primaryKey]; }
+		$mode = "";
+
+		$path = "";
+		$prefix = "";
+
+		if (!$id)
+		{
+			$this->body_title = "Upload your image to see it on 16 different items";
+			$mode = 'add';
+			$this->CustomImage->create();
+			$path = $this->_getImagePath();
+			$prefix = $this->_getImageFilenamePrefix();
+
+		} else {
+			$this->body_title = "Manage your image";
+			$mode = 'edit';
+			# Look up record, make sure id matches session_id.
+			$image = $this->CustomImage->read(null, $id);
+			$customer_id = $this->Session->read("Auth.Customer.customer_id");
+			if ($image['CustomImage']['session_id'] != $session_id && $image['CustomImage']['Customer_ID'] != $customer_id)
+			# XXX TODO OR customer_id mismatch.
+			{
+				$this->Session->setFlash("Invalid image");
+				$this->redirect(array('action'=>'index'));
+				return;
+			}
+
+			# Get from existing...
+
+			$path = dirname($image['CustomImage']['Image_Location']);
+			$prefix = preg_replace("/[.]\w+$/", "", basename($image['CustomImage']['Image_Location']));
+		}
+		$this->set("mode", $mode);
+
+		if (!empty($this->data))
+		{
+			if ($mode == 'add' && !$this->Image->didSupplyUpload('file'))
+			{
+				$this->Session->setFlash("Please choose an image to upload");
+			} else {
+				$return = $this->Image->saveUpload('file', $path, $prefix); # Done separately from actual db
+		
+				##error_log("RETURNED ($path, $prefix) FROM SAVE=$return");
+		
+				if ($return && is_array($return))
+				{
+					$this->Session->setFlash("Sorry, we are unable to save your image: " .  join("<br/>\n", $return) );
+					#$this->render();
+				} else if ($filename = $return) {
+					# Create sane sized image.
+					# Scale image to thumbnail.
+					$display_width = 350;
+					$thumb_height = 80;
+		
+					$rc = $this->Image->scaleFile("$path/$filename", "$path/display/$filename", $display_width, null, 1);
+                                        if (is_array($rc))
+                                        {
+                                                $this->Session->setFlash(join("<br/>", $rc));
+                                                return;
+                                        }
+                                        $rc = $this->Image->scaleFile("$path/$filename", "$path/thumbs/$filename", null, $thumb_height, 1);
+                                        if (is_array($rc))
+                                        {
+                                                $this->Session->setFlash(join("<br/>", $rc));
+                                                return;
+                                        }
+
+		
+					# Now update Image_location
+					$this->data['CustomImage']['session_id'] = $session_id;
+					$customer_id = $this->Session->read("Auth.Customer.customer_id");
+					$this->data['CustomImage']['Customer_ID'] = $customer_id;
+					# If logged in, use their customer_id instead.
+					# XXX TODO
+		
+					$this->data['CustomImage']['Image_Path'] = "$path"; 
+					$this->data['CustomImage']['Submission_Date'] = $this->unix_date();
+		
+					$this->data['CustomImage']['Image_Location'] = "$path/$filename"; # Could be gigantic here
+					$this->data['CustomImage']['display_location'] = "$path/display/$filename"; # What we'll bother showing on browser for sanity.
+					$this->data['CustomImage']['thumbnail_location'] = "$path/thumbs/$filename";
+
+					if(empty($this->data['CustomImage']['Title'])) { $this->data['CustomImage']['Title'] = $this->Image->getOriginalFilenamePrefix('file'); }
+		
+					# XXX TODO NEED TO RECONFIGURE SO HANDLES ERRORS APPROPRAITELY
+			
+					# REALLY SHOULD BE FIGURED ON THE FLY, but oh well...
+					# when switch over, must change these paths too...
+
+						#error_log("TRY SAVIN ");
+			
+					if ($this->CustomImage->save($this->data)) {
+						$msg = "Your image has been uploaded.";
+						#if (!$customer_id)
+						#{
+						#	$msg .= " We recommend you <a href='/account/login'>signup or login</a> to save your image for later.";
+						#}
+						$this->Session->setFlash(__($msg, true));
+
+						#error_log("SAVIN $mode");
+
+
+						if ($mode == 'add')
+						{
+							# Now send confirmation email to site admin.
+							$this->sendAdminEmail("Image Uploaded", "admin_image_uploaded", array('custom_image'=>$this->data['CustomImage']));
+
+							#$this->redirect(array('action'=>'index'));
+						}
+						$imgid = $this->CustomImage->id;
+						$this->redirect("/custom_images/select/$imgid");
+					} else {
+						if (empty($this->data['CustomImage']['title'])) {
+							$this->Session->setFlash(__('Your image could not be saved. Please give your image a title.', true));
+						} else {
+							$this->Session->setFlash(__('Your image could not be saved. Please, try again.', true));
+						}
+					}
+				}
+	
+			}
+		}
+
+	}
+
+	function _assignToCustomer($image, $customer_id)
+	{
+		# Add customer id.
+		# Change paths.
+	}
+
+	function _getImagePath($anon = false) # Will force anonymous...
+	{
+
+		if ($this->is_logged_in() && !$anon)
+		{
+			$customer_id = $this->get_customer_id();
+			return "/images/custom/customers/$customer_id"; # May want to change once logged in.
+		} else {
+			$session_id = $this->Session->id();
+			return "/images/custom/anon/$session_id"; # May want to change once logged in.
+		}
+	}
+
+	function _getImageFilenamePrefix()
+	{
+		return $prefix = time() . rand(0, 10000);
+	}
+
+	function edit($id = null) {
+
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid Image', true));
+			$this->redirect(array('action'=>'index'));
+		}
+
+		$this->add_or_edit_process($id);
+
+		# Since we don't load all fields, load again!
+		$this->data = $this->CustomImage->read(null, $id);
+
+		$this->action = 'add_or_edit';
+	}
+
+	function delete($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid Image', true));
+		}
+		if ($this->CustomImage->del($id)) {
+			$this->Session->setFlash(__('Image deleted', true));
+		}
+		$this->redirect(array('action'=>'index'));
+	}
+
+        function view($id = null) {
+                if (!$id) {
+                        $this->Session->setFlash(__('Invalid CustomImages.', true));
+                        $this->redirect(array('action'=>'index'));
+                }
+                $this->set('customImage', $this->CustomImage->read(null, $id));
+        }
+
+
+	function view_img($size = null, $id = null) 
+	{
+		$this->_displayPhoto($size, $id);
+		# XXX FIX SO WE PASS OWN TYPES OF PARAMETERS, view_primary PASSES OTHER...
+	}
+
+	function _displayPhoto($size = null, $id = null, $member_id = null) 
+	{
+		# MODIFY SO can handle given error images
+		# and can handle photo_id and size
+		# THIS should handle thumbnails! Not damned helper!
+
+		#if (!$id || !$size) {
+		#	$this->Session->setFlash(__('Invalid photo.', true));
+		#	$this->redirect(array('action'=>'editlist'));
+		#}
+
+		# SINCE NO PHOTO, no member to cross reference!
+
+		$photo = $this->MemberPhoto->read(null, $id);
+		if (!$member_id) { $member_id = $photo["MemberPhoto"]["member_id"]; }
+
+		$member = $this->Member->read(null, $member_id);
+
+		if ($member['Member']['member_type'] == 'model')
+		{
+			$profile = $member['MemberModelProfile'];
+		} else {
+			#$profile = $member['MemberProfessionalProfile'];
+			$profile = $member['MemberModelProfile'];
+			# FOR NOW...
+		}
+
+		$genderpostfix = ($profile['gender'] == 'Female' ? '_female' : '_male'); # Default male.
+
+		$ext = $photo["MemberPhoto"]["ext"];
+		##error_log("EXT=$ext");
+		if (!$ext) { $ext = "jpg"; }
+		if (!preg_match("/[.]\w+$/", $id)) # Only add extension if not already there...
+		{
+			$relname = "$id.$ext";
+		} else {
+			$relname = $id;
+		}
+
+		###$this->view = 'Media';
+		# BROKEN AS HELL!
+
+		$base = APP;
+		$img = "webroot/images";
+		$memberfolder = "$img/members/$member_id";
+		$file = "";
+
+		$defaultfile = "default$genderpostfix.jpg";
+
+
+		$defaultimage = array(
+			#'large'=> "$img/members/default/large/error.jpg",
+			#'medium'=> "$img/members/default/medium/error.jpg",
+			#'small'=> "$img/members/default/small/error.jpg",
+
+			'large'=> "$img/members/default/large/$defaultfile",
+			'medium'=> "$img/members/default/medium/$defaultfile",
+			'smallmedium'=> "$img/members/default/smallmedium/$defaultfile",
+			'small'=> "$img/members/default/small/$defaultfile",
+		);
+
+		if ($size == 'large')
+		{
+			$file = $defaultimage['large'];
+			if (file_exists("$base/$memberfolder/large/$relname"))
+			{
+				$file = "$memberfolder/large/$relname";
+			}
+		} else if ($size == 'smallmedium' || $size == 'medium' || $size == 'small') {
+			# Resize if necessary.
+
+			$file = $defaultimage[$size];
+			# If large version exists and medium doesn't, scale.
+			$sized = "$base/$memberfolder/$size/$relname";
+			$large = "$base/$memberfolder/large/$relname";
+			$default = "$base/".$defaultimage[$size];
+
+			if (file_exists($sized) && filesize($sized))
+			{
+				$file = "$memberfolder/$size/$relname";
+			} else if (file_exists($large) && filesize($large)) { # large exists.
+				$this->_scalePhoto("$base/$memberfolder", $relname, $size, $ext);
+				$file = "$memberfolder/$size/$relname";
+			} else if (!file_exists($default) || !filesize($default)) { 
+				# Scale large default.
+				$this->_scalePhoto("$base/$img/members/default", "$defaultfile", $size, 'jpg');
+				##error_log("SCALED!");
+				$file = $defaultimage[$size];
+			} # else, medium default exists, use THAT.
+		}
+
+		##error_log("DISPLAYING PHOTO=$file");
+
+		$params = array(
+			'id' => basename($file),
+			'name' => '',
+			'download' => false,
+			'extension' => $ext,
+			'path' => dirname("$file") . DS
+		);
+
+		##error_log("APP=".APP);
+
+		##error_log("VIEW SETTING=".print_r($params,true));
+
+		$this->set($params);
+
+		$this->tm_media_view($params); # Hack until Media viewer gets fixed!
+	}
+
+
+	function admin_index() {
+		$this->CustomImage->recursive = 0;
+		$this->set('customImages', $this->paginate());
+	}
+
+	function admin_view($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid CustomImages.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$this->set('customImage', $this->CustomImage->read(null, $id));
+	}
+
+	function admin_add() {
+		if (!empty($this->data)) {
+			$this->CustomImage->create();
+			if ($this->CustomImage->save($this->data)) {
+				$this->Session->setFlash(__('The CustomImages has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The CustomImages could not be saved. Please, try again.', true));
+			}
+		}
+	}
+
+	function admin_edit($id = null) {
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid CustomImages', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if (!empty($this->data)) {
+			if ($this->CustomImage->save($this->data)) {
+				$this->Session->setFlash(__('The CustomImages has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The CustomImages could not be saved. Please, try again.', true));
+			}
+		}
+		if (empty($this->data)) {
+			$this->data = $this->CustomImage->read(null, $id);
+		}
+	}
+
+	function admin_delete($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for CustomImages', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if ($this->CustomImage->del($id)) {
+			$this->Session->setFlash(__('CustomImages deleted', true));
+			$this->redirect(array('action'=>'index'));
+		}
+	}
+
+}
+?>

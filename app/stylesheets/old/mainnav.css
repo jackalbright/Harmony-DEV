@@ -1,0 +1,89 @@
+#mainnav_new
+{
+	margin: 0px;
+	position: absolute;
+	z-index: 100;
+}
+
+#mainnav_new, .mainnav_submenu
+{
+	background-color: #99CC66;
+	border-collapse: collapse;
+	position: relative;
+}
+
+#mainnav_submenu_products td
+{
+	width: 150px;
+}
+
+#mainnav_new .mainnav_button_left
+{
+	border-left: none;
+}
+
+#mainnav_new td.mainnav_button
+{
+	border-left: solid white 1px;
+	position: relative;
+	z-index: 100;
+}
+
+#mainnav_new td
+{
+	white-space: nowrap;
+	font-size: 12px;
+	position: relative;
+}
+
+#mainnav_new td a, 
+#mainnav_new td a:visited,
+#mainnav_new td a:link,
+#mainnav_new td a:active
+{
+	text-decoration: none;
+	color: #000;
+	display: block;
+	padding: 5px 12px 5px 12px;
+}
+
+#mainnav_new td a:hover
+{
+	text-decoration: underline;
+	background-color: #CECECE;
+}
+
+.mainnav_submenu_default
+{
+	display: none;
+}
+
+.mainnav_submenu
+{
+
+	position: absolute;
+	z-index: 100;
+	margin: 0px;
+	padding: 1px;
+}
+
+.mainnav_submenu_selected
+{
+	display: table !important;
+}
+
+.mainnav_subbutton, .mainnav_subbutton_top, .mainnav_subbutton_left
+{
+	border: 0px;
+	border-left: 0px;
+	border-top: solid white 1px;
+	margin: 0px;
+	padding: 0px;
+	width: 125px;
+}
+
+.mainnav_subbutton_left
+{
+	border-top: solid white 1px;
+	border-right: solid white 1px;
+}

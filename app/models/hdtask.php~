@@ -1,0 +1,9 @@
+<?php
+class Hdtask extends AppModel {
+
+	var $name = 'Hdtask';
+	var $useDbConfig = 'default_legacy';
+	var $primaryKey = 'hdtask_id';
+
+}
+?>

@@ -1,0 +1,49 @@
+		<table>
+		<tr>
+			<td>
+			Subtotal:
+			</td>
+			<td>
+				<?= sprintf("$%.02f", $subtotal); ?>
+			</td>
+		</tr>
+		<? if (!empty($shippingTotal)) { ?>
+		<tr>
+			<td>
+			Shipping:
+			</td>
+			<td>
+			<?= empty($shippingOption[0]['cost']) ? "<span class='alert2'>FREE</span>" : sprintf("$%.02f", $shippingOption[0]['cost']); ?>
+			</td>
+		</tr>
+		<? } ?>
+		<? if(!empty($rush_cost)) { ?>
+		<tr>
+			<td>
+			Rush charge:
+			</td>
+			<td>
+				<?= sprintf("$%.02f", $rush_cost); ?>
+			</td>
+		</tr>
+		<? } ?>
+
+		<tr>
+			<td class="smallcaps alert">
+			Grand Total:
+			</td>
+			<td class="alert bold">
+				<? if(!empty($grandTotals)) { ?>
+					<? $i = 0; foreach($grandTotals as $method_id => $grandTotal) { ?>
+					<div id="grandTotal<?= $method_id ?>" class="<?= ($i++ == 0 && !$defaultShippingMethod) || $defaultShippingMethod == $method_id ? "" : "hidden" ?> grandTotal">
+						<b><?= sprintf("$%.02f", $grandTotal); ?></b>
+					</div>
+					<? } ?>
+				<? } else if (!empty($shippingTotal)) { ?>
+					<? if(empty($rush_cost)) { $rush_cost = 0; } ?>
+					<?= sprintf("$%.02f", $subtotal + $shippingTotal + $rush_cost); ?>
+				<? } ?>
+			</td>
+		</tr>
+		</table>
+

@@ -1,0 +1,47 @@
+<?
+$url = $product['Product']['is_stock_item'] ? "/cart/add.php" : "/products/select/".$product['Product']['code'];
+
+$name = $product['Product']['short_name'];
+if (!$name) { $name = $product['Product']['name']; }
+$plural_product_name = $hd->pluralize($name);
+$label = ($product['Product']['is_stock_item'] ? "Add to Cart" : "Create $plural_product_name >"); 
+
+?>
+<form method="POST" action="<?= $url ?>" onSubmit="return assertTasselSelected('<?= $product['ProductPricing'][0]['quantity']?>');">
+	<table class="" width="" border=0 align="right">
+	<tr>
+		<? if($product['Product']['is_stock_item']) {  ?>
+		<td>
+			<select id="customTassel" name="tasselID">
+			<option value="">[Select a Tassel]</option>
+			<? foreach($tassels as $tassel) { ?>
+				<? if ($tassel["Tassel"]['available'] == 'Yes') { ?>
+				<option value="<?= $tassel['Tassel']['tassel_id']?>"><?= ucwords($tassel['Tassel']['color_name']) ?></option>
+				<? } ?>
+			<? } ?>
+			</select>
+		</td>
+		<td>
+			<input type="hidden" value="<?= $product['Product']['code'] ?>" name="productCode"/>
+			<input type="hidden" name="cartID" value="none"/> 
+			<!--
+			<input id="customTassel" type="hidden" value="" name="tasselID"/> -->
+			<b>Qty:</b>
+			<input type="text" size=4 name="quantity" id="quantity" value="<?= $product['ProductPricing'][0]['quantity']?>" onChange="return assertMinimum('<?= $product['ProductPricing'][0]['quantity']?>');"/>
+			<input type="hidden" name="productCode" value="<?= $product['Product']['code'] ?>"/>
+		</td>
+		<? } ?>
+		<td align="right">
+			<table cellpadding=0 cellspacing=0 class="button">
+			<tr>
+				<td class="button_left">&nbsp;</td>
+				<td class="button_main">
+					<input type="submit" value="<?= $label ?>"/>
+				</td>
+				<td class="button_right">&nbsp;</td>
+			</tr>
+			</table>
+		</td>
+	</tr>
+	</table>
+</form>

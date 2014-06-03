@@ -1,0 +1,38 @@
+<h2>Frequently Asked Questions</h2>
+
+<div class="right">
+	<a href="/admin/faqs/add">Add Question</a> |
+	<a href="/admin/faq_topics/add">Add Topic</a> 
+</div>
+
+<div class="faqs index">
+<? foreach($faqs as $faq) { ?>
+	<div class="faq" style="padding: 0px;">
+		<p><a href="/admin/faqs/edit/<?= $faq['Faq']['faq_id'] ?>" name="faq_<?= $faq['Faq']['faq_id'] ?>"><?= $faq['Faq']['question'] ?></a></p>
+		<div style="padding: 5px 15px;">
+			<? nl2br(strip_tags($faq['Faq']['answer'])); ?>
+			<?= $faq['Faq']['answer']; ?>
+		</div>
+	</div>
+<? } ?>
+</div>
+
+<div class="clear"></div>
+
+<div class="faqs index">
+<? foreach($faqTopics as $topic) { ?>
+	<div style="padding-top: 10px;">
+	<h6><a href="/admin/faq_topics/edit/<?= $topic["FaqTopic"]['faq_topic_id'] ?>"><?= $topic['FaqTopic']['topic_name'] ?></a></h6>
+
+	<? foreach($topic['Faq'] as $faq) { ?>
+		<div class="faq" style="padding: 0px;">
+			<p><a href="/admin/faqs/edit/<?= $faq['faq_id'] ?>" name="faq_<?= $faq['faq_id'] ?>"><?= $faq['question'] ?></a></p>
+			<div style="padding: 5px 15px;">
+				<?= $faq['answer']; ?>
+			</div>
+		</div>
+	<? } ?>
+	</div>
+
+<? } ?>
+</div>

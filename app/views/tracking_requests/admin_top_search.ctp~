@@ -1,0 +1,43 @@
+<div>
+<h3>What are people looking for? (top searches)</h3>
+
+<p><?= $total ?> searches total</p>
+
+	<table border=1>
+	<tr>
+		<td>%</td>
+		<td>#</td>
+		<td>Search</td>
+		<? if($keywords) { ?>
+		<td>Related Phrase</td>
+		<? } ?>
+		<td>Referer</td>
+	</tr>
+	<? arsort($searches); foreach($searches as $search => $count) { ?>
+	<tr>
+		<td>
+			<?= sprintf("%u%%", $count / $total * 100); ?>
+		</td>
+		<td>
+			<?= $count ?>
+		</td>
+		<td>
+			<?= $search ?><br/>
+			<a href="/admin/tracking_requests/trail_by_search?search=<?= $search ?>">View Pages They Visited</a>
+		</td>
+		<? if($keywords) { ?>
+		<td>
+			<? arsort($phrases[$search]); foreach($phrases[$search] as $phrase => $count) { ?>
+				<?= $phrase ?> (<?= $count ?>)<br/>
+			<? } ?>
+		</td>
+		<? } ?>
+		<td>
+			<? arsort($referers[$search]); foreach($referers[$search] as $referer => $count) { ?>
+				<?= $referer ?> (<?= $count ?>)<br/>
+			<? } ?>
+		</td>
+	</tr>
+	<? } ?>
+	</table>
+</div>

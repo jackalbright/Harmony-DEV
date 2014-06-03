@@ -1,0 +1,26 @@
+<div class="customImage form">
+	<?php echo $form->create('CustomImage',array('id'=>'CustomImageForm', 'type'=>'file','url'=>'/custom_images/iframe_add','onSubmit'=>'hideFlash();')); ?>
+	<table width="100%">
+	<tr>
+		<td>
+			<div class="relative">
+			<? echo $form->input('file',array('type'=>'file','style'=>'position: absolute; z-index: 0;', 'onChange'=>"$('CustomImageForm').submit();")); ?>
+
+			<a href="Javascript:void(0)">
+				<img style="position: absolute; z-index: 500;" src="/images/buttons/Preview.gif" onClick="$('CustomImageFile').focus();"/>
+			</a>
+			</div>
+			</a>
+		</td>
+		<td>
+			<input class="" type="image" src="/images/buttons/Preview-Product.gif" onClick="if(!$('CustomImageFile').value) { alert('Please choose an image to upload'); return false; }; parent.showPleaseWait(); return true;"/>
+		</td>
+	</tr>
+	</table>
+	</form>
+	<? if(!empty($this->data)) { ?>
+	<script>
+		Event.observe(window,'load', function() { parent.loadCustomProductImages(); });
+	</script>
+	<? } ?>
+</div>

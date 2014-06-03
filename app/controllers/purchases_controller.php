@@ -1,0 +1,1290 @@
+<?php
+class PurchasesController extends AppController {
+
+	var $name = 'Purchases';
+	var $helpers = array('Html', 'Form');
+	var $uses = array("Purchase",'ContactInfo','OrderItem','CartItem','CreditCard','ShippingMethod','Product');
+	var $paginate = array('order'=>'Purchase.Order_Date DESC, Purchase.Purchase_id DESC');
+
+	function beforeFilter()
+	{
+		parent::beforeFilter();
+		$this->Auth->deny('index');
+	}
+
+	function admin_by_customer($customer_id)
+	{
+		$this->set("readonly", true);
+		$this->setAction("orders", $customer_id);
+	}
+
+	function index()
+	{
+		$customer_id = $this->get_customer_id();
+		$this->setAction("orders", $customer_id);
+	}
+
+	function admin_log($date = null) # Dump log file.
+	{
+		$logfile = APP."/tmp/logs/payment.log";
+
+		header("Content-Type: text/plain");
+		if(!file_exists($logfile)) { echo "No transactions logged."; exit(0); }
+
+		$content = file_get_contents($logfile);
+		$lines = split("\n", $content);
+
+		#$lines = array_reverse($lines); # Reverse chrono order.
+
+
+		if(empty($lines)) { echo "No transactions logged."; }
+
+		foreach($lines as $line)
+		{
+			if(!empty($date))
+			{
+				$ymd = date("Y-m-d", strtotime($date));
+				list($linedate) = split("\s", $line); 
+				$lineymd = date("Y-m-d", strtotime($linedate));
+				if($ymd != $lineymd)
+				{
+					continue;
+				}
+			}
+			echo "$line\n";
+		}
+		exit(0);
+	}
+	
+	function orders($customer_id)
+	{
+		$this->paginate = array(
+		'limit'=>10,
+		'order'=>'Order_Date DESC, Order_Status, OrderItem.order_item_id DESC'
+		);
+
+		# Only show products theyve ordered before..
+		$idlist = $this->OrderItem->findAll("Customer_ID = '$customer_id'", "DISTINCT OrderItem.product_type_id AS product_type_id");
+		$ids = Set::extract($idlist, "{n}.OrderItem.product_type_id");
+
+		#print_r($ids);
+
+		$products = $this->Product->findAll(array('product_type_id'=>$ids),null,array('name'));
+		$products_by_id = Set::combine($products, '{n}.Product.product_type_id', '{n}');
+		$product_names_by_id = Set::combine($products, '{n}.Product.product_type_id', '{n}.Product.name');
+
+		$this->set("products", $product_names_by_id);
+
+		$this->OrderItem->recursive = 1;
+		#$purchases = $this->Purchase->findAll("Order_Status != 'Shipped'");
+		#$purchases = $this->paginate('Purchase'," Purchase.Customer_ID = '$customer_id' ");
+		$cond = array();
+		$cond["Purchase.Customer_ID"] = $customer_id;
+
+		$field = !empty($this->data['Purchase']['field']) ? $this->data['Purchase']['field'] : null;
+		$value = !empty($this->data['Purchase']['value']) ? $this->data['Purchase']['value'] : null;
+
+		#echo "F=$field, V=$value, DS=$date_start, DE=$date_end";
+
+		$searched = false;
+
+		if($field == 'Purchase_id' && $value != '')
+		{
+			$cond['OrderItem.Purchase_id'] = $value;
+			$searched = true;
+		} else if ($field == 'customer_po' && $value != '') {
+			$cond['Purchase.customer_po'] = $value;
+			$searched = true;
+		} else if ($field == 'product_type_id') {
+			$cond['OrderItem.product_type_id'] = $this->data['Purchase']['product_type_id'];
+			$searched = true;
+		} else if ($field == 'dates') { 
+			$date_start = !empty($this->data['Purchase']['date_start']) ? $this->data['Purchase']['date_start'] : date("m/d/Y");
+			$date_end = !empty($this->data['Purchase']['date_end']) ? $this->data['Purchase']['date_end'] : date("m/d/Y"); # TODAY
+
+			$date1 = date("Y-m-d", strtotime($date_start));
+			$searched = true;
+			$date2 = date("Y-m-d", strtotime($date_end));
+
+			$cond[] = "Purchase.Order_Date BETWEEN '$date1' AND '$date2' ";
+		}
+		$this->set("searched", $searched);
+
+		#print_r($cond);
+
+		$purchases = $this->paginate('OrderItem',$cond);
+		if(false)
+		{
+		foreach($purchases as &$purchase)
+		{
+
+			foreach($purchase['OrderItem'] as &$item)
+			{
+				#$item['Price'] = 666;
+				$pid = $item['product_type_id'];
+				if (!$pid) { continue; }
+				$item['Product'] = $products_by_id[$pid]['Product'];
+				$code = $item['Product']['code'];
+				$quantity = $item['Quantity'];
+				$product_list[$code] = $quantity;
+
+				#print_r($item['ItemPart']);
+				$custom_image_id = $item['ItemPart']['imageID'];
+				$thumbnail_id =  $item['ItemPart']['imageID'];
+				$catalog_number = $item['ItemPart']['catalogNumber'];
+				$thumbnail_location = '';
+				if ($custom_image_id)
+				{
+					$custom_image = $this->CustomImage->read(null, $custom_image_id);
+					$item['CustomImage'] = $custom_image['CustomImage'];
+					$thumbnail_location =  $custom_image['thumbnail_location'];
+				}
+				if ($catalog_number)
+				{
+					$gallery_image = $this->GalleryImage->find(" GalleryImage.catalog_number = '$catalog_number' ");
+					$item['GalleryImage'] = $gallery_image['GalleryImage'];
+				}
+
+				if ($item['ItemPart']['quote_ID'])
+				{
+					$quote = $this->Quote->read(null, $item['ItemPart']['quote_ID']);
+					$item['quote_info'] = $quote['Quote'];
+				}
+				if ($item['ItemPart']['tassel_ID'])
+				{
+					$tassel = $this->Tassel->read(null, $item['ItemPart']['tassel_ID']);
+					$item['tassel_info'] = $tassel['Tassel'];
+				}
+				if ($item['ItemPart']['border_ID'])
+				{
+					$border = $this->Border->read(null, $item['ItemPart']['border_ID']);
+					$item['border_info'] = $border['Border'];
+				}
+				if ($item['ItemPart']['charm_ID'])
+				{
+					$charm = $this->Charm->read(null, $item['ItemPart']['charm_ID']);
+					$item['charm_info'] = $charm['Charm'];
+				}
+				if ($item['ItemPart']['ribbon_ID'])
+				{
+					$ribbon = $this->Ribbon->read(null, $item['ItemPart']['ribbon_ID']);
+					$item['ribbon_info'] = $ribbon['Ribbon'];
+				}
+				if ($item['ItemPart']['frameID'])
+				{
+					$frame = $this->Frame->read(null, $item['ItemPart']['frameID']);
+					$item['frame_info'] = $frame['Frame'];
+				}
+			}
+
+		}
+		}
+
+		$this->set('purchases', $purchases);
+
+		$this->set("products_by_id", $products_by_id);
+	}
+
+	function getUnitPrice($item_id, $quantity)
+	{
+		$products_by_id = $this->Product->get_products_by_id();
+
+		$orderItem = $this->OrderItem->read(null, $item_id);
+		$product = $products_by_id[$orderItem['OrderItem']['product_type_id']];
+		$code = $product['Product']['code'];
+		$parts = $orderItem['ItemPart'];
+
+		$customer = $this->get_customer();
+		$catalogNumber = $parts['catalogNumber'];
+		$real_stamp = $parts['reproductionStamp'] == 'no';
+		$stamp_surcharge = $real_stamp && $catalogNumber ?
+			$this->GalleryImage->find("GalleryImage.catalog_number = '$catalogNumber' ") : null;
+
+		$options = $parts;
+
+		$pricing = $this->Product->get_effective_base_price($code, $quantity, $customer, $stamp_surcharge, $options, $catalogNumber);
+
+		$unitPrice = $pricing['total'];
+		return $unitPrice;
+	}
+
+	function reorder_pricing($item_id, $quantity)
+	{
+		Configure::write("debug",0);
+		$unitPrice = $this->getUnitPrice($item_id, $quantity);
+		echo sprintf("$%.02f", $unitPrice*$quantity);
+		exit(0);
+	}
+/*--------------------------------------------
+FUNCTION:reorder
+SYNOPSIS: loops through list of old orders that a customer decided to reorder, 
+parses the product info, and creates a Cart Item for each one
+RETURNS: After the cart items are created here, program flow goes to the Cart Display (see /views/cart/display)
+
+----------------------------------------------*/
+	function reorder()
+	{
+		if(!empty($this->data['OrderItem']))
+		{
+			
+			foreach($this->data['OrderItem'] as $i => $item)
+			{
+				if(!empty($item['reorder']))
+				{
+					$payload = json_encode($item);
+					
+					$quantity = $item['quantity'];
+					$order_item_id = $item['reorder'];
+					$myCartItemID = $this->data['OrderItem'];
+					$orderItem = $this->OrderItem->read(null, $order_item_id);
+					# See if stock item, how to add to cart...
+					$productCode = $orderItem['Product']['code'];
+					// See if this product is a bookmark. If it is, it needs to use the New Build method if the user decides to edit the cart item
+					// Note: as more items are converted to "new build" items, the following conditional statement will need to be expanded to include them.
+					// JSA 2014-04-23
+					$newBuild = FALSE;
+					if($productCode == "B" || $productCode == "BC" ||$productCode == "BNT" ||$productCode == "BB" ){
+						$newBuild = TRUE;
+					}
+					if($quantity < $orderItem['Product']['minimum'])
+					{
+						$quantity = $orderItem['Product']['minimum'];
+					}
+
+					# Calculate unitPrice
+					$unitPrice = $this->getUnitPrice($order_item_id, $quantity);
+
+					
+					$cartItem = array(
+						//'payload'=>$payload,
+						'order_item_id'=>$order_item_id,
+						'productCode'=>$productCode,
+						'quantity'=>$quantity,
+						'comments'=>$orderItem['OrderItem']['comments'],
+						'unitPrice'=>$unitPrice,
+						'template'=>$orderItem['OrderItem']['template'],
+						'rotate'=>$orderItem['OrderItem']['rotate'],
+						'customer_id'=>$this->get_customer_id(),
+						'session_id'=>session_id(),
+						'new_build'=>$newBuild
+					);
+
+//'parts'=>serialize($sides[0]), # Make sure to reference altered data....
+//'parts2'=>!empty($sides[1]) ? serialize($sides[1]) : null
+
+
+					$sides = $orderItem['ItemPart'];
+					$theSide=1;
+					//foreach($sides as $side)
+					foreach($sides as $side)
+					{
+						$parts = array();
+						$parts['catalogNumber'] = $itemPart['catalogNumber'];
+						$parts['customImageID'] = $itemPart['imageID'];
+	
+						
+						// this was the partmap that we here when I got here - JAA 	
+						
+						$partmap = array(
+							'custom_quote'=>'customQuote',
+							'personalization'=>'personalizationInput',
+							'postCardAddress'=>'postcardAddress',
+							'Size'=>'shirtSize',
+							'PrintSide'=>'printSide',
+							'imageID'=>'customImageID',
+							'background_color'=>'backgroundColor'
+						);
+						// this is the partmap taken from designs_controller/cart. Because we inherited this code we can only make an educated guess 
+						// as to why we do this. Presumably it is because a developer somewhere along the line changed the expected array element names
+						/*$partmap = array(
+							'tassel_id'=>'tasselID',
+							'charm_id'=>'charmID',
+							'quote_id'=>'quoteID',
+							'border_id'=>'borderID',
+							'ribbon_id'=>'ribbonID',
+							'background_color'=>'backgroundColor',
+							'quote'=>'customQuote',
+							'personalization'=>'personalizationInput',
+							'personalizationColor'=>'personalizationColor'
+						);*/
+						# XXX improve to include new fields also...
+	
+						//foreach($itemPart as $part => $value)
+						foreach($side as $part => $value)
+						{
+							$part = preg_replace("/_ID$/", "ID", $part); # 
+							if(!empty($partmap[$part]))
+							{
+								$part = $partmap[$part];
+							}
+	
+							# customX or xID, etc.
+							$parts[$part] = $value; # Assume the same.
+						}
+						if($theSide==1){
+							$testSide1 = $parts;
+							$cartItem['parts'] = serialize($parts);
+						}else{
+							$testSide2 = $parts;
+							$cartItem['parts2'] = serialize($parts);
+						}
+						$theSide=2;
+					}
+
+					# XXX also set 'parts2'
+
+					$orderItem['Product'] = null;
+					
+					
+					
+					error_log("STARTING WITH=".print_r($orderItem,true));
+					error_log("PARTS=".print_r($parts,true));
+					error_log("ENDING WITH=".print_r($cartItem,true));
+
+					$this->CartItem->create();
+					$this->CartItem->save(array('CartItem'=>$cartItem));
+				}
+			}
+			$this->Session->write("reorder",true);
+			
+			// TEST - put the cart item into session var so we can examine it on the cart display page
+			
+			$this->Session->write("testSide1",$testSide1);// Jack Albright test data
+			
+			$this->Session->write("testSide2",$testSide2);// Jack Albright test data
+			
+			$testCartItem = json_encode($cartItem); // Jack Albright test data
+			$this->Session->write("testCartItem",$testCartItem);// Jack Albright test data
+			
+			$testCartParts = json_encode($sides); // Jack Albright test data
+			$this->Session->write("testCartParts",$testCartParts);// Jack Albright test data
+			
+			$this->redirect("/cart/display");
+		}
+		$this->redirect("/purchases"); # If not.
+	}
+
+	function process()
+	{
+		if(!empty($this->data['OrderItem']))
+		{
+		#print_r($this->data);
+
+			$this->OrderItem->recursive = 2;
+			foreach($this->data['OrderItem'] as $item)
+			{
+				if (empty($item['Product']) || empty($item['product_type_id'])) { continue; }
+				if (empty($item['order_item_id'])) { continue; }
+
+				$quantity = $item['quantity'];
+				$order_item_id = $item['order_item_id'];
+
+				$order = $this->OrderItem->read(null, $order_item_id);
+				$product = $order['Product'];
+				$productCode = $product['code'];
+				$parts = $order['ItemPart'];
+				#error_log("ORDER=".print_r($order,true));
+				# Fix parts.
+				foreach($parts as $partkey => $partvalue)
+				{
+					if ($newpartkey = preg_replace("/_ID/", "ID", $partkey))
+					{
+						unset($parts[$partkey]);
+						$parts[$newpartkey] = $partvalue;
+					}
+					if (preg_match("/^[A-Z]/", $partkey))
+					{
+						$newpartkey = ucfirst($partkey); # Size => size
+						$parts[$newpartkey] = $partvalue;
+						unset($parts[$partkey]);
+					}
+				}
+				#error_log("PARTS=".print_r($parts,true));
+
+				$parts['customImageID'] = $parts['imageID'];
+				$parts['customQuote'] = $parts['custom_quote'];
+				$parts['personalizationInput'] = $parts['personalization'];
+
+				# Construct 'cart_item'
+				$cart_item = array('parts'=>serialize($parts));
+
+				$cart_item['quantity'] = $quantity;
+				$cart_item['customer_id'] = $this->get_customer_id();
+				$cart_item['session_id'] = session_id();
+				$cart_item['productCode'] = $product['code'];
+				$cart_item['proof'] = $order['OrderItem']['proof'];
+
+				$stamp_surcharge = $this->get_stamp_surcharge($product['code'], $parts['catalogNumber']);
+				$unitPrice = $this->Product->get_effective_base_price($productCode, $quantity, $this->Session->read("Auth.Customer"), $stamp_surcharge, $parts);
+				$cart_item['unitPrice'] = $unitPrice['total'];
+
+				$this->CartItem->create();
+				$this->CartItem->save(array('CartItem'=>$cart_item));
+			}
+		}
+		$this->redirect("/cart/display.php");
+	}
+
+	function admin_index() {
+		$this->Purchase->recursive = 1;
+		#$purchases = $this->Purchase->findAll("Order_Status != 'Shipped'");
+		$conditions =' init';
+		//$conditionsTemp = print_r($this->data,true); // for testing / debugging
+		$value = $this->data['value'];
+		// this condition-setter added by Jack Albright 2014-04-15
+		if (isset($this->data) && $this->data['searchPurchaseID'] !='')
+		{
+			$conditions = " `purchase_id` =" . $this->data['searchPurchaseID']." ";
+		$purchases = $this->paginate('Purchase',$conditions);#,empty($this->params['named']['shipped']) ? "Order_Status != 'Shipped'":"");
+		}else{
+			$purchases = $this->paginate('Purchase');
+		}
+		
+		$this->set("conditionsText",$conditionsTemp);
+		foreach($purchases as &$purchase)
+		{
+			$shipping_id = $purchase['Purchase']['Shipping_ID'];
+			$product_list = array();
+			foreach($purchase['OrderItem'] as $item)
+			{
+				$quantity = $item['Quantity'];
+				$order_item_id = $item['order_item_id'];
+
+				$order = $this->OrderItem->read(null, $order_item_id);
+				$product = $order['Product'];
+				$productCode = $product['code'];
+				$product_list[$productCode] = $quantity;
+			}
+
+			$shippingOptions = $this->get_all_shipping_options($shipping_id, $product_list, $purchase['Purchase']['Charge_Amount']);
+			#echo $purchase['Purchase']['Charge_Amount'];
+			#echo print_r($shippingOptions,true);
+			$purchase['shippingOptions'] = $shippingOptions;
+		}
+
+		$this->set("purchases", $purchases);
+
+
+		$products = $this->Product->findAll();
+		$products_by_id = Set::combine($products, '{n}.Product.product_type_id', '{n}');
+		$this->set("products_by_id", $products_by_id);
+	}
+
+	function admin_wholesale() {
+		Configure::write("debug", 2);
+		$this->Purchase->Behaviors->attach('Containable');
+		$this->Purchase->recursive = 1;
+		$this->set("wholesale",true);
+		##############
+		$this->paginate = array('conditions'=>array("Customer.is_wholesale"=>1),'order'=>'purchase_id DESC');
+		$purchases = $this->paginate();
+
+		foreach($purchases as &$purchase)
+		{
+			$shipping_id = $purchase['Purchase']['Shipping_ID'];
+			$product_list = array();
+			foreach($purchase['OrderItem'] as $item)
+			{
+				$quantity = $item['Quantity'];
+				$order_item_id = $item['order_item_id'];
+
+				$order = $this->OrderItem->read(null, $order_item_id);
+				$product = $order['Product'];
+				$productCode = $product['code'];
+				$product_list[$productCode] = $quantity;
+			}
+
+			$shippingOptions = $this->get_all_shipping_options($shipping_id, $product_list, $purchase['Purchase']['Charge_Amount']);
+			#echo $purchase['Purchase']['Charge_Amount'];
+			#echo print_r($shippingOptions,true);
+			$purchase['shippingOptions'] = $shippingOptions;
+		}
+		$this->set('purchases', $purchases);
+
+		$products = $this->Product->findAll();
+		$products_by_id = Set::combine($products, '{n}.Product.product_type_id', '{n}');
+		$this->set("products_by_id", $products_by_id);
+
+		$this->action = 'admin_index';
+	}
+
+	function admin_process()
+	{
+		$host = $_SERVER['HTTP_HOST'];
+	#	error_log("PUR=".print_r($this->data,true));
+		$submit = $this->data['submit'];
+		if(!empty($this->data['Purchase']['purchase_id']))
+		{
+			$purchase_ids = $this->data['Purchase']['purchase_id'];
+		#	error_log("PURCHAES=".print_r($purchase_ids,true));
+
+			if ($submit == 'FedEx Address')
+			{
+				$params = "";
+				foreach($purchase_ids as $pid) { $params .= "txtInvoice[]=$pid&"; }
+				$this->redirect("http://$host/admin38/order/FedExReport2.php?$params");
+			}
+			if ($submit == 'USPS Address')
+			{
+				$params = "";
+				foreach($purchase_ids as $pid) { $params .= "purchase_id[]=$pid&"; }
+				$this->redirect("/admin/purchases/address_csv/usps?$params");
+			}
+			if ($submit == 'MYOB Customer OLD')
+			{
+				$params = join(",", $purchase_ids);
+				$this->redirect("http://$host/admin38/order/newMYOBCustomer.php?txtInvoice=$params");
+			}
+			if ($submit == 'MYOB Customer')
+			{
+				$params = join(",", $purchase_ids);
+				#$this->redirect("http://$host/admin38/order/newMYOBCustomer.php?txtInvoice=$params");
+				$this->redirect("/admin/account/purchase_export/$params");
+			}
+
+			if ($submit == 'MYOB Item')
+			{
+				$params = join(",", $purchase_ids);
+				#$this->redirect("http://$host/admin38/order/MYOBItem.php?txtInvoice=$params");
+				$this->redirect("/admin/purchases/item_export/$params");
+			}
+			if ($submit == 'MYOB Purchase' )
+			{
+				$params = join(",", $purchase_ids);
+				$this->redirect("/admin/purchases/export/$params");
+			}
+			if ($submit == 'Process Order')
+			{
+				# DO WE SEND AN EMAIL SAYING WERE PROCESSING????
+				$this->Purchase->updateAll(array("Order_Status"=>"'Processing'"), array("purchase_id"=>$purchase_ids));
+				#return;
+			}
+			if ($submit == 'Complete Order')
+			{
+				# DO WE SEND AN EMAIL SAYING its shipped? (NO!)
+				#
+				# NO EMAIL!
+				$this->Purchase->updateAll(array("Order_Status"=>"'Shipped'"), array("purchase_id"=>$purchase_ids));
+			}
+			if ($submit == 'Delete Orders')
+			{
+				$this->Purchase->deleteAll(array("purchase_id"=>$purchase_ids));
+			}
+		}
+		$this->redirect("/admin/purchases/index");
+	}
+
+	function admin_delete($purchase_id)
+	{
+		$purchase = $this->Purchase->read(null, $purchase_id);
+		$customer_id = $purchase['Purchase']['Customer_ID'];
+		$this->Purchase->delete($purchase_id);
+		$referer = $this->referer(array('controller'=>'account','action'=>'view',$customer_id,"#SavedOrders"));
+		$this->Session->setFlash("Order #$purchase_id deleted");
+		$this->redirect($referer);
+	}
+
+	function admin_address_csv()
+	{
+		Configure::write("debug",0);
+		$purchase_ids = $this->params['url']['purchase_id'];
+		$purchases = $this->Purchase->findAll(array("purchase_id"=>$purchase_ids));
+
+		#header("Content-Type: text/plain");
+		header("Content-Type: application/txt");
+		header("Content-Disposition: attachment; filename=usps_import.csv");
+
+		$cols = array("Name","Company","Address1","Address2","City","State","ZipCode","Country","Phone","Email");
+
+		foreach($cols as $col) { echo "$col\t"; }
+		echo "\n";
+
+
+		foreach($purchases as $purchase)
+		{
+			$line = "";
+			$shipping = $this->ContactInfo->read(null, $purchase['Purchase']['Shipping_ID']);
+			$customer = $this->Customer->read(null, $purchase['Purchase']['Customer_ID']);
+
+			$line .= $customer['Customer']['First_Name'] . " " . $customer['Customer']['Last_Name'] . "\t";
+			$line .= $customer['Customer']['Company'] . "\t";
+			$line .= $shipping['ContactInfo']['Address_1'] . "\t";
+			$line .= $shipping['ContactInfo']['Address_2'] . "\t";
+			$line .= $shipping['ContactInfo']['City'] . "\t";
+			$line .= $shipping['ContactInfo']['State'] . "\t";
+			$line .= $shipping['ContactInfo']['Zip_Code'] . "\t";
+			$line .= $shipping['ContactInfo']['Country'] . "\t";
+			$line .= $shipping['Customer']['Phone'] . "\t";
+			$line .= $shipping['Customer']['eMail_Address'];
+
+			$line = preg_replace("/,/", " ", $line); # Get rid of commas....
+			echo "$line\n";
+		}
+
+		exit(0);
+	}
+
+	function admin_import()
+	{
+		if(!empty($this->data))
+		{
+			if(!empty($this->data['Purchase']['file']['size']))
+			{
+				$fileobj = $this->data['Purchase']['file'];
+				$csv = file_get_contents($fileobj['tmp_name']);
+				$lines = preg_split("/[\r|\n]/", $csv);
+				$header = split("\t", array_shift($lines));
+
+				$purchases = array();
+
+				$count = 0;
+
+				foreach($lines as $line)
+				{
+					$data = array();
+					$values = split("\t", $line); 
+					if(empty($values[0])) { continue; } # Skip line if 1st col blank.
+					for($i = 0; $i < count($header); $i++)
+					{
+						$data[$header[$i]] = $values[$i];
+					}
+
+					# Ought to do this next time around.
+					if($this->Purchase->find(" invoice_id = '{$data['Invoice #']}' ")) # Already exists. Skip.
+					{
+						#echo "SKIPPING SINCE EXISTS...";
+						continue;
+					}
+
+					$prod = $data['Item Number'];
+					$recid = $data['Record ID'];
+
+					# Filter...
+					if(
+						empty($recid) ||
+						empty($prod) ||
+						preg_match("/(Special|PROOF|SAMPLE|Design|Set-up|Setup|Charge|Disp|DSP|Spinner|Printing)/i", $prod)
+					)
+					{
+						#echo "SKIPPING BOGUS $prod, RECID=".$data['Record ID']."<br/>";
+						continue;
+					}
+
+					if($count++>10) { break; } # Only do 10.
+					#
+					#echo "GOOD...<br/>";
+					$purchase = array();
+					$order = array();
+
+					$repro = preg_match("/^R/", $prod);
+
+					$prod = preg_replace("/^R(-)?/", "", $prod);
+					$prod = preg_replace("/[-|0-9].*/", "", $prod); # Remove dash/number and everything after.
+
+					# Try to guess product. Default to standard code.
+					if(preg_match("/^(BKT|BM)/", $prod)) { $prod = 'B'; }
+					if(preg_match("/^(NM|MAG)/", $prod)) { $prod = 'MM'; }
+					if(preg_match("/^(TT)/", $prod)) { $prod = 'P'; }
+					if(preg_match("/^(PCard)/", $prod)) { $prod = 'PC'; }
+
+					# If isn't a valid product code, keep blank, let them decide.
+
+					#echo "PROD=$prod<br/>";
+
+					if($product = $this->Product->find(" code = '$prod' "))
+					{ # Else, don't know!
+						$pid = $product['Product']['product_type_id'];
+						$order['product_type_id'] = $pid;
+					}
+
+					# Already have quantity.
+					$order['Quantity'] = $data['Quantity'];
+					$order['description'] = $data['Description'];
+					$order['item_code'] = $data['Item Number'];
+					$order['reproduction'] = $repro ? 'Yes' : 'No';
+					$order['Price'] = preg_replace("/[^0-9\.]/", "", $data['Price']);
+					$order['line'] = $line;
+
+					$invoice_id = null;
+
+					if(is_numeric($data['Invoice #']))
+					{
+						$purchase['invoice_id'] = $invoice_id = trim($data['Invoice #'], '0');
+						# Should show as field so next pass can skip if duplicate.
+					}
+
+					$customer = $this->Customer->find(" myob_record_id = '$recid' ");
+
+					#echo "FINDING CUSTOMER=$recid<br/>";
+
+					if(empty($customer)) { echo "CUSTOMER NOT FOUND RECORD ID=$recid<br/>"; continue; } # No customer yet, can't add.
+					$customer_id = $customer['Customer']['customer_id'];
+
+					$purchase['Customer_ID'] = $customer_id;
+					$purchase['Order_Date'] = date("Y-m-d", strtotime($data['Date']));
+					$purchase['customer_po'] = $data['Customer PO'];
+
+					$total = preg_replace("/[^0-9\.]/", '', $data['Total']);
+
+					###########
+					# DONT DUPLICATE
+					if(!empty($purchases[$invoice_id]))
+					{
+						$purchases[$invoice_id]['OrderItem'][] = $order;
+						$purchases[$invoice_id]['Purchase']['Charge_Amount'] += $total;
+					} else {
+						$purchase['Charge_Amount'] = $total;
+						$purchases[$invoice_id] = array('Purchase'=>$purchase,'Customer'=>$customer['Customer'], 'OrderItem'=>array($order));
+					}
+
+
+					# When add, need to put purchase_id in order item.
+
+					#### ADD purchase for each order
+				}
+				#echo "PRU=".print_r($purchases,true);
+				$products = $this->Product->findAll();
+				$productList = Set::combine($products, '{n}.Product.product_type_id', '{n}.Product.name');
+				$this->set("products", $productList);
+				$this->set("purchases", $purchases);
+			} else if(!empty($this->data['MYOBPurchase'])) { # Parse records...
+				foreach($this->data['MYOBPurchase'] as $p => $purchase)
+				{
+					# Add purchase record first.
+					$existing = $this->Purchase->find(" invoice_id = '{$purchase['invoice_id']}' ");
+					if(empty($existing))
+					{
+						$this->Purchase->create();
+					} else {
+						$this->Purchase->id = $existing['Purchase']['purchase_id'];
+					}
+
+					$this->Purchase->save(array('Purchase'=>$purchase)); # Always update, override existing.
+					$purchase_id = $this->Purchase->id;
+
+
+					##############
+
+					$order_items = $this->data['OrderItem'][$p];
+					foreach($order_items as $order_item)
+					{
+						# Is there any way to identify if already there?
+						$existing = $this->OrderItem->find(" OrderItem.purchase_id = '$purchase_id' AND OrderItem.item_code = '{$order_item['item_code']}' AND OrderItem.description = '{$order_item['item_code']}' ");
+						if(empty($existing))
+						{
+							$this->OrderItem->create();
+						} else {
+							$this->OrderItem->id = $existing['OrderItem']['order_item_id'];
+						}
+						$order_item['Purchase_id'] = $purchase_id;
+
+						$this->OrderItem->save(array('OrderItem'=>$order_item));
+					}
+
+					###############
+				}
+				$this->Session->setFlash("Wholesale orders created.");
+				$this->redirect("/admin/purchases/wholesale");
+			}
+		}
+	}
+
+	function admin_export($idlist = null) # TO myob.
+	{
+		$this->Purchase->recursive = 2; # OrderItem and ItemPart
+		$purchases = $this->Purchase->findAll(" purchase_id IN ($idlist) ");
+		$items = array();
+		$products = $this->Product->findAll();
+		$product_map = Set::combine($products, "{n}.Product.product_type_id", "{n}.Product");
+		foreach($purchases as $purchase)
+		{
+			$billme = ($purchase['Purchase']['Credit_Card_ID'] == -2);
+			$paypal = ($purchase['Purchase']['Credit_Card_ID'] == -1);
+			$amazon = ($purchase['Purchase']['Credit_Card_ID'] == -3);
+
+			$purchase_id = $purchase['Purchase']['purchase_id'];
+			$customer = $this->Customer->read(null, $purchase['Purchase']['Customer_ID']);
+			$shipping = $this->ContactInfo->read(null, $purchase['Purchase']['Shipping_ID']);
+			$billing = $this->ContactInfo->read(null, $purchase['Purchase']['Billing_ID']);
+			$card = $purchase['Purchase']["Credit_Card_ID"] > 0 ? $this->CreditCard->read(null, $purchase['Purchase']['Credit_Card_ID']) : array();
+			$shippingMethod = $this->ShippingMethod->read(null, $purchase['Purchase']["Shipping_Method"]);
+
+			$company = $customer['Customer']['Company'];
+			if(empty($company) && !empty($shipping['ContactInfo']['Company']))
+			{
+				$company = $shipping['ContactInfo']['Company'];
+			}
+			if(empty($company) && !empty($billing['ContactInfo']['Company']))
+			{
+				$company = $billing['ContactInfo']['Company'];
+			}
+			 
+
+			foreach($purchase['OrderItem'] as $orderItem)
+			{
+				$part = $orderItem['ItemPart'];
+				$item = array();
+				$itemNumber = $this->OrderItem->getItemNumber($orderItem);
+				$itemDescription = $this->OrderItem->getItemDescription($orderItem);
+				$pid = $orderItem['product_type_id'];
+				$product = $this->Product->read(null, $pid);
+
+				$customImage = !empty($part['imageID']) ? $this->CustomImage->read(null, $part['imageID']) : 
+				$productCode = $product['Product']['code'];
+				$parts = $orderItem['ItemPart'];
+				error_log("OI=".print_r($orderItem,true));
+
+				########################
+
+				$item['Co./Last Name'] = !empty($company) ? $company : $customer['Customer']['Last_Name'];
+				$item['First Name'] = empty($company) ? $customer['Customer']['First_Name'] : null;
+				if (!empty($company))
+				{
+					$item['Addr 1 - Line 1'] = $company;
+					$item['           - Line 2'] = $shipping['ContactInfo']['In_Care_Of'];
+					$item['           - Line 3'] = $shipping['ContactInfo']['Address_1'] . ' ' . $shipping['ContactInfo']['Address_2'];
+				} else {
+					$item['Addr 1 - Line 1'] = $shipping['ContactInfo']['In_Care_Of'];
+					$item['           - Line 2'] = $shipping['ContactInfo']['Address_1'] . ' ' . $shipping['ContactInfo']['Address_2'];
+					$item['           - Line 3'] = '';
+				}
+				$item['           - Line 4'] = $shipping['ContactInfo']['City'].', '.$shipping['ContactInfo']['State'].' '.$shipping['ContactInfo']['Zip_Code'];
+				$item['Invoice #'] = '';
+				$item['Date'] = date("m/d/Y", strtotime($purchase['Purchase']['Order_Date']));
+				$item['Customer PO'] = "web-".$purchase['Purchase']['purchase_id'];
+				$item['Ship Via'] = $shippingMethod['ShippingMethod']['name'];
+				$item['Delivery Status'] = 'A';
+				$item['Item Number'] = $itemNumber;
+				$item['Quantity'] = $orderItem['Quantity'];
+				$item['Description'] = $itemDescription;
+				$item['Price'] = $orderItem['Price'];
+				$item['Discount'] = '0%';
+				$item['Total'] = $orderItem['Price']*$orderItem['Quantity'];
+				$item['Job'] = '';
+				$item['Comment'] = 'We look forward to serving you again';
+				$item['Journal Memo'] = "Sale; ".(!empty($company) ? $company : $customer['Customer']['First_Name'] .' '.$customer['Customer']['Last_Name']);
+				$item['Salesperson Last Name'] = 'Franklin';
+				$item['Salesperson First Name'] = 'Sherrill';
+				$item['Shipping Date'] = date("m/d/Y", strtotime($purchase['Purchase']['ships_by']));
+				$item['Tax Code'] = '';
+				$item['Tax Amount'] = '0';
+				$item['Freight Amount'] = sprintf("$%.02f", $purchase['Purchase']['Shipping_Cost']); # NOT sure if this will get added X times for each item, or if it's just the total (we can fake it by division)
+				$item['Tax on Freight'] = '';
+				$item['Freight Tax Amount'] = '';
+				$item['Sale Status'] = 'I';
+				$item['Currency Code'] = '';
+				$item['Exchange Rate'] = '';
+				
+				# XXX TODO BILL ME vs cc paid
+				$item['Terms - Payment is Due'] = !empty($billme) ? 2 : 1;
+				$item['           - Discount Days'] = 0;
+				$item['           - Balance Due Days'] = !empty($billme) ? 30 : 0;
+				$item['           - % Discount'] = 0;
+				$item['           - % Monthly Charge'] = 0;
+				$item['Referral Source'] = "";
+
+				# XXX If paypal, also do unpaid...
+				$paid = $purchase['Purchase']['Charge_Amount'];
+				if(!empty($billme) || !empty($paypal) || !empty($amazon))
+				{
+					$paid = 0;
+				}
+				$item['Amount Paid'] = sprintf("$%.02f", $paid);
+				$type = 'Check';
+				if(!empty($card))
+				{
+					$num = $this->CreditCard->decrypt($card['CreditCard']['Number']);
+					$type = $this->CreditCard->get_card_type($num);
+				} else if ($paypal) {
+					$type = 'PAYPAL';
+				} else if ($amazon) {
+					$type = 'Amazon';
+				}
+				$item['Payment Method'] =  $type;
+				$item['Payment Notes'] = "";
+				if(!empty($card))
+				{
+					$item['Name on Card'] = $card['CreditCard']['Cardholder'];
+					$decryptedNumber = $this->CreditCard->decrypt($card['CreditCard']['Number']);
+					$item['Last 4 Digits on Card'] = substr($decryptedNumber,-4);
+					$item['Expiration Date'] = date("m/d/Y", strtotime($card['CreditCard']['Expiration']));
+					$item['Address (AVS)'] = '';
+					$item['Zip (AVS)'] = $billing['ContactInfo']['Zip_Code'];
+				} else {
+					$item['Name on Card'] = '';
+					$item['Last 4 Digits on Card'] = '';
+					$item['Expiration Date'] = '';
+					$item['Address (AVS)'] = '';
+					$item['Zip (AVS)'] = '';
+				}
+				$item['Credit Card Swiped'] = '';
+				$item['Authorization Code'] = '';
+				$item['Check Number'] = '';
+				$item['Category'] = '';
+				$item['Location ID'] = '';
+				$item['Card Verification (CVV2) Used'] = '';
+				$item['Card ID'] = $customer['Customer']['customer_id']; #'*None';
+				$item['Record ID'] = ''; # Import based on Card ID.
+				$item["Web Order"] = 'N';
+				$item['Shipping Details - Service'] = '';
+				$item['Tracking Number'] = '';
+				$item['Shipping Details - Notes'] = '';
+
+
+				#################
+				$items[] = $item;
+
+				#################
+				# XXX TODO if free proof, add.
+
+				if(!empty($orderItem['setupPrice']) && $orderItem['setupPrice'] > 0)
+				{
+					$sitem = $item;
+					$sitem['Item Number'] = 'Set-up Charge'; # Will this replace existing?
+					$sitem['Quantity'] = 1;
+					$sitem['Description'] = 'Set-up chg./One-time charge for customization';
+					$sitem['Price'] = $orderItem['setupPrice'];
+					$sitem['Total'] = $orderItem['setupPrice'];
+
+					$items[] = $sitem;
+				}
+				if(!empty($orderItem['proof']) && $orderItem['proof'] == 'yes')
+				{
+					$sitem = $item;
+					$sitem['Item Number'] = 'PROOF'; # Will this replace existing?
+					$sitem['Quantity'] = 1;
+					$sitem['Description'] = "Free email proof includes ONE proof plus ONE email revision.  Additional proofs are charged at the rate of $60/hour prorated in 15 minute increments.";
+					$sitem['Price'] = 0;
+					$sitem['Total'] = 0;
+
+					$items[] = $sitem;
+				}
+			}
+
+			if(!empty($purchase['Purchase']['rush_cost']))
+			{
+				$sitem = $item;
+				$sitem['Item Number'] = 'Rush Charge'; # Will this replace existing?
+				$sitem['Quantity'] = 1;
+				$sitem['Description'] = "Rush Charge";
+				$sitem['Price'] = $purchase['Purchase']['rush_cost'];
+				$sitem['Total'] = $purchase['Purchase']['rush_cost'];
+
+				$items[] = $sitem;
+			}
+
+			if(!empty($purchase['Purchase']['discount']))
+			{
+				$sitem = $item;
+				$sitem['Item Number'] = 'Discount'; # Will this replace existing?
+				$sitem['Quantity'] = 1;
+				$sitem['Description'] = "Discount - ".$purchase['Purchase']['coupon'];
+				$sitem['Price'] = -$purchase['Purchase']['discount'];
+				$sitem['Total'] = -$purchase['Purchase']['discount'];
+
+				$items[] = $sitem;
+			}
+
+
+
+			# If free shipping, add.
+			# XXX TODO
+		}
+		# MAYBE we can just live with only the colums we fill in?
+
+		# Now print out.
+		Configure::write("debug", 0);
+		if(empty($items)) { exit(0); }
+
+		$keys = array_keys($items[0]);
+
+		if(!empty($_REQUEST['debug']))
+		{
+			header("Content-Type: text/plain");
+			print_r($items);
+			exit(0);
+		}
+
+		ob_start();
+
+		foreach($keys as $key)
+		{
+			echo "$key\t";
+		}
+		echo "\r";
+		#echo "\n"; # Needs a blank line between header and data.
+
+		for($i = 0; $i < count($items); $i++)
+		{
+			$item = $items[$i];
+			if($i > 0 && $items[$i-1]['Customer PO'] != $item['Customer PO'])
+			{
+				echo "\r"; # Have a second line so don't group orders...
+			}
+			foreach($keys as $key)
+			{
+				echo "$item[$key]\t";
+			}
+			echo "\r";
+		}
+		echo "\r";
+
+		$content = ob_get_clean();
+
+		############################################
+		header("Content-Type: text/csv");
+		header("Content-Disposition: attachment; filename=purchase_invoice_$idlist.txt");
+		#echo $content;
+		echo $this->cleanIntlChars($content);
+		exit(0);
+
+	}
+
+	function admin_item_export($purchase_id_list) # Per item to myob (needed before order/purchase imported)
+	{
+		$csv = join(",", preg_split("/\D+/", $purchase_id_list));
+		$orderItems = $this->OrderItem->findAll(" OrderItem.purchase_id IN ($csv) ");
+		error_log("order_item.purchase_id IN ($csv) ");
+		
+
+		$items = array();
+
+		$base_surcharge = !empty($catalogNumber) ? $this->get_config_value("base_stamp_surcharge") : 0;
+		foreach($orderItems as $orderItem)
+		{
+			$catalogNumber = $orderItem['ItemPart'][0]['catalogNumber'];
+			$repro = (strtolower($orderItem['OrderItem']['reproduction']) == 'yes');
+			$pid = $orderItem['OrderItem']['product_type_id'];
+			$product = $this->Product->read(null, $pid);
+
+			$item = array();
+			$itemNumber = $this->OrderItem->getItemNumber($orderItem);
+			$itemDescription = $this->OrderItem->getItemDescription($orderItem);
+			$item['Item Number'] = $itemNumber;
+			$item['Item Name'] = $itemDescription;
+			$item['Buy'] = '';
+			$item['Sell'] = 'S';
+			$item['Inventory'] = '';
+			$income_account = empty($catalogNumber) ? $product['Product']['cust_invoice_acct'] : $product["Product"]['income_acct'];
+			$item['Asset Acct'] = '';
+			$item['Income Acct'] = $income_account;
+
+			$stampSurcharge = !empty($catalogNumber) ? $this->StampSurcharge->find(" Catalog_number = '$catalogNumber' ") : null;
+
+			$item['Expense/COS Acct'] = '';
+			$item['Item Picture'] = '';
+			$item['Description'] = '';
+			$item['Use Desc. On Sale'] = '';
+			$item['Custom List 1'] = '';
+			$item['Custom List 2'] = '';
+			$item['Custom List 3'] = '';
+			$item['Custom Field 1'] = '';
+			$item['Custom Field 2'] = '';
+			$item['Custom Field 3'] = '';
+			$item['Primary Vendor'] = '';
+			$item['Vendor Item Number'] = '';
+			$item['Tax When Bought'] = '';
+			$item['Buy Unit Measure'] = '';
+			$item['# Items/Buy Unit'] = '';
+			$item['Reorder Quantity'] = '';
+			$item['Minimum Level'] = '';
+
+
+
+			# Get pricings for item. (consider stamp surcharge and repro)
+			$pricings = $this->ProductPricing->find(" product_type_id = '$pid' ", null, "quantity");
+			# input a quantity where qty >= X, find the FIRST ONE.
+
+			$pricings_by_qty = array();
+			$price_by_qty = array();
+			$pricings = $this->ProductPricing->findAll(" product_type_id = '$pid' ", null, "quantity");
+			foreach($pricings as $pricing)
+			{
+				$qty = $pricing['ProductPricing']['quantity'];
+				$price = $pricing['ProductPricing']['price'];
+				if($qty > 1 && empty($price_by_qty[1]))
+				{
+					$price_by_qty[1] = $price;
+				}
+				$price_by_qty[$qty] = $price;
+			}
+			$minqty = min(array_keys($price_by_qty));
+			$qtys = array_keys($price_by_qty);
+
+			$cheaper = 500;
+			$cheapest = 1001;
+
+			# We need to FORCE 5 quantity levels. strip off if extra. add more if not enough.
+			$quantity_levels = array();
+			for($i = 0; $i < 5; $i++)
+			{
+				$quantity_levels[$i] = count($qtys) > $i ? $qtys[$i] : $qts[count($qtys)-1];
+			}
+
+			$cheaper = $quantity_levels[count($quantity_levels)-2];
+			$cheapest = $quantity_levels[count($quantity_levels)-1];
+			if($cheaper < 250) { $cheaper = 250; }
+			if($cheapest < 250) { $cheapest = 250; }
+
+			$discounts = array('A'=>100,'B'=>250,'C'=>1,'D'=>250,'E'=>$cheaper,'F'=>$cheapest);
+			#500,'F'=>1001);
+
+			$item['Selling Price'] = $price_by_qty[$minqty];#$orderItem['OrderItem']['Price'];
+			$item['Sell Unit Measure'] = 'ea.';
+			$item['Tax When Sold'] = '';
+			$item['# Items/Sell Unit'] = 1;
+
+			# We have to match the website levels EXACTLY, so they get billed right.
+
+
+			//print_r($quantity_levels);
+
+
+			$ix = 1; foreach($quantity_levels as $qty)
+			{
+				if($qty < $minqty) { 
+					$quantity_price[$qty] = $price_by_qty[$minqty];
+				} else {
+					$quantity_price[$qty] = $price_by_qty[$qty];
+				}
+
+				$item['Quantity Break '.$ix] = $qty-1;
+				$ix++;
+
+			} # We need to compile so we can look ahead later.
+
+			$ix = 1; foreach($quantity_levels as $qty)
+			{
+				$price = 0;
+				foreach($discounts as $level => $dqty)
+				{
+					if($qty < $dqty)
+					{
+						$qty = $dqty; # Treat as higher/cheaper level
+					}
+					$cost = $quantity_price[$qty];
+
+					# Now save.
+					$surcharge = $this->Product->get_stamp_surcharge($stampSurcharge, $qty);
+					$addl_cost = !empty($repro) ? $surcharge + $base_surcharge : 0;
+					$total = $cost + $addl_cost;
+
+
+					$item["Price Level $level, Qty Break ".$ix] = $total;
+
+				}
+				$ix++;
+
+			}
+
+			# Need to skip ahead!
+			#$item['Price Level C, Qty Break 1'] = $orderItem['OrderItem']['Price'];
+
+			# Need a way to show wholesale vs retail price.
+			$item['Inactive Item'] = 'N';
+			$item['Standard Cost'] = '';
+			$item['Default Ship/Sell Location'] = '';
+			$item['Default Recvd/Auto Location'] = '';
+			$item['Brand'] = '';
+			$item['Weight'] = 0;
+			$item['Unit of Weight'] = 'Pound';
+			$item['Web Description'] = '';
+			$item['Sold in Web Store'] = 'N';
+			$item['Web Store Price'] = $price_by_qty[$minqty];
+	
+			$items[] = $item;
+		}
+
+		# Now print out.
+		if(empty($_REQUEST['debug'])) { 
+			Configure::write("debug", 0);
+		}
+		if(empty($items)) { error_log("NO ITEMS"); exit(0); }
+
+		$keys = array_keys($items[0]);
+
+		if(!empty($_REQUEST['debug']))
+		{
+			header("Content-Type: text/plain");
+			print_r($items);
+			exit(0);
+		}
+
+		############################################
+		header("Content-Type: text/csv");
+		header("Content-Disposition: attachment; filename=purchase_item_$purchase_id_list.txt");
+
+		ob_start();
+
+		foreach($keys as $key)
+		{
+			echo "$key\t";
+		}
+		echo "\r";
+		#echo "\n"; # Needs a blank line between header and data.
+		# NO BLANK 2nd line!
+
+
+		foreach($items as $item)
+		{
+			foreach($keys as $key)
+			{
+				echo "$item[$key]\t";
+			}
+			echo "\r";
+		}
+		$content = ob_get_clean();
+		echo $this->cleanIntlChars($content);
+		exit(0);
+
+	}
+
+	function admin_view($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid Purchase.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$this->set('purchase', $this->Purchase->read(null, $id));
+	}
+
+	function admin_add() {
+		if (!empty($this->data)) {
+			$this->Purchase->create();
+			if ($this->Purchase->save($this->data)) {
+				$this->Session->setFlash(__('The Purchase has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The Purchase could not be saved. Please, try again.', true));
+			}
+		}
+	}
+
+	function admin_edit($id = null) {
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid Purchase', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if (!empty($this->data)) {
+			if ($this->Purchase->save($this->data)) {
+				$this->Session->setFlash(__('The Purchase has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The Purchase could not be saved. Please, try again.', true));
+			}
+		}
+		if (empty($this->data)) {
+			$this->data = $this->Purchase->read(null, $id);
+		}
+	}
+
+	function admin_multidelete()
+	{
+		if (!empty($this->data['Purchase']))
+		{
+			
+		}
+		$this->redirect("/admin/purchases");
+	}
+
+}
+?>

@@ -1,0 +1,10 @@
+<?php
+class ShippingMethod extends AppModel {
+
+	var $name = 'ShippingMethod';
+	var $useDbConfig = 'default_legacy';
+	var $useTable = 'shippingMethod';
+	var $primaryKey = 'shippingMethodID';
+
+}
+?>

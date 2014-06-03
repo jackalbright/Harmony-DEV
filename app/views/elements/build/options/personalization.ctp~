@@ -1,0 +1,92 @@
+<div class="clear">
+		<!--<h2><?php echo $counter;?>. Add personalization <span class="note">(Optional - Free)</span></h2>-->
+		<p class="note">
+			<!--Example: &#8220;Happy Birthday, John &#8212; Your friend, Mary.&#8221;-->
+		</p>
+		<table width="100%"><tr>
+		<td valign="top">
+			<input id="personalizationNone" type="radio" name="data[options][personalizationNone]" onClick="$('personalizationInput').value = ''; if(this.checked) { $('persDetails').hide(); } else { $('persDetails').show(); } ; updateBuild('<?=$i?>');" value="1" <?= !empty($build['options']['personalizationNone']) ? "checked='checked'" : "" ?> /> No personalization
+			<br/>
+			<input type="radio" name="data[options][personalizationNone]" value="0" onClick="$('persDetails').show();" <?= empty($build['options']['personalizationNone']) ? "checked='checked'" : "" ?> /> Custom personalization
+
+			<script>
+			document.onkeypress = noTextEnter;
+			</script>
+
+			<div id="persDetails" style="<?= !empty($build['options']['personalizationNone']) ? "display: none;":"" ?>">
+			<table cellpadding=0 cellspacing=0>
+				<tr>
+					<td rowspan=3 style="padding-right: 20px;" valign="top">
+						<textarea rows=2 cols="<?= !empty($build['Product']['personalizationLimit']) ? ceil($build['Product']['personalizationLimit']/2) : 30 ?>" id="personalizationInput" name="data[options][personalizationInput]" style="overflow: clip;" maxlength="<?= $build['Product']['personalizationLimit'] ?>" onBlur="$('personalizationNone').checked = 0; " onChange="$('personalizationNone').checked = 0; updateBuild('<?= $i ?>');" onkeyup="typingPersonalization(event, '<?= $build['Product']['personalizationLimit'] ?>');"><?= !empty($build['options']['personalizationInput']) ? $build['options']['personalizationInput'] : "" ?></textarea>
+						<div class="clear"></div>
+						<?  $persLength = !empty($build['options']['personalizationInput']) ? strlen($build['options']['personalizationInput']) : 0; ?>
+						<div align="left" class="note"> <span id="personalizationLength"><?= $persLength ?></span> of <?= $build['Product']['personalizationLimit'] ?> characters.  </div>
+					</td>
+					<td>
+						Font style:
+					</td>
+					<td>
+						<input type="radio" id="personalizationStyleScript" name="data[options][personalizationStyle]" value="block" <?= (empty($build['options']['personalizationStyle']) || $build['options']['personalizationStyle'] == 'block' ) ? 'checked="checked"' : "" ?> onClick="updateBuild('<?=$i?>');" /><img src="/new-images/block-font.gif" alt="block font" height="20" align="middle" />
+					</td>
+					<td>
+						<input type="radio" id="personalizationStyleScript" name="data[options][personalizationStyle]" value="script" <?= (!empty($build['options']['personalizationStyle']) && $build['options']['personalizationStyle'] == 'script' ) ? 'checked="checked"' : "" ?> onClick="updateBuild('<?=$i?>');"/><img src="/new-images/script-font.gif" alt="script font" height="20" align="middle" />
+					</td>
+				</tr>
+				<? if(true || $build['template'] == 'imageonly') { ?>
+				<tr>
+					<td style="border-top: solid #CCC 1px;">
+						Text color:
+					</td>
+					<td style="border-top: solid #CCC 1px;">
+						<input type="radio" name="data[options][personalizationColor]" <?= empty($build['options']['personalizationColor']) || $build['options']['personalizationColor'] == 'black' ? "checked='checked'" : "" ?> value="black" onChange="updateBuild('<?=$i?>');"/>
+						<span style="color: black; background-color: white; padding: 5px;">Black</span>
+					</td>
+					<td style="border-top: solid #CCC 1px;">
+						<input type="radio" name="data[options][personalizationColor]" <?= !empty($build['options']['personalizationColor']) && $build['options']['personalizationColor'] == 'white' ? "checked='checked'" : "" ?> value="white" onChange="updateBuild('<?=$i?>');"/>
+						<span style="color: white; background-color: black; padding: 5px;"> White</span>
+					</td>
+				</tr>
+				<? } ?>
+				<tr>
+					<td align='left' colspan=3>
+						<br/>
+						<a href="Javascript:void(0)" onClick="updateBuildImage();"><img src="/images/buttons/small/Preview-grey.gif"/></a>
+					</td>
+				</tr>
+			</table>
+			</div>
+
+			<div class="clear"></div>
+		</td>
+		<? if(false) { ?>
+		<td class="center" valign="top" style="border-left: solid #CCC 1px;">
+			<div class="bold">
+			Or provide your own logo:
+			</div>
+			<br/>
+
+			<div id="logoUpload" XXclass="<?= !empty($build['PersonalizationLogo']) ? "hidden":"" ?>">
+			<input type="file" name="data[PersonalizationLogo][file]" size="20" onChange="$('personalizationInput').value = '';"/>
+			<br/>
+
+			<input type="image" src="/images/buttons/Preview.gif" onClick="showPleaseWait(); $('personalizationInput').value = ''; $('build_form').action = '/custom_images/add_build_logo'; return true;"/>
+			<!-- REDIRECT TO CUSTOM_IMAGES/ADD, sayin we're a logo, so it knows to go back to build after done... -->
+			<br/>
+			<br/>
+
+			<div id="personalizationLogoDetails">
+			<? if(!empty($build['PersonalizationLogo'])) { ?>
+				<input id="logo_id" type="hidden" name="data[options][personalization_logo_id]" value="<?= $build['PersonalizationLogo']['Image_ID'] ?>"/>
+				<div id="logo_preview" align="center">
+					<img height=50 src="<?= $build['PersonalizationLogo']['thumbnail_location'] ?>"/>
+				</div>
+			<? } ?>
+			</div>
+			</div>
+
+		</td>
+		<? } ?>
+		</tr></table>
+
+</div>
+

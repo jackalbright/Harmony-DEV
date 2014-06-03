@@ -1,0 +1,27 @@
+#stamp_browse_grid
+{
+}
+
+#stamp_browse_grid .stamp_browse_item
+{
+	/*border: solid #EEE 1px;*/
+	background: white url("/images/stamp_browse_bg.png") repeat-x;
+	border: solid #CCC 1px;
+}
+
+#stamp_browse_grid .stamp_browse_item
+{
+	width: 30%;
+}
+
+img.stamp_thumbnail
+{
+	background-color: #060606;
+	border: solid #060606 2px;
+}
+
+img.stamp_large
+{
+	background-color: #060606;
+	border: solid #060606 5px;
+}

@@ -1,0 +1,40 @@
+<? if(empty($product['Product']['is_stock_item'])) { ?>
+<div>
+	<a href="/gallery?prod=<?= $product['Product']['code'] ?>"><img src="/images/buttons/See-Your-Design-Now.gif"/></a>
+</div>
+
+<div align="left" style="margin: 10px; border: solid #AAA 1px; background-color: white; width: 250px;">
+	<h3 style="background-color: #CCC; padding: 5px; font-weight: bold;">In a hurry?</h3>
+	<div style="padding: 10px;">
+	<p>Rush service is our specialty.</p>
+	<p>Specify 'Rush Processing' at checkout, or contact us for more info:</p>
+	<div>
+		888.293.1109<br/>
+		<a href="mailto:info@harmonydesigns.com?subject=Rush Service">info@harmonydesigns.com</a>
+	</div>
+	</div>
+</div>
+
+<div align="left" style="margin: 10px; border: solid #AAA 1px; background-color: white; width: 250px;">
+	<h6 style="background-color: #CCC; padding: 5px; font-weight: bold;">Contact us for more info</h6>
+	<div style="padding: 10px;">
+		<div style="line-height: 150%;">
+			<div> <a rel="shadowbox;type=html;width=500;height=600" href="/sample_requests/add/<?= $prod ?>">Request a random sample</a></div>
+			<div> <a rel="shadowbox;type=html;width=500;height=600" href="/quote_requests/add/<?= $prod ?>">Request price quote</a></div>
+			<? if(preg_match("/custom/", $product['Product']['image_type'])) { ?>
+			<div> <a href="mailto:info@harmonydesigns.com?subject=Request a template">Request a template</a></div>
+			<div> <a href="mailto:info@harmonydesigns.com?subject=Completed art">Submit your completed art</a></div>
+			<? } ?>
+			<div> Call now for a free consultation:<br/>888.293.1109</div>
+		</div>
+	</div>
+</div>
+
+	<? } else { ?>
+			<div id="stock_calc">
+			<?= $this->element("products/stock_calc",array('p'=>$product['Product'])); ?>
+			</div>
+			<script>
+			document.observe('dom:loaded', function() { calculateStockSubtotal('<?= $product['Product']['code'] ?>'); });
+			</script>
+		<? } ?>

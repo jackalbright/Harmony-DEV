@@ -1,0 +1,63 @@
+.fancyDropdown
+{
+	padding-right: 25px;
+	cursor: pointer;
+	display: inline-block;
+	position: relative;
+	background-color: #EEE;
+	border: solid 1px #AAA;
+	width: 150px;
+	font-size: 1em;
+}
+.fancyDropdown .arrow /* really sweet trick using thick one-sided color, other-sided transparent borders on a box with no interior size */
+{
+	position: absolute;
+	right: 5px;/*0.5em;*/
+	top: 45%;
+	border-left: 6px solid transparent;
+	border-right: 6px solid transparent;
+	border-top: 6px solid #AAA;
+}
+.fancyDropdown input
+{
+	position: relative;
+	margin: 0px;
+	width: 100% !important;
+	cursor: pointer;
+	border: 0px;
+	background-color: #FAFAFA;
+	border-right: solid #DDD 1px;
+	padding: 2px;
+	/* stuff for arrow, etc; or maybe above? */
+}
+.fancyDropdown ul
+{
+	display: none;
+	list-style-type: none;
+	margin: 0px;
+	margin-left: 0px !important;
+	padding: 0px;
+	position: absolute;
+	background-color: white;
+	z-index: 10;
+	overflow-y: auto;
+	max-height: 250px;
+	cursor: pointer;
+	width: 250px;
+	border: solid #666 1px;
+}
+.fancyDropdown li
+{
+	margin: 0px;
+	padding: 2px;
+	overflow: hidden;
+}
+.fancyDropdown li:hover, .fancyDropdown li.selected
+{
+	background-color: #CCC;
+}
+
+.fancyDropdown ul:hover li.selected
+{
+	background-color: #FFF;
+}

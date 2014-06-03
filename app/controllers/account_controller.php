@@ -1,0 +1,1324 @@
+<?php
+class AccountController extends AppController {
+
+	var $name = 'Account';
+	var $title = 'My Account';
+	var $helpers = array('Html', 'Form');
+	var $components = array('Cookie','AddressBook');
+	var $uses = array('Customer','CustomImage','ContactInfo','Country','CreditCard','CartItem','Purchase');
+	var $paginate = array(
+		'Customer'=>array(
+			'order'=>'Customer.customer_id DESC',
+		),
+	);
+
+
+	function beforeFilter()
+	{
+		#$this->Auth->deny('*'); # Anonymous pages....
+		#$this->Auth->allow('forgot','signup','index','login'); # Anonymous pages....
+		$this->Auth->allow('login','signup','forgot','reset','logout','signup_anonymous','session');
+		parent::beforeFilter();
+		#$this->require_https();
+		# This won't work when using logins in an ajax container/modal.... since the calling page isn't necessarily secure.
+	}
+
+	function session()
+	{
+		if(!empty($this->params['url']))
+		{
+			foreach($this->params['url'] as $key => $value)
+			{
+				$this->Session->write($key, $value);
+				# Can be Build.options.tasselID, etc...
+			}
+		}
+		Configure::write("debug", 0);
+		header("Content-Type: text/plain");
+		print_r($this->Session->read());
+		exit();
+	}
+
+	function admin_logout()
+	{
+		$this->action = 'logout';
+
+		$_SESSION['customerRecord'] = array();
+		$this->set_legacy_cookie("customerlogin", null);
+		$this->Session->setFlash("You have been logged out");
+		$this->redirect($this->Auth->logout());
+	}
+
+
+	function admin_login()
+	{
+		$this->body_title = "Administrative Account Login";
+		if($customer = $this->Auth->user())
+		{
+			# admin38 bypass
+        		$this->Session->write('UName' , "sfranklin");
+                        $this->Session->write('canManageOrders' , 'Yes');
+                        $this->Session->write('canManageParts' , 'Yes');
+                        $this->Session->write('canManageUsers' , 'Yes');
+                        $this->Session->write('canManageItems' , 'Yes');
+                        $this->Session->write('canManageEvents' , 'Yes');
+                        $this->Session->write('canManageDatabase' , 'Yes');
+                        $this->Session->write('canManageTestimonials' , 'Yes');
+
+
+
+			/*
+			$email_pass = $customer['Customer']['eMail_Address'] . $this->data['Customer']['Password']; # Password only available in form...
+			$cookieText = $customer['Customer']['customer_id'] . 'x' . md5($email_pass);
+			$this->set_legacy_cookie("customerlogin", $cookieText);
+			$session_id = session_id();
+			$this->CustomImage->moveAnonymousImages($session_id, $customer['Customer']['customer_id']);
+
+			# Move cart items over to account...
+			$this->CartItem->assignToCustomer($session_id, $customer['Customer']['customer_id']);
+
+			# Re-calculate rush charges... (do ajax call but dont display content...)
+			$this->requestAction("/cart/update_review");
+
+			$custom_image_id = $this->Session->read("Build.CustomImage.Image_ID");
+			if ($custom_image_id)
+			{
+				$custom_image = $this->CustomImage->read(null, $custom_image_id);
+				$this->Session->write("Build.CustomImage", $custom_image['CustomImage']);
+				$this->build = $this->Session->read("Build");
+			}
+
+			$_SESSION['customerRecord'] = $this->Session->read("Auth.Customer");
+			*/
+
+
+			return $this->redirect($this->Auth->redirect());
+		}
+	}
+
+
+	function login($blurb = '')
+	{
+		$this->set("in_login", true);
+
+		#$this->_redirect_referer();
+
+		$this->body_title = "Account Login";
+		if (!empty($this->data) && ($customer = $this->Auth->user())) # if we directly call /account/login, we want to re-login, maybe from guest to real account.
+		{
+		#	error_log("GOOD LOGIN");
+			# Set cookie for older pages...
+			$email_pass = $customer['Customer']['eMail_Address'] . $this->data['Customer']['Password']; # Password only available in form...
+			#error_log("EMAIL_PASS = $email_pass");
+			$cookieText = $customer['Customer']['customer_id'] . 'x' . md5($email_pass);
+			#$this->Cookie->write("customerlogin", $cookieText);
+			$this->set_legacy_cookie("customerlogin", $cookieText);
+			#$this->Cookie->write("customerlogin", $cookieText);
+			# WRONG, sets CakeCookie[customerlogin]
+
+			#error_log("CUST=".print_r($customer,true));
+
+			# Now move all images over....
+			$session_id = session_id();
+			$this->CustomImage->moveAnonymousImages($session_id, $customer['Customer']['customer_id']);
+
+
+			# Move cart items over to account...
+			$this->CartItem->assignToCustomer($session_id, $customer['Customer']['customer_id']);
+
+			# Re-calculate rush charges... (do ajax call but dont display content...)
+			$this->requestAction("/cart/update_review");
+
+			# RELOAD image so it has the new path in the session.....
+			$custom_image_id = $this->Session->read("Build.CustomImage.Image_ID");
+			if ($custom_image_id)
+			{
+				$custom_image = $this->CustomImage->read(null, $custom_image_id);
+				$this->Session->write("Build.CustomImage", $custom_image['CustomImage']);
+				$this->build = $this->Session->read("Build");
+			}
+
+			# If images are anonymous and dont move over, they may already be assigned to some other account!
+
+			$_SESSION['customerRecord'] = $this->Session->read("Auth.Customer");
+			#error_log("OK, REDIR, = ". $this->Auth->redirect());
+			#error_log("PARAMS=".print_r($this->params,true));
+			#if (!empty($_COOKIE['goto'])) {
+			#	$goto = $this->clear_goto();
+			#	$this->redirect($goto);
+			#} else 
+
+			#if ($goto = $this->Session->read("goto")) { 
+			#	error_log("GOTO=$goto");
+			#	$this->Session->write('goto', null);
+			#	$this->redirect($goto);
+			#}
+			#else 
+			if (!empty($this->params['form']['goto'])) {
+				error_log("GOTO1.5=".$this->params['form']['goto']);
+				$this->redirect($this->params['form']['goto']);
+			} else if (!empty($this->params['url']['goto'])) {
+				error_log("GOTO2=".$this->params['url']['goto']);
+				$this->redirect($this->params['url']['goto']);
+			#} else if(!empty($_SERVER['HTTP_REFERER'])) {
+			#	$this->redirect($_SERVER['HTTP_REFERER']);
+
+			# XXX TODO go to 'my account' if that's what they wanted...
+
+			} else {
+				$to = $this->Auth->redirect();
+				error_log("GOTO AUTH REDIR=".$to);
+				return $this->redirect($to);
+			}
+		} else if (!empty($this->params['url']['goto'])) {
+			error_log("URL_GOTO SET=".$this->params['url']['goto']);
+			$this->Auth->redirect($this->params['url']['goto']);
+		} else if (!empty($this->params['form']['goto'])) {
+			error_log("FORMGOTO SET=".$this->params['form']['goto']);
+			$this->Auth->redirect($this->params['form']['goto']);
+		} else {
+			# Always force going to the previous page...
+			# There is a flaw in Auth->startup() where it only sets Auth.redirect ONCE, even if we never log into the restricted pages - 
+			# And thus redirecting to those old pages despite logging in to a totally different page...
+
+
+			# If current url (/account) is NOT login (/account/login), redir to there. otherwise, go to referer.
+
+			if(!$this->Session->read("Auth.redirect") && !empty($_SERVER['HTTP_REFERER'])) # Only go to prev page if not trying to go somewhere else, ie 'my acct'
+			{ # Auth.redirect is set to referer if requested url isn't explicitly '/account/login'
+				error_log("GOING TO PREVIOUS PAGE... at=".$this->params['url']['url']);
+				$this->Auth->redirect($_SERVER['HTTP_REFERER']);
+			}
+
+			#if(!empty($this->data))
+			#{
+			#	$this->Session->setFlash("Could not log in. Please check your email and password.");
+			#}
+		#	error_log("BAD LOGIN!");
+		}
+		if(!empty($_REQUEST['goto']))
+		{
+			#error_log("GOTO={$_REQUEST['goto']}");
+			$this->Session->write("goto", $_REQUEST['goto']);
+		}
+
+		$this->set("blurb", $blurb);
+		# return false;
+	}
+
+	function logout()
+	{
+		$this->_redirect_referer();
+
+		$_SESSION['customerRecord'] = array();
+		##error_log("SESS=".print_r($_SESSION['customerRecord'],true));
+		$this->set_legacy_cookie("customerlogin", null);
+		$this->Session->setFlash("You have been logged out");
+		$logout = $this->Auth->logout();
+
+		# Eliminate some stuff from session...
+		$this->Session->delete("zipCode");
+		$this->Session->delete("country");
+
+			if (!empty($_COOKIE['goto'])) {
+				$goto = $this->clear_goto();
+				$this->redirect($goto);
+			}
+			else if ($goto = $this->Session->read("goto")) { 
+				$this->Session->write('goto', null);
+				$this->redirect($goto);
+			}
+			else if (!empty($this->params['url']['goto']))
+			{
+				#error_log("OK, REDIR_GOTO, = ". $this->params['url']['goto']);
+				$this->redirect($this->params['url']['goto']);
+			} else {
+				$this->redirect($logout);
+			}
+	}
+
+	function home()
+	{
+		$this->setAction("index");
+	}
+
+	function index() {
+		$this->body_title = "My Account";
+		#$this->Customer->recursive = 0;
+		#$this->set('customers', $this->paginate());
+		$customer = $this->get_customer();
+		if(!empty($customer['guest'])) # Force guests to log in with legit account.
+		{
+			$this->Auth->logout();
+			$this->redirect("/account");
+		}
+		$this->set("customer", $customer);
+	}
+
+	function _redirect_referer()
+	{
+		$referer = !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : null;
+		#error_log("REF=$referer");
+		# We SHOULD be catching original source...
+		if (!empty($_REQUEST['goto']))
+		{
+			$referer = $_REQUEST['goto'];
+		}
+		if (!$this->data && !preg_match("/\/account/", $referer))
+		{
+			#error_log("SETTING SRC=$referer");
+			#$this->set_goto($referer); # Go to referer.
+			$this->Session->write("goto", $referer);
+			#$this->Auth->redirect($referer);
+		}
+	}
+
+	function redir() { } # hmmm....
+
+	function signup_anonymous()
+	{
+		# Re-use existing customer in session if there and marked as 'guest'
+		$customer = $this->Session->read("Auth.Customer");
+		if(!empty($customer['guest'])) # Already tried signing up as a guest.
+		{
+			$this->data = array('Customer'=>$customer);
+		} else {
+			$this->data = array('Customer'=>array());
+			$this->Customer->create();
+		}
+		# Now set registration date...
+		$this->data['Customer']['dateAdded'] = $this->unix_date(true);
+		$this->data['Customer']['Password'] = "";
+		$this->data['Customer']['guest'] = 1;
+		$this->data['Customer']['session_id'] = session_id(); # So can reuse without asking for password..
+		$this->data['Customer']['eMail_Address'] = "";
+		$this->data['Customer']['First_Name'] = "";
+		$this->Customer->save($this->data);
+		$customer_id = $this->Customer->id;
+		$customer = $this->Customer->read(null, $customer_id);
+		$this->manual_login($customer);
+		$this->Session->write("Auth.Customer", $customer['Customer']);
+
+		$this->redirect("/checkout/review");
+	}
+
+	function signup_anonymous_form() # After partially logged in...
+	{
+		$customer = $this->Session->read("Auth.Customer");
+		#error_log("C=".print_r($customer,true));
+		if (!empty($customer)) { #error_log("LOGGED IN..."); return $this->logout(); 
+		}
+
+		# Set referer...
+	#	$this->set_goto(); # Goes to referer.
+
+		$this->_redirect_referer();
+
+		$this->body_title = "";#Checkout without creating an account";
+		if (!empty($this->data))
+		{
+			##error_log(print_r($this->data,true));
+			$email = $this->data['Customer']['eMail_Address'];
+
+			# Make sure username is alphanumeric, 6+ chars.
+			# Make sure password matches password2, at least 6 chars.
+			###$firstname = $this->data['Customer']['First_Name'];
+			###$lastname = $this->data['Customer']['Last_Name'];
+
+			###if (strlen($firstname) <= 0 || strlen($lastname) <= 0)
+			###{
+			###	$this->Session->setFlash('Must enter in your complete first and last names.');
+			###}
+			###else 
+			if (!preg_match("/^.+@.+[.].+$/", $email)) 
+			{
+				$this->Session->setFlash("Invalid email.");
+			}
+			else if ($this->Customer->hasAny(array('eMail_Address' => $email)))
+			# Verify email not already signed up....
+			{
+				$this->Session->setFlash('Email already in use. Choose another or <a href="/account/forgot">retrieve your password</a>.');
+				# Hopefully this will display on THIS page, and not require a redirect.
+			} else {
+				# All good, do actual signup...
+				$this->Customer->create();
+				# Now set registration date...
+				$this->data['Customer']['dateAdded'] = $this->unix_date(true);
+
+				if ($this->Customer->save($this->data))
+				{
+					$this->CustomImage->moveAnonymousImages(session_id(), $this->Customer->id);
+
+					#$this->Session->setFlash(__('Account created', true));
+					# Send out email confirmation.... with username, password, email, etc.
+					# XXX TODO
+					#$this->sendEmail($this->data, "HarmonyDesigns.com Account", "account_created", array('customer'=>$this->data['Customer']));
+
+					# redirect to thank you page, with login form. 
+					$this->set('eMail_Address', $email);
+					$this->set('content_file', "content/signup_thanks");
+					# under elements/content/signup_thanks.ctp
+					#$this->redirect(array('action'=>'login'));
+
+					# Manually login
+					# WE NEED
+					$this->manual_login($email);
+					if (!empty($_COOKIE['goto']))
+					{
+						$goto = $_COOKIE['goto'];
+						$this->clear_goto();
+						$this->redirect($goto);
+					} else if ($goto = $this->Session->read("goto")) { 
+						$this->Session->write('goto', null);
+						$this->redirect($goto);
+					} else {
+						$this->redirect(array('action'=>'index'));
+					}
+				} else {
+					$this->setError("Cannot create account", $this->Customer);
+
+				}
+			}
+		}
+
+	}
+
+	function signup()
+	{
+		$customer = $this->Session->read("Auth.Customer");
+		#error_log("C=".print_r($customer,true));
+		if (!empty($customer)) { #error_log("LOGGED IN..."); return $this->logout(); 
+		}
+
+		# Set referer...
+	#	$this->set_goto(); # Goes to referer.
+
+		#$this->_redirect_referer();
+
+		$this->body_title = "Account Signup";
+		if (!empty($this->data))
+		{
+			##error_log(print_r($this->data,true));
+
+			# Make sure username is alphanumeric, 6+ chars.
+			# Make sure password matches password2, at least 6 chars.
+
+
+			if (!
+				(
+				#$this->Customer->verify_name($this->data) &&
+				$this->Customer->verify_password($this->data) &&
+				$this->Customer->verify_email($this->data)
+				)
+			)
+			{
+				$this->Session->setFlash(join("<br/>", $this->Customer->errors));
+				$this->redirect("/account/login");
+			} else {
+				if ($this->save_account($this->data))
+				{
+					$this->sendEmail($this->data, "HarmonyDesigns.com Account", "account_created", array('customer'=>$this->data['Customer']));
+					#$this->goto_redirect(array('action'=>'index'));
+
+					# RELOAD image so it has the new path in the session.....
+					$custom_image_id = $this->Session->read("Build.CustomImage.Image_ID");
+					if ($custom_image_id)
+					{
+						$custom_image = $this->CustomImage->read(null, $custom_image_id);
+						$this->Session->write("Build.CustomImage", $custom_image['CustomImage']);
+					}
+					$goto = $this->Session->read("goto");
+					if(empty($goto)) { $goto = $this->Auth->redirect(); }
+				#	error_log("REDIR GOTO=$goto");
+					$this->redirect($goto);
+				} else {
+					$this->setError("Cannot create account", $this->Customer);
+				}
+			}
+		}
+
+	}
+
+	function admin_purchase_export($pids) # To myob
+	{
+		$this->layout = 'plain';
+		Configure::write('debug',0);
+
+		$pidlist = split(",", $pids);
+
+		# print
+		if(!empty($_REQUEST['debug'])) { 
+			header("Content-Type: text/plain");
+
+		} else {
+			header("Content-Type: application/txt");
+			header("Content-Disposition: attachment; filename=customer-$pids.txt");
+		}
+
+		ob_start();
+
+		foreach($pidlist as $pid)
+		{
+			$purchase = $this->Purchase->read(null, $pid);
+			$cid = $purchase['Purchase']['Customer_ID'];
+			
+			$customer = $this->Customer->read(null, $cid);
+			$c = $customer['Customer'];
+			$c['Phone'] = preg_replace("/\D/", "", $c['Phone']); # Remove non-digits.
+			$billing = $this->ContactInfo->read(null, $purchase['Purchase']['Billing_ID']);
+			$shipping = $this->ContactInfo->read(null, $purchase['Purchase']['Shipping_ID']);
+			$b = $billing['ContactInfo'];
+			$s = $shipping['ContactInfo'];
+
+			$credit_card = $this->CreditCard->read(null, $purchase['Purchase']['Credit_Card_ID']);
+
+			$cc = $credit_card['CreditCard'];
+
+			$paymentType = null;
+
+			#error_log("PROF+CARD={$cc['cardType']}");
+
+			if(!empty($cc['Card_Type']))
+			{
+				$paymentType = $cc['Card_Type'];
+			} else if (!empty($purchase['Purchase']['payment_profile_id'])) {
+				if(!empty($c['cardType'])) {
+					$paymentType = $c['cardType'];
+				} else {
+					$paymentType = 'Credit Card';
+				}
+			} else if ($purchase['Purchase']['Credit_Card_ID'] == -1) { 
+				$paymentType = 'PayPal';
+			} else if ($purchase['Purchase']['Credit_Card_ID'] == -2) { 
+				$paymentType = 'Bill Me';
+			}
+			#error_log("PT=$paymentType");
+	
+			$company = trim($c['Company']);
+			if(empty($company) && !empty($s['Company']))
+			{
+				$company = trim($s['Company']);
+			}
+			if(empty($company) && !empty($b['Company']))
+			{
+				$company = trim($b['Company']);
+			}
+	
+			$record = array();
+			# ...
+			$last_name = $c['Last_Name'];
+			$s_name = preg_split("/\s+/", $s['In_Care_Of']);
+			$b_name = preg_split("/\s+/", $b['In_Care_Of']);
+			if(empty($last_name) && !empty($b_name[count($b_name)-1]))
+			{
+				$last_name = $b_name[count($b_name)-1];
+			}
+			if(empty($last_name) && !empty($s_name[count($s_name)-1]))
+			{
+				$last_name = $s_name[count($s_name)-1];
+			}
+
+			$first_name = $c['First_Name'];
+			if(empty($first_name) && !empty($b_name[0]))
+			{
+				$first_name = $b_name[0];
+			}
+			if(empty($first_name) && !empty($s_name[0]))
+			{
+				$first_name = $s_name[0];
+			}
+	
+			# create array.
+			$record['Co./Last Name'] = !empty($company) ? $company : $last_name;
+			$record['First Name'] = !empty($company) ? "" : $first_name;
+			$record['Card ID'] = $c['customer_id'];
+			$record['Card Status'] = '';
+			$record['Currency Code'] = '';
+			if(!empty($company))
+			{
+				$record['Addr 1 - Line 1'] = $b['In_Care_Of'];
+				$record['Addr 1 - Line 2'] = $b['Address_1'];
+				$record['Addr 1 - Line 3'] = $b['Address_2'];
+			} else { # No company, so don't duplicate person's name.
+				$record['Addr 1 - Line 1'] = $b['Address_1'];
+				$record['Addr 1 - Line 2'] = $b['Address_2'];
+				$record['Addr 1 - Line 3'] = '';
+			}
+			$record['Addr 1 - Line 4'] = '';
+			$record['Addr 1 - City'] = $b['City'];
+			$record['Addr 1 - State'] = $b['State'];
+			$record['Addr 1 - ZIP Code'] = $b['Zip_Code'];
+			$record['Addr 1 - Country'] = $b['Country'];
+			$record['Addr 1 - Phone # 1'] = $c['Phone'];
+			$record['Addr 1 - Phone # 2'] = '';
+			$record['Addr 1 - Phone # 3'] = '';
+			$record['Addr 1 - Fax #'] = '';
+			$record['Addr 1 - Email'] = $c['eMail_Address'];
+			$record['Addr 1 - WWW'] = '';
+			$contact_name = $s['In_Care_Of'];
+			if(empty($contact_name) && !empty($b['In_Care_Of'])) { 
+				$contact_name = $b['In_Care_Of'];
+			}
+			if(empty($contact_name) && !empty($b['First_Name'])) { 
+				$contact_name = $b['First_Name'] . ' ' . $b['Last_Name'];
+			}
+			$record['Addr 1 - Contact Name'] = $contact_name;
+			$record['Addr 1 - Salutation'] = '';
+	
+			$record['Addr 2 - Line 1'] = $s['In_Care_Of'];
+			$record['Addr 2 - Line 2'] = $s['Address_1'];
+			$record['Addr 2 - Line 3'] = $s['Address_2'];
+			$record['Addr 2 - Line 4'] = '';
+			$record['Addr 2 - City'] = $s['City'];
+			$record['Addr 2 - State'] = $s['State'];
+			$record['Addr 2 - ZIP Code'] = $s['Zip_Code'];
+			$record['Addr 2 - Country'] = $s['Country'];
+			$record['Addr 2 - Phone # 1'] = $c['Phone'];
+			$record['Addr 2 - Phone # 2'] = '';
+			$record['Addr 2 - Phone # 3'] = '';
+			$record['Addr 2 - Fax #'] = '';
+			$record['Addr 2 - Email'] = $c['eMail_Address'];
+			$record['Addr 2 - WWW'] = '';
+			$record['Addr 2 - Contact Name'] = $contact_name;
+			$record['Addr 2 - Salutation'] = '';
+	
+			$record['Addr 3 - Line 1'] = '';
+			$record['Addr 3 - Line 2'] = '';
+			$record['Addr 3 - Line 3'] = '';
+			$record['Addr 3 - Line 4'] = '';
+			$record['Addr 3 - City'] = '';
+			$record['Addr 3 - State'] = '';
+			$record['Addr 3 - ZIP Code'] = '';
+			$record['Addr 3 - Country'] = '';
+			$record['Addr 3 - Phone # 1'] = '';
+			$record['Addr 3 - Phone # 2'] = '';
+			$record['Addr 3 - Phone # 3'] = '';
+			$record['Addr 3 - Fax #'] = '';
+			$record['Addr 3 - Email'] = '';
+			$record['Addr 3 - WWW'] = '';
+			$record['Addr 3 - Contact Name'] = '';
+			$record['Addr 3 - Salutation'] = '';
+	
+			$record['Addr 4 - Line 1'] = '';
+			$record['Addr 4 - Line 2'] = '';
+			$record['Addr 4 - Line 3'] = '';
+			$record['Addr 4 - Line 4'] = '';
+			$record['Addr 4 - City'] = '';
+			$record['Addr 4 - State'] = '';
+			$record['Addr 4 - ZIP Code'] = '';
+			$record['Addr 4 - Country'] = '';
+			$record['Addr 4 - Phone # 1'] = '';
+			$record['Addr 4 - Phone # 2'] = '';
+			$record['Addr 4 - Phone # 3'] = '';
+			$record['Addr 4 - Fax #'] = '';
+			$record['Addr 4 - Email'] = '';
+			$record['Addr 4 - WWW'] = '';
+			$record['Addr 4 - Contact Name'] = '';
+			$record['Addr 4 - Salutation'] = '';
+	
+			$record['Addr 5 - Line 1'] = '';
+			$record['Addr 5 - Line 2'] = '';
+			$record['Addr 5 - Line 3'] = '';
+			$record['Addr 5 - Line 4'] = '';
+			$record['Addr 5 - City'] = '';
+			$record['Addr 5 - State'] = '';
+			$record['Addr 5 - ZIP Code'] = '';
+			$record['Addr 5 - Country'] = '';
+			$record['Addr 5 - Phone # 1'] = '';
+			$record['Addr 5 - Phone # 2'] = '';
+			$record['Addr 5 - Phone # 3'] = '';
+			$record['Addr 5 - Fax #'] = '';
+			$record['Addr 5 - Email'] = '';
+			$record['Addr 5 - WWW'] = '';
+			$record['Addr 5 - Contact Name'] = '';
+			$record['Addr 5 - Salutation'] = '';
+	
+			$record['Picture'] = '';
+			$record['Notes'] = '';
+			$record['Identifiers'] = 'I';
+			$record['Custom List 1'] = '';
+			$record['Custom List 2'] = '';
+			$record['Custom List 3'] = '';
+			$record['Custom Field 1'] = '';
+			$record['Custom Field 2'] = '';
+			$record['Custom Field 3'] = '';
+	
+			$record['Billing Rate'] = '0';
+			$record['Terms - Payment Is Due'] = '1';
+			$record['Terms - Discount Days'] = '0';
+			$record['Terms - Balance Due Days'] = '0';
+			$record['Terms - % Discount'] = '0';
+			$record['Terms - % Monthly Charge'] = '0';
+			$record['Tax Code'] = 'X';
+			$record['Credit Limit'] = '0';
+			$record['Tax ID No.'] = '';
+			$record['Volume Discount %'] = '0';
+			$record['Sales/Purchase Layout'] = 'N';
+			$record['Price Level'] = '3';
+	
+			# Don't forget to find the RIGHT credit card! what if more than one?
+	
+			$record['Payment Method'] = $paymentType;#$cc['Card_Type'];
+			$record['Payment Notes'] = '';
+			$record['Name on Card'] = $cc['Cardholder'];
+			$record['Card Number'] = $cc['Number'];
+			$record['Expiration Date'] = !empty($cc['Expiration']) ? date("m/d/Y", strtotime($cc['Expiration'])) : null;
+			$record['Address (AVS)'] = $b['Address_1'];
+			$record['ZIP (AVS)'] = $b['Zip_Code'];
+			$record['Card Verification (CVV2)'] = '';
+			$record['Account'] = '';
+	
+			$record['Salesperson'] = 'Franklin, Sherrill';
+			$record['Salesperson Card ID'] = '*None';
+			$record['Comment'] = 'We look forward to serving you again.';
+			$record['Shipping Method'] = '';
+			$record['Printed Form'] = '';
+			$record['Freight Tax Code'] = '-';
+			$record['Receipt Memo'] = '';
+			$record['Invoice/Purchase Order Delivery'] = 'P';
+			$record['Record ID'] = '';
+
+			$records[] = $record;
+		}
+
+		$keys = array_keys($records[0]);
+		foreach($keys as $key)
+		{
+			echo "$key\t";
+		}
+		echo "\r";
+
+		foreach($records as $record)
+		{
+	
+			foreach($keys as $key)
+			{
+				echo "$record[$key]\t";
+			}
+			echo "\r";
+		}
+
+		$content = ob_get_clean();
+		echo $this->cleanIntlChars($content);
+
+		exit(0);
+
+	}
+
+	function payment_select()
+	{
+		$this->redirect("/account/payment_edit");
+		###################################
+		$this->body_title = 'Manage Credit Cards';
+		$customer = $this->Session->read("Auth.Customer");
+		$customer_id = $customer['customer_id'];
+		$payments = $this->CreditCard->findAll("customer_id = '$customer_id'");
+		if (empty($payments)) { $this->redirect("/account/payment_edit"); }
+		foreach($payments as &$payment)
+		{
+			$payment['CreditCard']['NumberPlain'] = $this->CreditCard->decrypt($payment['CreditCard']['Number']);
+		}
+		$this->set("paymentMethods", $payments);
+	}
+
+	function payment_delete($payment_id)
+	{
+		$customer_id = $this->Session->read("Auth.Customer.customer_id");
+		$card = $this->CreditCard->read(null, $payment_id);
+		if($card['CreditCard']['Customer_ID'] == $customer_id)
+		{
+			$this->CreditCard->del($payment_id);
+			$this->Session->setFlash("Payment information removed.");
+		}
+		$this->redirect("/account/payment_select"); 
+	}
+
+	function payment_edit()
+	{
+		$this->set("body_title", "Payment Information");
+
+		$profile_id = $this->getCustomerProfileId();
+		$profile = $this->getCustomerProfile($profile_id);
+		$paymentProfile = $this->getCustomerPaymentProfile($profile);
+
+		$this->set("paymentProfile", $paymentProfile); # Has last four.
+
+		if(!empty($this->data))
+		{
+			$billinfo = $this->data['ContactInfo'];
+			$cardinfo = $this->data['CreditCard'];
+
+			# XXX MAY need to convert info...
+
+			# If card number not changed, don't change that...
+			# ??? can we change oter stuff (ie expiration only?)
+			#
+
+			# Get billing address (form should ask if none on file)
+			# if billing is new, save that too. (esp cardholder=>First, Last)
+			# Address_1, Address_2, City, State, Zip_Code, Country
+
+			$this->updateCustomerPaymentCard($profile_id, $billinfo, $cardinfo);
+
+			# Also change ContactInfo...
+
+			$this->ContactInfo->save($this->data);
+			$contact_id = $this->ContactInfo->id;
+
+			# Save to customer.
+			$this->Customer->id = $this->Auth->user("Customer_ID");
+			$this->Customer->saveField("billing_id_pref", $contact_id);
+
+			# Will yell if can't.
+
+			$this->Session->setFlash("Your payment information has been updated.");
+			$this->redirect("/account");
+		}
+
+		$billing_id_pref = $this->Auth->user("billing_id_pref");
+
+		if(!empty($billing_id_pref))
+		{
+			$this->data = $this->ContactInfo->read(null, $billing_id_pref);
+		}
+
+	}
+
+	function payment_edit_old($payment_id = '')
+	{
+		$this->checkout_step = 3;
+		$this->body_title = $payment_id ? 'Update Payment Method' : 'Add Payment Method';
+		$customer_id = $this->Session->read("Auth.Customer.customer_id");
+
+		if (!empty($this->data))
+		{
+			# Process.
+			$payment_id = $this->save_credit_card();
+			$this->Session->setFlash("Credit card saved");
+			$this->redirect("/account/payment_select");
+		}
+
+		$this->data = $payment_id ? $this->CreditCard->find("credit_card_id = '$payment_id' AND customer_id = '$customer_id'") : array();
+		#if (!$this->data) { $this->redirect("/checkout/payment_select"); }
+		if (!empty($this->data['CreditCard']))
+		{
+			$this->data['CreditCard']['NumberPlain'] = $this->CreditCard->decrypt($this->data['CreditCard']['Number']);
+		}
+
+		$this->js_required_fields[] = "CreditCardCardType";
+		$this->js_required_fields[] = "CreditCardCardholder";
+	}
+
+	function save_credit_card()
+	{
+		$customer_id = $this->Session->read("Auth.Customer.customer_id");
+		$card_id = $this->data['CreditCard']['credit_card_id'];
+		if (!$card_id || !$this->CreditCard->findCount("credit_card_id = '$card_id' AND CreditCard.Customer_ID = '$customer_id'"))
+		# Make sure it's one of theirs.... ,else create
+		{
+			unset($this->data['CreditCard']['credit_card_id']);
+			$this->CreditCard->create();
+		}
+
+		# May only be given id field....
+
+		$this->data['CreditCard']['Customer_ID'] = $customer_id;
+		$this->data['CreditCard']['Expiration'] = $this->data['CreditCard']['Expiration']['year'] . '-' . $this->data['CreditCard']['Expiration']['month'] . '-01';
+		# Verify completedness....
+		if (!$this->data['CreditCard']['Cardholder'])
+		{
+			$this->Session->setFlash("Missing cardholder name");
+			return;
+		} else if (strtotime($this->data['CreditCard']['Expiration']) < time()) {
+			$this->Session->setFlash("Invalid expiration date. Card has expired.");
+			return;
+		} else if (!$this->CreditCard->is_valid_credit_card($this->data['CreditCard']['NumberPlain'])) {
+			$this->Session->setFlash("Invalid card number");
+			return;
+		}
+		$this->data['CreditCard']['Number'] = $this->CreditCard->encrypt($this->data['CreditCard']['NumberPlain']);
+
+		$this->CreditCard->save($this->data);
+		$card_id = $this->CreditCard->id;
+
+		return $this->CreditCard->id;
+	}
+
+	function address_select()
+	{
+		$this->body_title = 'Manage Address Book';
+		$customer = $this->Session->read("Auth.Customer");
+		$customer_id = $customer['customer_id'];
+		$addresses = $this->ContactInfo->findAll("ContactInfo.Customer_ID = '$customer_id'");
+		if (!count($addresses)) { $this->redirect("/account/address_edit"); }
+		$this->set("addresses", $addresses);
+
+		$this->set("countries", $this->Country->findAll());
+	}
+
+	function address_delete($contact_id)
+	{
+		$customer_id = $this->Session->read("Auth.Customer.customer_id");
+		$address = $this->ContactInfo->read(null, $contact_id);
+		if($address['ContactInfo']['Customer_ID'] == $customer_id)
+		{
+			$this->ContactInfo->del($contact_id);
+			$this->Session->setFlash("Address removed.");
+		}
+		$this->redirect("/account/address_select"); # NOT THEIRS, bogus...
+
+	}
+
+	function address_edit($contact_id = '')
+	{
+		$this->body_title = $contact_id ? 'Update Address' : 'Add Address';
+		$customer_id = $this->Session->read("Auth.Customer.customer_id");
+		$customer = $this->get_customer();
+
+		if (!empty($this->data))
+		{
+			# Process.
+			$contact_id = $this->AddressBook->save_address();
+			$this->Session->setFlash("Address saved");
+			$this->redirect("/account/address_select");
+		}
+
+		$this->data = $contact_id ? $this->ContactInfo->find("Contact_ID = '$contact_id' AND ContactInfo.customer_id = '$customer_id'") : array();
+	#	if (!$this->data) { $this->redirect("/checkout/billing_select"); }
+		if (empty($this->data['ContactInfo']['Name']))
+		{
+			# Default to their name...
+			$this->data['ContactInfo']['Name'][0] = $customer['First_Name'];
+			$this->data['ContactInfo']['Name'][1] = $customer['Last_Name'];
+		}
+
+		$this->set("countries", $this->Country->findAll());
+
+		$this->js_required_fields[] = "ContactInfoInCareOf";
+		$this->js_required_fields[] = "ContactInfoAddress1";
+		$this->js_required_fields[] = "ContactInfoCity";
+		$this->js_required_fields[] = "ContactInfoZipCode";
+
+	}
+
+	function reset($email = '', $code = '') # Changing password, given email and secret code.
+	{
+		if ($email == '' || $code == '') 
+		{
+			$this->Session->setFlash("The link you used is expired. Please provide your email to send a new link to reset your password.", 'warn');
+			$this->redirect("/account/forgot");
+		}
+
+		$customer = $this->Customer->find(array('eMail_Address'=>$email,'reset_code'=>$code));
+
+		if (!$customer)
+		{
+			$this->Session->setFlash("The link you used is expired. Please provide your email to send a new link to reset your password.", 'warn');
+			$this->redirect("/account/forgot");
+		} else {
+			# LOG THEM IN...
+			$this->manual_login($customer);
+			$this->Customer->id = $customer['Customer']['customer_id'];
+			$this->Customer->saveField("reset_code", null);
+			
+			$this->Session->setFlash("Please update your password to something memorable.");
+
+			$this->redirect("/account/change_password");
+		}
+	}
+
+	function forgot() # Allows for code to be put in to change later to something memorable.
+	{
+		$this->body_title = "Reset your password";
+		if (!empty($this->data)) # Specified email to send new password to.
+		{
+			$email = $this->data['Customer']['eMail_Address'];
+			$customer = $this->Customer->find("eMail_Address = '$email'");
+
+			# Somehow there's a disconnect from findByEmail to saveField...
+			# (since it creates a new record!!!!)
+
+			if ($customer)
+			{ # FOUND!
+				##error_log("FOUND!=");
+				#print_r($customer);
+				# XXX TODO (email send, regen password)
+				
+				# For now, just reset password to 'username1';
+				$customer_id = $customer["Customer"]["customer_id"];
+				#$new_password = $username . "1";
+
+				if(!empty($customer['Customer']['reset_code']))
+				{
+					$reset_code = $customer['Customer']['reset_code']; # use the same reset code if there, so emails dont get mixed up and it seem broken.
+				} else {
+					$reset_code = $this->Customer->generate_code(64);
+
+					$this->Customer->id = $customer["Customer"]['customer_id'];
+					$this->Customer->saveField("reset_code", $reset_code);
+				}
+				
+				# Send email out.
+				$this->sendEmail($customer, "Harmony Designs Password", "password_reset", array("reset_code" => $reset_code));
+
+				$this->Session->setFlash("You will receive an email shortly with a link to access your account and change your password.");
+				$this->Session->delete('Auth.redirect');
+			} else { # Doesn't exist.
+				$this->Session->setFlash(__('Sorry, that email does not exist. Please try again or <a href="/account/login">create a new account</a>', true));
+			}
+
+
+		}
+
+	}
+
+	function forgot_reset() # Resets password instead.
+	{
+		$this->body_title = "Password Retrieval";
+		if (!empty($this->data)) # Specified email to send new password to.
+		{
+			$email = $this->data['Customer']['eMail_Address'];
+			$customer = $this->Customer->find("eMail_Address = '$email'");
+
+			# Somehow there's a disconnect from findByEmail to saveField...
+			# (since it creates a new record!!!!)
+
+			if ($customer)
+			{ # FOUND!
+				##error_log("FOUND!=");
+				#print_r($customer);
+				# XXX TODO (email send, regen password)
+				
+				# For now, just reset password to 'username1';
+				$customer_id = $customer["Customer"]["customer_id"];
+				#$new_password = $username . "1";
+
+				$new_password = $this->Customer->generate_password();
+
+				# SET...
+				#$id = $this->Customer->customer_id = $customer["Customer"]['customer_id'];
+				#$id = $this->Customer->id = $customer["Customer"]['customer_id'];
+				##error_log( "ID=$id\n");
+				#$enc_password = $this->Auth->password($new_password);
+				$this->Customer->id = $customer["Customer"]['customer_id'];
+				$this->Customer->saveField("Password", $new_password);
+				
+				#$customer["Customer"]["password"] = $enc_password;
+				#$this->Customer->save($customer);
+
+				# Send email out.
+				$this->sendEmail($customer, "HarmonyDesigns.com New Password", "password_reset", array("new_password" => $new_password));
+
+				#$this->Session->setFlash("Password changed. You should receive an email shortly. ($new_password = $enc_password)");
+				$this->Session->setFlash("Password changed. You should receive an email shortly.");
+				#$this->redirect(array('action'=>"login"));
+				# this is breaking it!
+				$this->Session->delete('Auth.redirect');
+				#$this->redirect(array('action'=>'change_password'));
+
+			
+			} else { # Doesn't exist.
+				$this->Session->setSplash(__('Sorry, that email does not exist.', true));
+			}
+
+
+		}
+
+	}
+
+	function change_password()
+	{
+		$sessid = $this->Session->read("Auth.Customer.customer_id");
+		$customer = $this->Session->read("Auth");
+		
+		if (!empty($this->data)) # Sent back...
+		{
+			# If customer_id isn't theirs, BARF!
+			$id = $this->data["Customer"]["customer_id"];
+			if ($id !== $sessid)
+			{
+				$this->Session->setFlash('Unauthorized. You are not this user.');
+				return;
+			}
+
+			$password = $this->data["Customer"]["Password"];
+			$password2 = $this->data["Customer"]["Password2"];
+	
+			if ($password != "") # Changing...
+			{
+				if ($password2 == "" || strlen($password2) == 0)
+				{
+					$this->Session->setFlash('Password verification required. Please enter your password again.');
+					return; # Go straight to error page
+				} else if (strlen($password2) < 6)
+				{
+					$this->Session->setFlash('Password too short. Must be 6 or more characters.');
+					return; # Go straight to error page
+				}
+				else if ($password != $password2) 
+				{
+					$this->Session->setFlash("Passwords do not match.");
+					return; # Go straight to error page
+				}
+
+				if ($this->Customer->save($this->data)) {
+					$this->Customer->saveField("guest", 0);
+					$this->legacy_login($customer, $password);
+					$this->Session->setFlash(__('Your password has been changed', true));
+					$this->redirect(array('action'=>'index'));
+				} else {
+					$this->Session->setFlash(__('Your password could not be saved. Please, try again.', true));
+				}
+			}
+
+		} # Else display form
+		$this->data["Customer"] = array();
+		$this->data["Customer"]["customer_id"] = $sessid;
+		# All we really need anyway.
+	}
+
+	function edit() {
+		$this->body_title = "Account Information";
+		$id = $this->Session->read("Auth.Customer.customer_id");
+
+
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid Account', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if (!empty($this->data)) {
+			$this->data['Customer']['customer_id'] = $id; # Since not in form....
+			if ($this->Customer->save($this->data)) {
+				$this->Session->setFlash(__('Your Account has been saved', true));
+
+				$customer = $this->Customer->read(null, $this->get_customer_id());
+				if(!empty($this->data['Customer']['eMail_Address']))
+				{
+					# Send email to notify of change.
+					$this->sendEmail($this->data, "HarmonyDesigns.com Email Changed", "email_changed", array('customer'=>$this->data['Customer']));
+				}
+
+				$this->Session->write("Auth.Customer", $customer['Customer']);
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('Your Account could not be saved. Please, try again.', true));
+			}
+		}
+		if (empty($this->data)) {
+			$this->data = $this->Customer->read(null, $id);
+		}
+	}
+
+	function delete($id = null) {
+		exit(1);
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for Customer', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if ($this->Customer->del($id)) {
+			$this->Session->setFlash(__('Customer deleted', true));
+			$this->redirect(array('action'=>'index'));
+		}
+	}
+
+
+
+	function admin_index($type = '') {
+		$this->Customer->recursive = 0;
+		$cond = array();
+		if($type == 'wholesale')
+		{
+			$cond = array('is_wholesale'=>1);
+			$this->set("wholesale", $type);
+		}
+
+		$all_customers = $this->paginate('Customer', $cond);
+		foreach($all_customers as &$customer)
+		{
+			$customer_id = $customer['Customer']['customer_id'];
+
+			$this->Purchase->recursive = 1;
+			$purchases = $this->Purchase->findAll(" Purchase.customer_id = '$customer_id' ");
+			$order_count = 0;
+			foreach($purchases as $purchase)
+			{
+				if (!empty($purchase['OrderItem']))
+				{
+					$order_count += count($purchase['OrderItem']);
+				}
+			}
+
+			$customer['order_count'] = $order_count;
+
+			$cart_items_count = $this->CartItem->findCount(" CartItem.customer_id = '$customer_id' ");
+			$customer['cart_items_count'] = $cart_items_count;
+			#echo "CIC($customer_id)=$cart_items_count, OC=$order_count, pur=".print_r($purchases,true);
+			$customers[] = $customer;
+		}
+		$this->set('customers', $customers);
+	}
+
+	function admin_search_email()
+	{
+		if (isset($this->data))
+		{
+			$value = $this->data['value'];
+			if ($this->data['field'] == 'firstlast') { 
+				$conditions = "CONCAT(First_Name, ' ', Last_Name) LIKE '%$value%'";
+			} else if ($this->data['field'] == 'lastfirst') { 
+				$conditions = "CONCAT(Last_Name, ', ', First_Name) LIKE '%$value%'";
+			} else if ($this->data['field'] == 'email') { 
+				$conditions = array('eMail_Address LIKE'=>"%$value%");
+			} else if ($this->data['field'] == 'company') { 
+				$conditions = array('Company LIKE'=>"%$value%");
+			}
+			$this->Customer->recursive = 0;
+			$customers = $this->paginate('Customer',$conditions);
+			$this->set('customers', $customers);
+		} else {
+			#$customers = $this->paginate('Customer');
+			# Dont show all, slows down.
+		}
+		$this->layout = 'default_plain';
+	}
+
+	function admin_search()
+	{
+		$value = $this->data['value'];
+		#Configure::write("debug",2);
+
+		if (isset($this->data))
+		{
+			if ($this->data['field'] == 'firstlast') { 
+				$conditions = "CONCAT(First_Name, ' ', Last_Name) LIKE '%$value%'";
+			} else if ($this->data['field'] == 'lastfirst') { 
+				$conditions = "CONCAT(Last_Name, ', ', First_Name) LIKE '%$value%'";
+			} else if ($this->data['field'] == 'email') { 
+				$conditions = array('eMail_Address LIKE'=>"%$value%");
+			} else if ($this->data['field'] == 'company') { 
+				$conditions = array('Customer.Company LIKE'=>"%$value%");
+			}
+			$this->Customer->recursive = 0;
+			$customers = $this->paginate('Customer',$conditions);
+			foreach($customers as &$customer)
+			{
+				$customer_id = $customer['Customer']['customer_id'];
+	
+				$this->Purchase->recursive = 1;
+				$purchases = $this->Purchase->findAll(" Purchase.customer_id = '$customer_id' ");
+				$order_count = 0;
+				foreach($purchases as $purchase)
+				{
+					if (!empty($purchase['OrderItem']))
+					{
+						$order_count += count($purchase['OrderItem']);
+					}
+				}
+	
+				$customer['order_count'] = $order_count;
+			$cart_items_count = $this->CartItem->findCount(" CartItem.customer_id = '$customer_id' ");
+			$customer['cart_items_count'] = $cart_items_count;
+			}
+			$this->set('customers', $customers);
+			$this->action = 'admin_index'; # Use same template...
+		} else {
+			$this->redirect(array('action'=>'index'));
+		}
+
+	}
+
+	function admin_view($id = null) {
+		$this->Customer->recursive = 2;
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid Customer.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$this->set('cust', $this->Customer->read(null, $id));
+
+		$cartItems = $this->CartItem->find('all', array('conditions'=>array('customer_id'=>$id),'order'=>'cart_item_id DESC'));
+
+		list($shoppingCart,$subtotal,$product_list) = $this->load_cart_data($cartItems);
+
+
+		#$this->set("shoppingCart", array_reverse($shoppingCart));
+		$this->set("shoppingCart", $shoppingCart);
+		$this->set("subtotal", $subtotal);
+		$products = $this->Product->findAll('available = "yes" ');
+		$this->set("product_map", Set::combine($products, '{n}.Product.code', '{n}.Product'));
+
+	}
+
+	function admin_raw($id = null)
+	{
+		$this->Customer->recursive = 2;
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid Customer.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$customer = $this->Customer->read(null, $id);
+		foreach($customer['CreditCards'] as &$card)
+		{
+			$card['Decrypted_Number'] = $this->CreditCard->decrypt($card['Number']);
+		}
+		header("Content-Type: text/plain");
+		print_r($customer);
+		exit(0);
+	}
+
+	function admin_add() {
+		if (!empty($this->data)) {
+			$this->Customer->create();
+			if ($this->Customer->save($this->data)) {
+				$this->Session->setFlash(__('The Customer has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The Customer could not be saved. Please, try again.', true));
+			}
+		}
+	}
+
+	function admin_edit($id = null) {
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid Customer', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		# Get old, see if password wasn't set yet.
+		$customer = $this->Customer->read(null, $id);
+
+		if (!empty($this->data)) {
+			if ($this->Customer->save($this->data)) {
+				#if(empty($customer['Customer']['Password']) && !empty($this->data['Customer']['Password']))
+				#{
+				#	# Send them signup info if we are setting password.
+				#	$this->sendEmail($this->data, "HarmonyDesigns.com Account", "account_created", array('customer'=>$this->data['Customer']));
+#
+#					$this->Session->setFlash(__('The Customer account has been saved and an email has been sent with signup information', true));
+#				} else {
+					$this->Session->setFlash(__('The Customer account has been saved', true));
+#				}
+				#$this->redirect(array('action'=>'index'));
+				$id = $this->Customer->id;
+
+			} else {
+				$this->Session->setFlash(__('The Customer could not be saved. Please, try again.', true));
+			}
+		}
+		if (!empty($id))
+		{
+			$this->data = $this->Customer->read(null, $id);
+		}
+	}
+
+	function admin_delete($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for Customer', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if ($this->Customer->delete($id)) {
+			$this->Session->setFlash(__('Customer deleted', true));
+			$this->redirect(array('action'=>'index'));
+		}
+	}
+
+}
+?>

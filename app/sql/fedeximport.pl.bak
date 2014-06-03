@@ -1,0 +1,77 @@
+#!/usr/bin/perl
+#
+
+use Data::Dumper;
+
+$shippingMethod = $ARGV[1]; # 1 == ground, etc.
+if (!$shippingMethod) { print "$0 <shippingMethodID>\n"; exit(1); }
+
+open(PRICING, "<GroundCounter.csv");
+
+open(ZONES, "<allzones/19300-19499.csv");
+
+%zone_costs = ();
+
+while($line = <PRICING>)
+{
+	chomp($line);
+	@fields = split(",", $line);
+	if ($fields[0] eq 'Weight')
+	{
+		shift(@fields);
+		#print Dumper(\@fields);
+		#@zones = @fields;
+		@zones = map { $_ =~ s/Zone //; $_; } @fields;
+	} elsif ($fields[0] =~ /\d/) {
+		my $weight = shift(@fields);
+		@costs = map { $_ =~ s/\$//; $_ =~ s/\s+//; $_; } @fields;
+		for($z = 0; $z < @zones; $z++)
+		{
+			$zone = $zones[$z];
+			$zone_costs{$zone}{$weight} = $costs[$z];
+		}
+	}
+}
+
+#print Dumper(\%zone_costs);
+#exit(0);
+
+# Now load zips to zones....
+
+while($line = <ZONES>)
+{
+	chomp($line);
+	@field = split(",", $line);
+	$field[0] =~ s/"//g;
+	$field[1] =~ s/"//g;
+
+	#print "F= $field[0] , $field[1] ";
+
+	if ($field[0] =~ /\d/ && $field[1] =~ /\d/)
+	{
+		#print "FOO";
+		@zips = split("-", $field[0]);
+		$zone = $field[1];
+
+		if (scalar(@zips) == 1) { $zips[1] = $zips[0]; }
+		($zip_start, $zip_end) = @zips;
+		$zip_start = sprintf("%03d", $zip_start);
+		$zip_end = sprintf("%03d", $zip_end);
+		$zip_start .= "0" x ( 5 - length $zip_start );
+		$zip_end .= "9" x ( 5 - length $zip_end );
+
+		#print "Z=$zone\n";
+		#print Dumper(\%{ $zone_costs{$zone} });
+
+		while(($weight,$cost) = each(%{ $zone_costs{$zone} }))
+		{
+			print "UPDATE shippingPricePoint SET $zip_start, $zip_end, $weight, $cost\n";
+		}
+
+		#exit(0);
+		
+
+	}
+
+}
+

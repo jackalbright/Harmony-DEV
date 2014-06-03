@@ -1,0 +1,42 @@
+<div id="charm_list">
+
+<div>
+Select a category from the list to look at related charms. Then click on a charm and click 'Buy Now' to add to cart.
+<br/>
+
+<select class="" onChange="displaySelectedContent(this, 'charm_category');">
+<option value="">[Select a Category]</option>
+<? foreach($charm_categories as $cat) { ?>
+<option value="<?= $cat['CharmCategory']['charm_category_id'] ?>"><?= $cat['CharmCategory']['category_name'] ?></option>
+<? } ?>
+<option value="other">Other</option>
+</select>
+
+<div class="clear"></div>
+</div>
+
+<? foreach($charm_categories as $cat) { ?>
+<div id="charm_category_<?= $cat['CharmCategory']['charm_category_id'] ?>" class="charm_category hidden">
+	<? foreach($cat['Charm'] as $charm) { ?>
+		<div id='charm_<?= $charm['charm_id'] ?>' class="charm" onClick="selectCharm(this, '<?= $charm['charm_id'] ?>', '<?= $charm['name'] ?>');">
+		<img src="<?= $charm['graphic_location'] ?>">
+		<br/>
+		<?= $charm['name'] ?>
+		</div>
+	<? } ?>
+</div>
+<? } ?>
+
+<div id="charm_category_other" class="charm_category hiddenX">
+<? foreach($other_charms as $charm) { ?>
+		<div id='charm_<?= $charm['charm_id'] ?>' class="charm" onClick="selectCharm(this, '<?= $charm['Charm']['charm_id'] ?>', '<?= $charm['Charm']['name'] ?>');">
+		<img src="<?= $charm['Charm']['graphic_location'] ?>">
+		<br/>
+		<?= $charm['Charm']['name'] ?>
+		</div>
+<? } ?>
+</div>
+
+<div class="clear"></div>
+
+</div>

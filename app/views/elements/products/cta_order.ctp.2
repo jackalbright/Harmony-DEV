@@ -1,0 +1,81 @@
+<? if(empty($product['Product']['is_stock_item'])) { ?>
+	<h3 class="orange_header" style=""><span><?= empty($product['Product']['is_stock_item']) ? "How to Order" : "Order Now" ?></span></h3>
+	<div class="clear"></div>
+	<div class="whitebg grey_border">
+
+	<? if(!preg_match("/custom/", $product['Product']['image_type'])) { ?>
+			<div class="bold" align="center"> 
+				<a href="/gallery/browse?prod=<?= $product['Product']['code']?>">
+					<img style="padding-top: 5px;" src="/images/buttons/Browse-Stamps.gif"/>
+				</a>
+			</div> 
+	<? } else { ?>
+	<div align="left" style="padding: 5px;">
+
+	<ol style="text-align: left; margin-left: 5px; padding: 0px 15px; margin-top: 10px;">
+		<li>
+			<div class="relative" style="z-index: 1001;">
+			Upload your art, logo, photo 
+			<? if(preg_match("/(real|repro)/", $product['Product']['image_type'])) { ?>
+				or <a href="/gallery/browse?prod=<?= $product['Product']['code']?>">browse our stamp image ideas</a>
+			<? } ?>
+
+			</div>
+		<li>Customize your 
+			<?= preg_replace("/custom /", "", Inflector::pluralize(strtolower($product['Product']['short_name']))) ?> 
+			using our <?= $this->Html->link("step-by-step online design tool", "javascript:showGetStarted();"); ?>
+
+		<li>Preview your 
+			<?= preg_replace("/custom /", "", Inflector::pluralize(strtolower($product['Product']['short_name']))) ?> 
+			and order in 10 minutes or less
+	</ol>
+
+	
+			<div style="margin-top: 10px; border: solid #CCC 1px; background-color: #DDD; padding: 5px;">
+				<div align="left">
+				<form action="/custom_images/add" method="POST" enctype="multipart/form-data">
+					<input type="hidden" name="data[prod]" value="<?= $product['Product']['code'] ?>"/>
+					<div align="left" class="bold" style="font-size: 14px;">STEP 1.</div>
+					<div align="left" class="bold" style="font-size: 12px;">Choose your art, logo, photo</div>
+					<input type="file" name="data[CustomImage][file]" size="15"/>
+					<div style="font-size: 10px; color: #888;">
+					JPG, PNG, GIF, PSD, PDF, EPS (5MB limit)
+					</div>
+					<div align="center"><input alt="Upload Image" style="padding-top: 5px;" type="image" align="middle" src="/images/buttons/Upload.gif" onClick="showPleaseWait();"/></div>
+					<div class='clear'></div>
+				</form>
+				</div>
+				<? if(!empty($custom_images)) { ?>
+				<div align="center" class="bold">OR</div>
+				<div align="center" class="bold"><a href="/custom_images?prod=<?= $product['Product']['code']?>"><img src="/images/buttons/small/Browse-Existing-Pictures.gif"/></a></div>
+				<? } ?>
+			</div>
+		</div>
+	
+	<? } ?>
+	</div>
+
+<? } ?>
+
+<script>
+function showGetStarted()
+{
+	j('#modal').load("/products/how_to_order/<?= $product['Product']['code'] ?>", function() {
+		j('#modal').dialog({
+			dialogClass: 'HowToOrder',
+			width: 960,
+			height: 560,
+			resizable: false,
+			modal: true,
+			zIndex: 800,
+			open: function(event, ui) {
+
+			}
+		});
+		j('.ui-widget-overlay').live("click", function()
+		{
+			j('#modal').dialog('close');
+		});
+	});
+}
+</script>

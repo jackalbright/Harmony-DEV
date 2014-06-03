@@ -1,0 +1,41 @@
+<?php
+class StaticController extends AppController {
+
+	var $name = 'Static';
+	var $helpers = array('Html', 'Form');
+	var $uses = array();
+	#var $uses = array("Product", "GalleryImage", "CustomImage","Charm","CharmCategory","CharmCategoryCharm","Tassel","Part");
+	var $breadcrumbs = false;
+	var $controller_crumbs = false;
+
+	function beforeFilter()
+	{
+		
+		parent::beforeFilter();
+	}
+
+	function contact()
+	{
+		$this->body_title = "Contact Us";
+		if(!empty($this->data))
+		{
+			if (!$this->data['message'] || !$this->data['phone_email'] || $this->data['message'] == 1 || $this->data['phone_email'] == 1)
+			{
+				$this->Session->setFlash("Please enter in a valid contact info and message to send");
+				return;
+			}
+			$from = '';
+			if (preg_match("/\w+@[\w.]+\w+/", $this->data['phone_email']))
+			{
+				$from = $this->data['phone_email'];
+			}
+			$this->sendAdminEmail("Website Inquiry", "contact_submission", $this->data, $from);
+			$this->Session->setFlash("Thank you for your inquiry. We will contact you before the end of business day.");
+		}
+	}
+
+	function page()
+	{
+	}
+
+}

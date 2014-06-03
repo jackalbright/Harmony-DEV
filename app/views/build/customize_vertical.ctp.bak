@@ -1,0 +1,179 @@
+<div id="build">
+	<table style="width: 800px;" align="center" border=1 cellspacing=0 cellpadding=0>
+	<tr>
+		<td colspan=2>
+			<table width="600">
+			<tr>
+				<td align="left">
+					<?= $this->element("build/preview",array('live'=>1,'vertical'=>true)); ?>
+				</td>
+			</tr>
+			</table>
+		</td>
+	</tr>
+	<tr>
+		<td style="width: 300px;" valign="top">
+			<? if (!empty($build['CustomImage'])) { ?>
+			<div align="center">
+				<a rel="shadowbox;width=700;height=600" href="/build/crop/<?= $build['template'] ?>">Crop or adjust your image</a>
+			</div>
+			<? } ?>
+
+
+			<div class="padded">
+				<br/>
+				<h4>Example Diagram:</h4>
+				<? if(!empty($build['template']) && $build['template'] == 'imageonly') { ?>
+					<img src="/images/products/diagram/imageonly/<?= $build['Product']['code'] ?>.jpg"/>
+				<? } else { ?>
+					<img src="/images/products/diagram/<?= $build['Product']['code'] ?>.jpg"/>
+				<? } ?>
+			</div>
+		</td>
+		<td valign="top">
+			<div class="">
+				<table width="100%">
+				<tr>
+					<td align="left">
+						<a class="bold" href="/details/<?= $build['Product']['prod'] ?>.php"><?= $build['Product']['name'] ?> information</a>
+					</td>
+					<td align="right">
+						<!--
+						<? if (empty($build['GalleryImage'])) { ?>
+						<a class="hold" href="/build/create">Change product layout</a>
+						<? } ?>
+						-->
+					</td>
+				</tr>
+				</table>
+			</div>
+			<?
+				$template = !empty($build['template']) ? $build['template'] : null;
+			?>
+			<form id="build_form" name="build_form" method="POST" action="/cart/add_consolidated"/>
+			<input type="hidden" name="data[cart_item_id]" value="<?= !empty($build['cart_item_id']) ? $build['cart_item_id'] : "" ?>"/>
+			<input type="hidden" name="data[productCode]" value="<?= $build['Product']['code'] ?>"/>
+			<input type="hidden" name="data[template]" value="<?= !empty($build['template']) ? $build['template'] : null ?>"/>
+			<input type="hidden" name="data[options][template]" value="<?= !empty($build['template']) ? $build['template'] : null ?>"/>
+			<input type="hidden" name="data[options][customImageID]" value="<?= !empty($build['CustomImage']) ? $build['CustomImage']['Image_ID'] : "" ?>"/>
+			<input type="hidden" name="data[options][imageCrop]" value="<?= !empty($build['crop'][$template]) ? join(",", $build['crop'][$template]) : "" ?>"/>
+			<input type="hidden" name="data[options][catalogNumber]" value="<?= !empty($build['GalleryImage']) ? $build['GalleryImage']['catalog_number'] : "" ?>"/>
+			<table width="100%" border=0 cellspacing=0 cellpadding=5>
+			<? 
+			$i = 0; 
+			$product_templates = split(",", $build['Product']['product_template']);
+			if(false && !empty($build['Product']['CustomImage'])) { 
+			?>
+			<tr class="">
+				<td colspan=1 class="top_border grey_border" valign="top">
+					<div class="right_padding bottom_padding left">
+						<img src="/images/icons/<?= ++$i ?>.gif" height="25"/>
+					</div>
+					<div class="left"><b>Layout</b>&nbsp;&nbsp;</div>
+					<div class="clear"></div>
+
+					<div class="padded">
+
+					<input id="build_template" type='radio' <?= (empty($build['template']) || $build['template'] == 'standard') ? "checked='checked'" : "" ?> onClick="updateBuildForm(); $('diagram_imageonly').addClassName('hidden'); $('diagram_standard').removeClassName('hidden');" name="data[template]" value="standard">Image + Text
+					<br/>
+					<br/>
+					<input id="build_template" type='radio' <?= (!empty($build['template']) && $build['template'] == 'imageonly') ? "checked='checked'" : "" ?> onClick="updateBuildForm(); $('diagram_standard').addClassName('hidden'); $('diagram_imageonly').removeClassName('hidden');" name="data[template]" value="imageonly">Image Only
+					</div>
+				</td>
+				<td colspan=1 align="center" class="left_border top_border grey_border" valign="middle">
+					<img id="diagram_standard" class="<?= (empty($build['template']) || $build['template'] == 'standard') ? "" : "hidden" ?>" height="150" src="/images/products/diagram/<?= $build['Product']['code'] ?>.jpg"/>
+					<img id="diagram_imageonly" class="<?= (!empty($build['template']) && $build['template'] == 'imageonly') ? "" : "hidden" ?>" height="150" src="/images/products/diagram/imageonly/<?= $build['Product']['code'] ?>.jpg"/>
+				</td>
+			</tr>
+			<? } ?>
+			<? foreach($options as $option) { 
+				$option_code = $option['Part']['part_code'];
+			?>
+			<tr>
+				<td colspan=1 class="top_border grey_border" valign="top">
+					<div class="right_padding bottom_padding left">
+						<img src="/images/icons/<?= ++$i ?>.gif" height="25"/>
+					</div>
+					<?
+					$extra_charge = !empty($option['Part']['price']) ? " extra charge" : "";
+					?>
+					<div class="left"><b><?= $option['Part']['part_name'] ?> <? if($option['ProductPart']['optional'] == 'yes') { echo "(opt.) $extra_charge"; } ?></b>&nbsp;&nbsp;</div>
+
+					<? if(!empty($option['Part']['part_summary'])) { ?>
+					<div class="part_summary">
+						<?= $option['Part']['part_summary'] ?>
+					</div>
+					<? } ?>
+
+					<?= $hd->product_element("build/options/$option_code", $build['Product']['prod'], array()); ?>
+				</td>
+				<td colspan=1 align="center" class="left_border top_border grey_border" valign="middle">
+					<?= $hd->product_element("build/options/{$option_code}_preview", $build['Product']['code'], array(), true); ?>
+				</td>
+			</tr>
+			<? } ?>
+
+			<tr>
+				<td colspan=1 class="top_border grey_border">
+					<div class="right_padding bottom_padding left">
+						<img src="/images/icons/<?= ++$i ?>.gif" height="25"/>
+					</div>
+
+					<div class="left"><b>Comments</b></div>
+
+					<?= $this->element("build/options/comments"); ?>
+				</td>
+				<td colspan=1 align="center" class="left_border top_border grey_border">
+				&nbsp;
+				</td>
+			</tr>
+
+			<tr>
+				<td colspan=1 class="top_border grey_border" valign="top">
+					<div class="right_padding bottom_padding left">
+						<img src="/images/icons/<?= ++$i ?>.gif" height="25"/>
+					</div>
+					<? if(empty($build['cart_item_id'])) { ?>
+						<div class="left"><b>Add to Cart</b></div>
+					<? } else { ?>
+						<div class="left"><b>Update Cart</b></div>
+					<? } ?>
+
+					<div class="clear"></div>
+
+					<div class="alert2">Save more when you order more</div>
+
+					<?= $this->element("build/quantity_new", array('url'=>'')); ?>
+				</td>
+				<td class="left_border top_border grey_border" valign="top">
+					<?= $this->element("build/pricing_chart_small"); ?>
+					<br/>
+					<div class="bold alert2">
+						<?= $this->element("special_offer"); ?>
+					</div>
+
+					<? if(false && $malysoft) { ?>
+					<div>
+						<input type="image" src="/images/buttons/Save-grey.gif"/>
+						<br/>
+						Save your order for later.
+					</div>
+						
+					<? } ?>
+
+				</td>
+
+			</tr>
+			</table>
+
+			</form>
+		</td>
+	</tr>
+	</table>
+
+	<script>
+		hidePleaseWait();
+	</script>
+
+
+</div>

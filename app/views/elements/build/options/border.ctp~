@@ -1,0 +1,93 @@
+<?
+$defaultBorderID = isset($build['options']['borderID']) ? $build['options']['borderID'] : ($template == 'imageonly' ? -1 : 2); # blank, yet set, means 'no border'
+?>
+<div style="clear: both;">
+<p>Tip: A border helps anchor your design.</p>
+</div>
+<div class="clear" XXstyle="height: 350px; overflow: scroll;">
+
+		<div class="center" style="width: 110px; height: 50px; float: left; padding: 5px;"
+			onClick="$('border_none').checked = 'checked'; selectBorder('-1'); updateBuild('border');" 
+				>
+				<div class="border_div" id="border_div_-1">
+					<img id="border_image_none" src="/borders/No Border.gif" alt="Loading..." onClick="$('border_none').checked = 1;" width="100"/>
+					<nobr><input style=" display: none; " id="border_none" type="radio" <?= empty($defaultBorderID) ? "checked='checked'" : "" ?>  name="data[options][borderID]" 
+				value="-1"/>No border</nobr>
+				</div>
+		</div>
+
+			<script>
+			document.observe('dom:loaded', function() {
+			window.borders = {};
+			<? foreach($borders as $record) { ?>
+				window.borders['border_image_<?= $record->border_id ?>'] = '<?= $record->location ?>';
+			<? } ?>
+			});
+			</script>
+
+		<? $img_borders = !empty($image) ? $image->listBorders() : array(); 
+		$found = array();
+		if(count($img_borders))
+		{
+			?>
+			<?
+			foreach($img_borders as $record) { 
+				$found[$record->id] = true;
+			?>
+				<div class="center" style="width: 110px; height: 50px; float: left; padding: 5px;"
+					onClick="$('border_<?= $record->id ?>').checked = 'checked'; selectBorder('<?= $record->id ?>'); updateBuild('border');" 
+				>
+				<div class="border_div" id="border_div_<?= $record->id ?>">
+					<img id="border_image_<?= $record->id ?>" src="<?= $record->location ?>" alt="Loading..." onClick="$('border_<?= $record->id ?>').checked = 1;" width="100"/>
+					<nobr><input style=" display: none; " id="border_<?= $record->id ?>" type="radio" <?= $defaultBorderID == $record->id ? "checked='checked'" : "" ?>  name="data[options][borderID]" 
+				value="<?= $record->id ?>"/><?= ucwords($record->name); ?></nobr>
+				</div>
+				</div>
+			<? }
+		} 
+
+		foreach($borders as $record) {
+				if (!empty($found[$record->border_id]) || $record->name == 'None') { continue; }
+				?>
+				<div class="center" style="width: 110px; height: 50px; float: left; padding: 5px;"
+					onClick="$('border_<?= $record->border_id ?>').checked = 'checked'; selectBorder('<?= $record->border_id ?>'); updateBuild('border');" 
+				>
+				<div id="border_div_<?= $record->border_id ?>" class="border_div">
+				<img id="border_image_<?= $record->border_id ?>" src="<?= $record->location ?>" alt="Loading..." onClick="$('border_<?= $record->border_id ?>').checked = 1;" width="100"/>
+				<nobr><input style="display: none;" id="border_<?= $record->border_id ?>" type="radio" <?= $defaultBorderID == $record->border_id ? "checked='checked'" : "" ?> name="data[options][borderID]" value="<?= $record->border_id ?>"/><?= ucwords($record->name); ?></nobr>
+				</div>
+
+				</div>
+		<? } ?>
+
+		<div class="clear"></div>
+
+		<style>
+		div.border_div
+		{
+			cursor: pointer;
+			border: solid 1px #CCC;
+			margin: 2px auto;
+		}
+
+		div.selected_border
+		{
+			border: solid #333 4px;
+		}
+		</style>
+
+		<script>
+		function selectBorder(border_id)
+		{
+			j('.border_div').removeClass("selected_border");
+			j('#border_div_'+border_id).addClass("selected_border");
+		}
+		<? if(!empty($defaultBorderID)) { ?>
+		selectBorder('<?= $defaultBorderID ?>');
+		<? } ?>
+		</script>
+
+</div>
+
+
+

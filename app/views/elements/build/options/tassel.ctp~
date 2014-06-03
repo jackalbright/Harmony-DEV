@@ -1,0 +1,105 @@
+<?
+$defaultTasselID = isset($build['options']['tasselID']) ? $build['options']['tasselID'] : 41; # blank, yet set, means 'no tassel'
+?>
+
+<div align="left"> <a href="Javascript:void('tassel');" onClick="showBuildStepNext('<?= $option_code ?>');"><img src="/images/buttons/small/Next-green.gif"></a> </div>
+				
+<div class="" XXXstyle="height: 350px; overflow: scroll;">
+		<div>
+
+		<script>
+		document.observe('dom:loaded', function() {
+			window.tassels = {};
+			<? foreach($tassels as $tassel) { ?>
+			window.tassels['tassel_image_<?= $tassel->tassel_id ?>'] = "/tassels/thumbs/<?= preg_replace("/ /", "-", $tassel->color_name) ?>.gif";
+			<? } ?>
+		});
+		</script>
+
+		<div class="padded center" style="float: left; width: 85px; height: 48px;"
+				onClick="$('tassel_none').checked = 'checked'; check_charm(); selectTassel('-1','tassel'); updateBuild('tassel'); setProduct('BNT','tassel'); update_build_review(); update_build_pricing(); ">
+				<div class="tassel_div" id="tassel_div_-1" style="background: url(/images/icons/no-tassel-box.png) no-repeat;">&nbsp;
+				</div>
+				<input id="tassel_none" type="radio" style="display: none;" <?= ($defaultTasselID == -1 || !$defaultTasselID) ? "checked='checked'" : "" ?> name="data[options][tasselID]" value="-1"/>
+				No tassel
+		</div>
+
+		<? 
+		$tassels_found = array();
+
+		$img_tassels = !empty($image) ? $image->listTassels() : array();
+		if(count($img_tassels)) {
+		?>
+		<?php
+			foreach ($img_tassels as $record) {
+				$tassel_code = preg_replace("/ /", "-", $record->name);
+				$tassels_found[$tassel_code] = true;
+				?>
+				<div class="padded center" style="float: left; width: 85px; height: 48px;"
+					onClick="$('tassel_<?= $record->id ?>').checked = 'checked'; check_charm(); selectTassel('<?= $record->id ?>','tassel'); updateBuild('tassel'); update_build_review(); update_build_pricing(); "
+				>
+					<div class="tassel_div" id="tassel_div_<?= $record->id ?>" style="background-color: #<?= $record->color ?>; ">&nbsp;</div>
+				<!--<img id="tassel_image_<?= $record->id ?>" src="" alt="Loading..." onClick="$('tassel_<?=$record->id?>').checked='checked'; check_charm(); updateBuild('tassel');"/>-->
+				<nobr><input style="display: none;" id="tassel_<?= $record->id ?>" type="radio" name="data[options][tasselID]" <?= $defaultTasselID == $record->id ? "checked='checked'" : "" ?> value="<?= $record->id ?>"/>
+					<?= ucwords($record->name); ?>
+				</nobr>
+				</div>
+				<?
+			}
+		}
+
+			foreach ($tassels as $record) {
+				$tassel_code = preg_replace("/ /", "-", $record->color_name);
+				if (!empty($tassels_found[$tassel_code])) { continue; }
+				?>
+				<div class="padded center" style="float: left; width: 85px; height: 48px;"
+					onClick="$('tassel_<?= $record->tassel_id ?>').checked = 'checked'; check_charm(); selectTassel('<?= $record->tassel_id ?>','tassel'); updateBuild('tassel'); update_build_review(); update_build_pricing(); "
+				>
+
+				<div class="tassel_div" id="tassel_div_<?= $record->tassel_id ?>" style="background-color: #<?= $record->color_code ?>;">&nbsp;</div>
+				<!--<img id="tassel_image_<?= $record->tassel_id ?>" src="" alt="Loading..." onClick="$('tassel_<?=$record->tassel_id?>').checked='checked'; check_charm(); updateBuild('tassel');"/>-->
+				<nobr><input style="display: none;" type="radio" id="tassel_<?= $record->tassel_id ?>" <?= $defaultTasselID == $record->tassel_id ? "checked='checked'" : "" ?> name="data[options][tasselID]" value="<?= $record->tassel_id ?>" 
+				/> <?= ucwords($record->color_name); ?></nobr>
+
+				</div>
+				<?
+			}
+			?>
+
+		</div>
+		<div class="clear"></div>
+
+		<style>
+		div.tassel_div
+		{
+			cursor: pointer;
+			border: solid 1px #CCC;
+			width: 24px;
+			height: 24px;
+			margin: 2px auto;
+		}
+
+		div.selected_tassel
+		{
+			border: solid #333 4px;
+		}
+		</style>
+
+		<script>
+		function selectTassel(tassel_id,step)
+		{
+			j('.tassel_div').removeClass("selected_tassel");
+			j('#tassel_div_'+tassel_id).addClass("selected_tassel");
+			if(tassel_id == '-1')
+			{
+				setProduct('BNT',step);
+			} else if ($('prod').value == 'BNT') {
+				setProduct('B',step);
+			}
+		}
+		<? if(!empty($defaultTasselID)) { ?>
+		selectTassel('<?= $defaultTasselID ?>');
+		<? } ?>
+		</script>
+</div>
+

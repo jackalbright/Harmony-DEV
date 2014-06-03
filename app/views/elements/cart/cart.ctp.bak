@@ -1,0 +1,211 @@
+	<table style="width: 1000px !important; border: solid #CCC 1px; border-style: solid;" id="cartDisplay" class="solid_border">
+	<tr style="background-color: #AAA; color: #FFF; ">
+		<th class="border">Preview</th>
+		<th class="border">Details</th>
+		<th class="border" style="width: 75px;">Quantity</th>
+		<th class="border" style="width: 75px;">Unit Price</th>
+		<th class="border" style="width: 75px;">Total</th>
+		<th class="border"><? if(empty($checkout)) { echo "You might also like..."; } else if (empty($receipt)) { echo "Comments, questions, feedback:"; } ?></th>
+	</tr>
+	<? $i = 0; $shoppingCart = array_reverse($shoppingCart); foreach($shoppingCart as $cartItem) { 
+		$cart_item_id = $cartItem['cart_item_id'];
+		$quantity = $cartItem['quantity'];
+		$unitPrice = $cartItem['unitPrice'];
+		$productCode = $cartItem['productCode'];
+		$cart_item_product = $product = $cartItem['Product'];
+		$baseCode = $cart_item_product['code'];
+		if ($baseCode == 'BC') { $baseCode = 'B'; }
+		if ($baseCode == 'PSF') { $baseCode = 'PS'; }
+		$customImage = $cartItem['CustomImage'];
+		$galleryImage = $cartItem['GalleryImage'];
+		$image_name = "Custom";
+		$imageID = $customImage ? $customImage['Image_ID'] : null;
+		$catalog_number = $galleryImage ? $galleryImage['catalog_number'] : null;
+		if ($customImage) { $image_name = $customImage['Title']; }
+		if ($galleryImage) { $image_name = $galleryImage['stamp_name']; }
+		if (!$image_name) { $image_name = 'Custom'; }
+
+		$product = !empty($product_map[$productCode]) ?  $product_map[$productCode] : null;
+		$pricing = !empty($pricing_map[$productCode]) ?  $pricing_map[$productCode] : null;
+		$related_products = !empty($related_product_map[$productCode]) ?  $related_product_map[$productCode] : null;
+		$parent = !empty($parent_product_map[$productCode]) ?  $parent_product_map[$productCode] : null;
+	?>
+	<tr class="<?= ($i % 2 == 0) ? 'cart_even' : 'cart_odd' ?>">
+		<td valign=top align="center" class="border">
+			<?= $this->element("build/preview", array('build'=>array('Product'=>$product, 'CustomImage'=>$customImage,'GalleryImage'=>$galleryImage,'cart'=>1))); ?>
+		</td>
+		<td valign=top class="border">
+			<?= $this->element("cart/item_description", array('cart_item'=>$cartItem,'product'=>$product,'imageID'=>$imageID,'cart_item_product'=>$cart_item_product,'cart_item_id'=>$cart_item_id,'catalog_number'=>$catalog_number)); ?>
+
+			<br/>
+			<div class="right_align">
+			<? if(!$product['is_stock_item'] && empty($checkout)) { ?>
+				<!--<a href="/build/step?catalogNumber=<?= $catalog_number ?>&imageID=<?= $imageID ?>&productCode=<?= $cart_item_product['code'] ?>&cartID=<?= $i ?>">Modify this item</a>-->
+				<a href="/build/cart?catalogNumber=<?= $catalog_number ?>&imageID=<?= $imageID ?>&productCode=<?= $cart_item_product['code'] ?>&cart_item_id=<?= $cart_item_id ?>">Modify this item</a>
+			<? } ?>
+			</div>
+		</td>
+		<td valign=top class="border">
+			<? if(!empty($checkout)) { ?>
+				<?= $quantity ?>
+			<? } else { ?>
+				<input type="text" size=4 id="quantity<?= $i ?>" name="quantity<?= $cartItem['cart_item_id'] ?>" value="<?=$quantity?>" onChange="return checkMinimum(this.value, '<?= $cart_item_product['minimum'] ?>', 'quantity<?=$i?>');"/>
+				<input type="image" height="20" src="/images/buttons/Update-Qty-grey.gif"/>
+				<br/>
+				<br/>
+				<a href="/cart/remove/<?= $cartItem['cart_item_id'] ?>" onClick="return confirm('Are you sure you want to remove this item?');">Remove</a>
+			<? } ?>
+		</td>
+		<td valign=top class="border">
+			<?= sprintf("$%.02f", $unitPrice); ?>
+		</td>
+		<td valign=top class="border" align="right">
+			<? $list_price = !empty($pricing) ? $pricing[0]['price'] : $unitPrice; ?>
+			<? if ($list_price > $unitPrice) { ?>
+			<div style="font-weight: bold; text-decoration: line-through;"><?= sprintf("$%.02f", $list_price*$quantity); ?></div>
+			<? } ?>
+			<div style="color: red;"><?= sprintf("$%.02f", $unitPrice*$quantity); ?></div>
+			<? if ($list_price > $unitPrice) { ?>
+				<?= sprintf("(%u%% off)", ($list_price-$unitPrice)/$list_price*100); ?>
+			<? } ?>
+		</td>
+		<? if(!empty($review)) { ?>
+			<? if($i == 0) { ?>
+			<td valign="top" class="border" rowspan="<?= count($shoppingCart); ?>">
+				<textarea style="width: 200px; height: 150px;" name="orderComment"></textarea>
+			</td>
+			<? } ?>
+		<? } else { ?>
+		<td valign="top" class="border">
+			<? if(empty($checkout)) { ?>
+			<? if($customImage) { ?>
+				<a href="/custom_images/edit/<?= $customImage['Image_ID'] ?>">View more "<?= $image_name ?>" products</a>
+			<? } else if ($galleryImage) { ?>
+				<a href="/gallery/view/<?= $galleryImage['catalog_number'] ?>">View more "<?= $image_name ?>" products</a>
+			<? } ?>
+			<? } ?>
+			<? if(empty($checkout) && $product['is_stock_item'] && !empty($related_products)) { ?>
+				<? foreach($related_products as $related) { ?>
+					<a href="/details/<?= $parent['Product']['prod'] ?>.php"><?= $hd->pluralize($related['Product']['name']) ?></a><br/>
+				<? } ?>
+			<? } ?>
+		</td>
+		<? } ?>
+	</tr>
+	<? $i++; } ?>
+
+	<? if(true || empty($checkout) || !empty($read_only_summary)) { ?>
+	<tr style="background-color: #CCCCCC;">
+		<? if(empty($shipping_select)) { ?>
+		<td colspan=1 rowspan=1>
+		</td>
+		<td>
+		</td>
+		<? } ?>
+		<td colspan="2" align="left">
+		<b>Subtotal:</b>
+		</td>
+		<td colspan="1" align="right">
+			<?= sprintf("$%.02f", $subtotal); ?>
+		</td>
+		<td>
+			<? if(!empty($ships_by_start) && !empty($ships_by_end)) { ?>
+				<i>Ships on or before: <?= $ships_by_end ?></i>
+				<!--<i>Ships: on or before <?= $ships_by_end ?></i>-->
+			<? } else if($ships_by) { ?>
+				<i> Ships on or before: <?= $ships_by ?></i>
+			<? } ?>
+		</td>
+	</tr>
+	<tr style="background-color: #CCCCCC;">
+		<? if(empty($shipping_select)) { ?>
+		<td colspan=2 valign="top" rowspan="2">
+			
+			<br/>
+		</td>
+		<? } ?>
+		<td colspan="2" align="left" valign="top">
+		<b>Shipping:</b>
+		</td>
+		<td colspan="1" rowspan=1 valign=top align="right">
+			<? if(!empty($shippingTotals)) { ?>
+				<? $i = 0; foreach($shippingTotals as $method_id => $shippingTotal) { ?>
+				<div id="shippingTotal<?= $method_id ?>" class="<?= ($i++ == 0 && !$defaultShippingMethod) || $defaultShippingMethod == $method_id ? "" : "hidden" ?> shippingTotal">
+					<?= sprintf("$%.02f", $shippingTotal ); ?>
+				</div>
+				<? } ?>
+			<? } else if (!empty($shippingTotal)) { ?>
+					<?= sprintf("$%.02f", $shippingTotal ); ?>
+
+			<? } ?>
+		</td>
+		<td valign=top rowspan=1 style="vertical-align: top;">
+			<? if(empty($read_only_summary)) { ?>
+			<div>
+			Zip Code: <input align="left" type="text" size="6" name="zipCode" value="<?= $zipCode ?>"/> 
+			<input type="image" valign="bottom" height="25" style="vertical-align: top;" src="/images/buttons/Calculate-grey.gif"/>
+
+			</div>
+			<? if(empty($shippingOptions)) { ?>
+			Enter your zip code to calculate shipping
+			<? } ?>
+			<? } ?>
+		</td>
+	</tr>
+	<? if ($grandTotals) { ?>
+	<tr style="background-color: #CCCCCC; font-variant: small-caps;" class="">
+		<td colspan="2" align="left" class="bold alert" valign="bottom">
+			<b>Grand Total:</b>
+		</td>
+		<td colspan=1 valign="bottom" class="bold alert" align="right">
+			<? $i = 0; foreach($grandTotals as $method_id => $grandTotal) { ?>
+			<div id="grandTotal<?= $method_id ?>" class="<?= ($i++ == 0 && !$defaultShippingMethod) || $defaultShippingMethod == $method_id ? "" : "hidden" ?> grandTotal">
+					<b><?= sprintf("$%.02f", $grandTotal); ?></b>
+			</div>
+			<? } ?>
+		</td>
+		<td valign="top">
+			<? if(!empty($shippingOptions) && empty($shipping_select)) { ?>
+				<? if(!empty($read_only_summary)) { ?>
+					<? $i = 0; foreach($shippingOptions as $shippingOption) { 
+						if ((empty($defaultShippingMethod) && $i++ == 0) || $defaultShippingMethod == $shippingOption['shippingPricePoint']['shippingMethod'])
+						{
+							$dayMin = $shippingOption['shippingMethod']['dayMin'];
+							$dayMax = $delivery_days = $shippingOption['shippingMethod']['dayMax'];
+							$delivery_time = $ships_by_time + 24*60*60;
+							while($delivery_days > 0)
+							{
+								$delivery_time += 24*60*60;
+								$delivery_day = date("D", $delivery_time);
+								if ($delivery_day != "Sun" && $delivery_day != "Mon") { $delivery_days--; }
+							}
+							echo "<b>".$shippingOption['shippingMethod']['name'] ?> - <?= $dayMin < $dayMax ? "$dayMin - $dayMax days" : "$dayMin day(s)" ?> - <?= sprintf("$%.02f", $shippingOption[0]['cost'])."</b>";
+						}
+					} ?>
+
+				<? } else { ?>
+					<select name="shipping_method" onChange="cart_updateGrandTotal(this.value);">
+					<? $i = 0; foreach($shippingOptions as $shippingOption) { ?>
+					<?
+						$dayMin = $shippingOption['shippingMethod']['dayMin'];
+						$dayMax = $delivery_days = $shippingOption['shippingMethod']['dayMax'];
+						$delivery_time = $ships_by_time + 24*60*60;
+						while($delivery_days > 0)
+						{
+							$delivery_time += 24*60*60;
+							$delivery_day = date("D", $delivery_time);
+							if ($delivery_day != "Sun" && $delivery_day != "Mon") { $delivery_days--; }
+						}
+					?>
+					<option <?= ($i++ == 0 || $defaultShippingMethod == $shippingOption['shippingPricePoint']['shippingMethod']) ? "selected='selected'" : "" ?> value="<?= $shippingOption['shippingPricePoint']['shippingMethod']?>"><?= $shippingOption['shippingMethod']['name'] ?> - <?= $dayMin < $dayMax ? "$dayMin - $dayMax days" : "$dayMin day(s)" ?> - <?= sprintf("$%.02f", $shippingOption[0]['cost']) ?></option>
+					<? } ?>
+					</select>
+				<? } ?>
+			<? } ?>
+		</td>
+	</tr>
+	<? } ?>
+
+	<? } ?>
+	</table>
+

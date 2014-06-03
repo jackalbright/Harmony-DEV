@@ -1,0 +1,116 @@
+/* Forms */
+#main_column form {
+	clear: both;
+	/*margin-right: 20px;
+	padding: 0;
+	width: 80%;*/
+}
+#main_column fieldset {
+	border: 1px solid #ccc;
+	margin-top: 30px;
+	padding: 16px 20px;
+}
+#main_column fieldset legend {
+	background:#fff;
+	color: #e32;
+	/*font-size: 160%;*/
+	font-weight: bold;
+}
+#main_column fieldset fieldset {
+	margin-top: 0px;
+	margin-bottom: 20px;
+	padding: 16px 10px;
+}
+#main_column fieldset fieldset legend {
+	/*font-size: 120%;*/
+	font-weight: normal;
+}
+#main_column fieldset fieldset div {
+	clear: left;
+	margin: 0 20px;
+}
+#main_column form div {
+	clear: both;
+	/*margin-bottom: 1em;
+	padding: .5em;*/
+	vertical-align: text-top;
+}
+#main_column form div.input {
+	color: #444;
+}
+#main_column form div.required {
+	color: #333;
+	font-weight: bold;
+}
+#main_column form div.submit {
+	border: 0;
+	clear: both;
+	margin-top: 10px;
+	margin-left: 140px;
+}
+#main_column label {
+	display: block;
+	/*font-size: 110%;*/
+	font-size: 12px;
+	padding-right: 20px;
+}
+#main_column input, #main_column textarea {
+	clear: both;
+	/*font-size: 140%;*/
+	/*font-family: "frutiger linotype", "lucida grande", "verdana", sans-serif;*/
+	/*padding: 2px;*/
+	margin: 2px;
+	/*width: 100%;*/
+}
+#main_column select {
+	clear: both;
+	/*font-size: 120%;*/
+	vertical-align: text-bottom;
+}
+#main_column select[multiple=multiple] {
+	width: 100%;
+}
+#main_column option {
+	/*font-size: 120%;*/
+	padding: 0 3px;
+}
+#main_column input[type=checkbox] {
+	/*
+	clear: left;
+	float: left;
+	margin: 0px 6px 7px 2px;
+	width: auto;
+	*/
+}
+#main_column input[type=radio] {
+	/*float:left;
+	width:auto;
+	margin: 0 3px 7px 0;
+	*/
+}
+#main_column div.radio label {
+	/*
+	margin: 0 0 6px 20px;
+	*/
+}
+#main_column input[type=submit] {
+	/*
+	display: inline;
+	padding: 2px 5px;
+	width: auto;
+	vertical-align: bottom;
+	*/
+}
+
+
+.inline label
+{
+	display: inline;
+}
+
+input[type=submit], button
+{
+	font-size: 16px;
+	font-weight: bold;
+
+}

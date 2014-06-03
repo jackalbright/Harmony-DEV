@@ -1,0 +1,41 @@
+<? $this->set("enable_tracking", "faq"); ?>
+<div class="faqs index">
+<h2>Frequently Asked Questions</h2>
+
+<div style="float: right; width: 300px;">
+	<h4>Submit a Question</h4>
+	<div style="border: solid #CCC 1px; padding: 5px;" id="faqRequest">
+		<?= $this->requestAction("/faq_requests/add",array('return')); ?>
+	</div>
+</div>
+
+<? foreach($faqs as $faq) { ?>
+	<div class="faq" style="padding: 0px; padding-top: 5px;">
+		<p class="bold"><a href="Javascript:void(0)" onClick="$('faq_<?= $faq['Faq']['faq_id'] ?>').toggleClassName('hidden');"><?= $faq['Faq']['question'] ?></a></p>
+		<div id="faq_<?= $faq['Faq']['faq_id'] ?>" class="hidden" style="padding: 5px 15px;">
+			<?= $faq['Faq']['answer']; ?>
+		</div>
+	</div>
+<? } ?>
+
+<? foreach($faq_topics as $faq_topic) { ?>
+<? if(!empty($faq_topic['Faq'])) { ?>
+	<div style="padding-top: 10px;">
+	<h6><?= $faq_topic['FaqTopic']['topic_name'] ?></h6>
+	<div>
+		<? foreach($faq_topic['Faq'] as $faq) { ?>
+			<div class="faq" style="padding-top: 5px; padding-left: 10px;">
+				<p class="bold"><a href="Javascript:void(0)" onClick="$('faq_<?= $faq['faq_id'] ?>').toggleClassName('hidden');"><?= $faq['question'] ?></a></p>
+				<div id="faq_<?= $faq['faq_id'] ?>" class="hidden" style="padding: 5px 15px;">
+					<?= $faq['answer']; ?>
+				</div>
+			</div>
+		<? } ?>
+	</div>
+	</div>
+<? } ?>
+<? } ?>
+
+
+</div>
+<div class="clear"></div>

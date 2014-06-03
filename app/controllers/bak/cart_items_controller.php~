@@ -1,0 +1,207 @@
+<?
+
+# Parent wrapper for various shared cart stuff...
+
+class CartItemsController extends AppController
+{
+	var $uses = array("Product", "ProductPricing", "ProductPart", "GalleryImage", "CustomImage", "CustomizationOption", "ProductRecommendedQuote", "ImageRecommendedQuote","Quote","Tassel","Charm","Border","Ribbon","Frame","ContactInfo","ShippingPricePoint","CartItem","CreditCard");
+
+	function clear_cart()
+	{
+		#$this->Session->write("shoppingCart", array());
+		$customer_id = $this->get_customer_id();
+		$session_id = $this->get_session_id();
+
+		$this->CartItem->deleteAll("customer_id = '$customer_id' OR session_id = '$session_id'");
+	}
+
+	function load_cart_data($cart_items)
+	{
+		#echo "X=".print_r($cart_items,true);
+		$shoppingCart = array();
+		$product_list = array();
+		$subtotal = 0;
+		foreach($cart_items as $cart_item)
+		{
+			$cartItem = array();
+			$parts = array();
+			if (is_object($cart_item))
+			{
+				$cartItem = get_object_vars($cart_item);
+				$parts = get_object_vars($cart_item->parts);
+			} else if (!empty($cart_item['CartItem'])) { 
+				$cartItem = $cart_item['CartItem'];
+				$parts = unserialize($cart_item['CartItem']['parts']);
+			}
+			$cartItem['parts'] = $parts;
+			$imageID = !empty($cartItem['parts']['customImageID']) ? $cartItem['parts']['customImageID'] : null;
+			$catalogNumber = !empty($cartItem['parts']['catalogNumber']) ? $cartItem['parts']['catalogNumber'] : null;
+			$galleryImage = $catalogNumber ? $this->GalleryImage->find("catalog_number = '$catalogNumber'") : null;
+			$cartItem['GalleryImage'] = $galleryImage ? $galleryImage['GalleryImage'] : null;
+			$productCode = $cartItem['productCode'];
+			if ($productCode == 'B' && !empty($cartItem['parts']['charmID']) && $cartItem['parts']['charmID'] != 'None')
+			{
+				$productCode = 'BC';
+			}
+			$product = $this->Product->find("code = '$productCode'");
+			$cartItem['Product'] = $product['Product'];
+			$customImage = $imageID ? $this->CustomImage->find("Image_ID = '$imageID'") : null;
+			$cartItem['CustomImage'] = $customImage ? $customImage['CustomImage'] : null;
+
+			$subtotal += $cartItem['quantity'] * $cartItem['unitPrice'];
+
+
+			$product_list[$product['Product']['code']] = $cartItem['quantity'];
+
+			# LOAD OTHER STUFF
+			# Load quote if there...
+			if (isset($cartItem['parts']['quoteID'])) {
+				$quote = $this->Quote->read(null, $cartItem['parts']['quoteID']);
+				$cartItem['quote_info'] = $quote['Quote'];
+			}
+
+			if (isset($cartItem['parts']['customTassel'])) {
+				$tassel = $this->Tassel->read(null, $cartItem['parts']['customTassel']);
+				$cartItem['tassel_info'] = $tassel['Tassel'];
+			} else if (isset($cartItem['parts']['tasselID'])) {
+				$tassel = $this->Tassel->read(null, $cartItem['parts']['tasselID']);
+				$cartItem['tassel_info'] = $tassel['Tassel'];
+			}
+
+			if (isset($cartItem['parts']['customRibbon'])) {
+				$ribbon = $this->Ribbon->read(null, $cartItem['parts']['customRibbon']);
+				$cartItem['ribbon_info'] = $ribbon['Ribbon'];
+			} else if (isset($cartItem['parts']['ribbonID'])) {
+				$ribbon = $this->Ribbon->read(null, $cartItem['parts']['ribbonID']);
+				$cartItem['ribbon_info'] = $ribbon['Ribbon'];
+			}
+
+			if (isset($cartItem['parts']['customCharm'])) {
+				$charm = $this->Charm->read(null, $cartItem['parts']['customCharm']);
+				$cartItem['charm_info'] = $charm['Charm'];
+			} else if (isset($cartItem['parts']['charmID'])) {
+				$charm = $this->Charm->read(null, $cartItem['parts']['charmID']);
+				$cartItem['charm_info'] = $charm['Charm'];
+			}
+
+			if (isset($cartItem['parts']['customBorder'])) {
+				$border = $this->Border->read(null, $cartItem['parts']['customBorder']);
+				$cartItem['border_info'] = $border['Border'];
+			} else if (isset($cartItem['parts']['borderID'])) {
+				$border = $this->Border->read(null, $cartItem['parts']['borderID']);
+				$cartItem['border_info'] = $border['Border'];
+			}
+
+			if (isset($cartItem['parts']['frameID'])) {
+				$frame = $this->Frame->read(null, $cartItem['parts']['frameID']);
+				$cartItem['frame_info'] = $frame['Frame'];
+			}
+			$shoppingCart[] = $cartItem;
+		}
+		return array($shoppingCart, $subtotal, $product_list);
+	}
+
+	function get_cart_items()
+	{
+		$db_cart_items = $this->get_cart();
+		list ($shoppingCart, $subtotal, $product_list) = $this->load_cart_data($db_cart_items);
+
+		$ships_by_time = $this->Product->get_shipment_time($product_list);
+		$ships_by = date("l F j, Y", $ships_by_time);
+
+		$this->set("ships_by_time", $ships_by_time);
+		$this->set("ships_by", $ships_by);
+
+		$country = "";
+		$is_po_pox = false;
+
+		$shipping_id = $this->Session->read("shipping_id");
+		#echo "SID=$shipping_id";
+
+		if (!$shipping_id)
+		{
+			$shipping_id = $this->Session->read("Auth.Customer.shipping_id_pref");
+			#echo "SID2=$shipping_id";
+		}
+		# Try to guess from preferred shipping....
+		$is_po_box = false;
+		if ($shipping_id)
+		{
+			$shippingAddress = $this->ContactInfo->read(null, $shipping_id);
+			if(!empty($shippingAddress['ContactInfo']['Zip_Code']))
+			{
+				$country = $shippingAddress['ContactInfo']['Country'];
+				$zipCode = $shippingAddress['ContactInfo']['Zip_Code'];
+				$is_po_box = !empty($shippingAddress['ContactInfo']['is_po_box']) ? $shippingAddress['ContactInfo']['is_po_box'] : false;
+				#echo "SHIP=$zipCode";
+			}
+		}
+
+		if (empty($zipCode)) # Default mini-fill-in
+		{
+			$zipCode = $this->Session->read("zipCode");
+		}
+
+			#print_r($product_list);
+			#echo "ZC=$zipCode";
+
+		$this->set("subtotal", $subtotal);
+
+		$grandTotals = array();
+		$shippingTotals = array();
+
+		if ($zipCode)
+		{
+			$shippingOptions = $this->ShippingPricePoint->calculate_shipping_options_list(array($zipCode, $country), $product_list);
+
+			#print_r($shippingOptions);
+
+			$availableShippingOptions = array(); # May exclude fedex if po box...
+
+			foreach($shippingOptions as $shippingOption)
+			{
+				$optionName = $shippingOption['shippingMethod']['name'];
+				if($is_po_box && !preg_match("/USPS/", $optionName))
+				{
+					continue; # only postal service can deliver to po box.
+				}
+				$grandTotal = $subtotal + $shippingOption[0]['cost'];
+				$grandTotals[$shippingOption['shippingPricePoint']['shippingMethod']] = $grandTotal;
+				$shippingTotals[$shippingOption['shippingPricePoint']['shippingMethod']] = $shippingOption[0]['cost'];
+				$availableShippingOptions[] = $shippingOption;
+
+			}
+			$this->set("shippingOptions", $availableShippingOptions);
+
+		}
+		$this->set("grandTotals", $grandTotals);
+		$this->set("shippingTotals", $shippingTotals);
+
+		$this->set("zipCode", $zipCode);
+		$smid = $this->Session->read("shipping_method_id");
+		# FORCE defaultShippingMethod to be in list of options.... otherwise no options will show up....
+		$found_smid = false;
+		$first_smid = 1;
+		$i = 0; foreach($shippingTotals as $method_id => $shippingTotal)
+		{
+			if ($i++ == 0) { $first_smid = $method_id; }
+			if ($smid == $method_id) { $found_smid = true; }
+		}
+		if (!$found_smid) { $smid = $first_smid; } #$this->Session->write("shipping_method_id", $smid); }
+		# Don't write over, since will skip asking!
+		if (!empty($shippingOptions)) # May not have if no zip code yet!
+		{
+			foreach($shippingOptions as $shippingOption)
+			{
+				if ($smid == $shippingOption['shippingMethod']['shippingMethodID'])
+				{
+					$this->set("shippingOption", $shippingOption);
+				}
+			}
+		}
+		$this->set("defaultShippingMethod", $smid);
+
+		return array($shoppingCart, $subtotal, $product_list);
+	}
+}
+?>

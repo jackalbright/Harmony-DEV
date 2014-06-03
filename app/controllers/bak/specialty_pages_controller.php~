@@ -1,0 +1,161 @@
+<?php
+class SpecialtyPagesController extends AppController {
+
+	var $name = 'SpecialtyPages';
+	var $helpers = array('Html', 'Form');
+	var $uses = array('SpecialtyPage','SpecialtyPageSectionContent');
+	var $section_names = array('intro','details','moreinfo');
+	var $title = 'Specialty Services';
+	var $controller_crumbs = false;
+
+
+	function index() {
+		$this->SpecialtyPage->recursive = 0;
+		$this->set('specialtyPages', $this->paginate());
+	}
+
+	function beforeRender()
+	{
+		parent::beforeRender();
+		$this->set("current_build_step", 1);
+	}
+
+	function view($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid SpecialtyPage.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$id = preg_replace("/[.]php$/", "", $id); # If routed.
+
+		if (!is_numeric($id))
+		{
+			$specialtyPage = $this->SpecialtyPage->findByPageUrl($id);
+		} else {
+			$specialtyPage = $this->SpecialtyPage->read(null, $id);
+		}
+
+		$this->set('specialtyPage', $specialtyPage);
+
+		# NOW SET META STUFF...
+		if (!empty($specialtyPage['SpecialtyPage']['meta_keywords'])) { $this->meta_keywords = $specialtyPage['SpecialtyPage']['meta_keywords']; }
+		if (!empty($specialtyPage['SpecialtyPage']['meta_desc'])) { $this->meta_description = $specialtyPage['SpecialtyPage']['meta_desc']; }
+
+		$sections = array();
+		foreach($specialtyPage['SpecialtyPageSectionContent'] as $section)
+		{
+			$sections[$section['page_section_name']] = $section;
+		}
+		$this->set('specialtyPageSections', $sections);
+
+		$this->set('rightbar_disabled', true);
+		# NOw we're using new template.
+
+		if (isset($_REQUEST['album']))
+		{
+			$this->set('rightbar_disabled', true);
+			$this->set("sample_gallery_album", true);
+			$this->action = "view_album";
+			$this->body_title = $specialtyPage['SpecialtyPage']['body_title'] . ": Sample Gallery";
+			$this->pageTitle = $specialtyPage['SpecialtyPage']['page_title'] . " Sample Gallery";
+			$this->body_title_crumbs = false;
+			$this->breadcrumbs[$this->params['url']['url']] = $specialtyPage['SpecialtyPage']['body_title'];
+			$this->breadcrumbs[$this->params['url']['url']."?album=1"] = "Sample Gallery";
+		} else {
+			$this->body_title = $specialtyPage['SpecialtyPage']['body_title'];
+			$this->pageTitle = $specialtyPage['SpecialtyPage']['page_title'];
+			#$this->set('rightbar_disabled', true);
+			$this->set('rightbar_template', "specialty_pages/rightbar");
+		}
+		$this->set("products", $this->Product->create_dropdown_list('name', 'All Product'));
+
+	}
+
+	function admin_index() {
+		$this->SpecialtyPage->recursive = 0;
+		$this->set('specialtyPages', $this->paginate());
+	}
+
+	function admin_add() {
+		if (!empty($this->data)) {
+			$this->SpecialtyPage->create();
+			if ($this->SpecialtyPage->save($this->data)) {
+				$specialty_page_id = $this->SpecialtyPage->id;
+
+				# Create section entries too....
+
+				#for($i = 0; $i < count($this->section_names); $i++)
+				#{
+				#	$this->section_data = array(
+				#		'specialty_page_id'=>$specialty_page_id,
+				#		'page_section_name'=>$this->section_names[$i],
+				#	);
+#
+#					$this->SpecialtyPageSectionContent->create();
+#					$this->SpecialtyPageSectionContent->save($this->section_data);
+#				}
+
+				$this->Session->setFlash(__('The SpecialtyPage has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The SpecialtyPage could not be saved. Please, try again.', true));
+			}
+		}
+	}
+
+	function admin_edit($id = null) {
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid SpecialtyPage', true));
+			$this->redirect(array('action'=>'index'));
+		}
+
+		#if (!empty($this->data['SpecialtyPageSectionContent']))
+		if (!empty($this->data))
+		{
+			$this->SpecialtyPage->save($this->data);
+
+			if (!empty($this->data['SpecialtyPageSectionContent']))
+			{
+				# Loop through and if any blank ones, remove if existing in db, ignore if blank.
+				#
+				$pricing_data = array();
+				foreach($this->data['SpecialtyPageSectionContent'] as &$content)
+				{
+					if ($content['content'] == "")
+					{
+						if ($content['specialty_page_section_content_id'] != "") # Delete from db.
+						{
+							$this->SpecialtyPageSectionContent->del($content['specialty_page_section_content_id']);
+						} else { # Blank, ignore.
+							#
+						}
+					} else {
+						$specialty_content_data[] = $content;
+					}
+	
+				}
+				$this->SpecialtyPageSectionContent->saveAll($specialty_content_data);
+				$this->Session->setFlash("Content updated");
+			}
+		}
+		$contents = $this->SpecialtyPageSectionContent->findAllBySpecialtyPageId($id, array(), 'specialty_page_section_content_id');
+		if (!$contents) { $contents = array(); }
+		$this->data = $this->SpecialtyPage->read(null, $id);
+		$this->data['SpecialtyPageSectionContent'] = Set::combine($contents, '{n}.SpecialtyPageSectionContent.specialty_page_section_content_id', '{n}.SpecialtyPageSectionContent');  
+
+		$this->set("specialty_page_id", $id);
+
+	}
+
+	function admin_delete($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for SpecialtyPage', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if ($this->SpecialtyPage->del($id)) {
+			$this->Session->setFlash(__('SpecialtyPage deleted', true));
+			$this->redirect(array('action'=>'index'));
+		}
+	}
+
+}
+?>

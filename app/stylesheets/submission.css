@@ -1,0 +1,23 @@
+#productList p.center	
+{
+float: left;
+width: 90px;
+height: 80px;
+margin: 0.5em 6px 0.5em 6px;
+}
+#main #productList a { text-decoration: none; }
+#submitInfo
+{
+	background-color: #FFE;
+	border-color: #E0E0E0;
+	border-width: 1px;
+	border-style: solid;
+	padding: 2px;
+	margin: 1em 0 1em 0;
+}
+ol
+{
+	margin: 0;
+	padding: 0 0 0 1.5em;
+}
+#main li { margin: 0 0 0.5em 0; }

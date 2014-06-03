@@ -1,0 +1,12 @@
+.required label
+{
+	font-weight: bold;
+	color: red;
+}
+
+.required label:after
+{
+	content: ' * (required)';
+	color: red;
+	display: inline;
+}

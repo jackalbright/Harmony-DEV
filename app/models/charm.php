@@ -1,0 +1,18 @@
+<?php
+class Charm extends AppModel {
+
+	var $name = 'Charm';
+	var $useTable = 'charm';
+	var $primaryKey = 'charm_id';
+	var $order = 'Charm.name ASC';
+
+	var $hasMany = array(
+		'CharmCategoryCharm'=>array('className'=>'CharmCategoryCharm', 'foreignKey'=>'charm_id'),
+	);
+
+	var $hasAndBelongsToMany = array(
+		'CharmCategories'=>array('className'=>'CharmCategoryCharm', 'foreignKey'=>'charm_id','group'=>'Charm.charm_id','joinTable'=>'charm_category_charms'),
+	);
+
+}
+?>

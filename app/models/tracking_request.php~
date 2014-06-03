@@ -1,0 +1,9 @@
+<?php
+class TrackingRequest extends AppModel {
+
+	var $name = 'TrackingRequest';
+	var $useDbConfig = 'default_legacy';
+	var $primaryKey = 'tracking_request_id';
+
+}
+?>

@@ -1,0 +1,21 @@
+#five_step_banner
+{
+	background-color: #DEDEDE;
+}
+
+#five_step_title
+{
+	font-weight: bold;
+	text-align: left;
+}
+
+#five_step_banner .five_step_step
+{
+	border: 0px;
+	border-left: solid white 1px;
+}
+
+#five_step_banner #five_step_step1
+{
+	border-left: 0px;
+}

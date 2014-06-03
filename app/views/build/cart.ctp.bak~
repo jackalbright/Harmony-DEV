@@ -1,0 +1,8 @@
+<div class="">
+	<p>Select how many items you would like:</p>
+	<form method="POST" action="/cart/add">
+		Quantity:
+		<input type="text" name="data[Build][quantity]" value="<?= $min_quantity ?>" onChange="return assertMinimum('<?= $min_quantity ?>');">
+		<input type="submit" value="Add to Cart">
+	</form>
+</div>

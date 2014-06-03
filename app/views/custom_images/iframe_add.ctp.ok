@@ -1,0 +1,20 @@
+<div class="">
+	<?php echo $form->create('CustomImage',array('id'=>'CustomImageForm', 'type'=>'file','url'=>'/custom_images/iframe_add','onSubmit'=>'hideFlash();')); ?>
+
+		<input type="file" id="file" name="data[CustomImage][file]" onChange="hideFlash(); parent.showPleaseWait(); $('CustomImageForm').submit();" style="width: 200px;"/>
+	<div class="" style="text-align: center;">
+		<br/>
+				<b>OR</b>
+		<br/>
+				<a target="_top" href="/custom_images">Use a saved image
+	</div>
+	<div class="clear"></div>
+
+	</form>
+
+	<? if(!empty($this->data)) { ?>
+	<script>
+		Event.observe(window,'load', function() { parent.loadCustomProductImages(); });
+	</script>
+	<? } ?>
+</div>

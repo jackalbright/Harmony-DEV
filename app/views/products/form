@@ -1,0 +1,5 @@
+calculator.ctp:		<? echo $ajax->form("calculator/$prod",'post', array('model'=>'Product','enctype'=>'multipart/form-data','name'=>'pricingForm','id'=>'pricingForm','update'=>'pricing_calculator_holder')) ?>
+calculator.ctp.bak:		<? echo $ajax->form("calculator/$prod",'post', array('model'=>'Product','enctype'=>'multipart/form-data','name'=>'pricingForm','id'=>'pricingForm','update'=>'pricing_calculator_holder')) ?>
+viewbak.ctp:		echo $ajax->Javascript->event('window','load',
+viewbak.ctp:			$ajax->remoteFunction( array('url'=>"/products/calculator/".$product['Product']['code'], 'update'=>"pricing_calculator_holder")));
+view.ctp.bak:		<? echo $ajax->Javascript->event('window','load', $ajax->remoteFunction( array('url'=>"/shipping/calculator/".$product['Product']['code'], 'update'=>"shipping_calculator"))); ?>

@@ -1,0 +1,70 @@
+<?= $this->element("steps/steps", array('step'=>'product','stock'=>1)); ?>
+<div class="product product_view">
+
+<table width="100%" cellpadding=5>
+<tr>
+<td valign="top" style="width: 50%;">
+<?
+$products = array($product);
+
+$width = 450;
+$class = "";
+if (count($related_products) > 1) { 
+	#$products = array_merge($products, $related_products);
+	$products = array_merge($related_products);
+	$width = 200;
+	$class = "left";
+}
+#echo "C=".count($products);
+echo $hd->product_element("products/sample_gallery_left",$product['Product']['prod'],array('products'=>$products,'width'=>$width,'class'=>$class));
+?>
+
+
+
+</td>
+<td valign="top" style="width: 50%; border-left: solid #CCC 1px;">
+
+<?= $hd->product_element("products/intro", $product['Product']['prod']); ?>
+
+<table>
+<tr>
+	<td width="50%" valign="top">
+	.
+		<?= $hd->product_element("products/choose", $product['Product']['prod'],array('no_chart'=>1,'product'=>$product)); ?>
+	</td>
+	<td width="50%" valign="top">
+	.
+		<?= $hd->product_element("products/choose", $product['Product']['prod'],array('no_features'=>1,'product'=>$product)); ?>
+	</td>
+</tr>
+</table>
+
+</td>
+</tr>
+<tr>
+	<td colspan=2>
+
+		<? if(!empty($client_list)) { ?>
+		<div class="clear">
+			<hr/>
+		<a class="hidden right" href="#top" name="clientlist">Top</a>
+		<?= $this->element("clients/clientlist", array('clients'=>$client_list)); ?>
+		</div>
+		<? } ?>
+
+<? if(count($product['Testimonials'])) { ?>
+		<div>
+			<hr/>
+			<a class="hidden right" href="#top" name="comments">Top</a>
+			<div id="testimonials">
+			<div class="sidebar_header">Customer Comments:</div>
+				<?= $this->element("products/testimonials", array('testimonials'=>$product['Testimonials'],'limit'=>1,'random'=>true)); ?>
+			</div>
+		</div>
+<? } ?>
+	</td>
+</tr>
+</table>
+
+
+</div>

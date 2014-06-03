@@ -1,0 +1,55 @@
+				<?
+					$width = 270;
+					if($prod == 'RL' || $prod == 'PR' || $prod == 'PB') { $width = 550; }
+				?>
+		<?
+			$event_handler = empty($build['Product']['is_stock_item']) ? 'onMouseDown="return startDrag(event);" onMouseOut="return endDrag(event);" onMouseUp="return endDrag(event);" onMouseMove="return doDrag(event);" onDrag="return false;" onDragStart="return false;"' : "";
+		?>
+		<div style="width: <?= $width ?>px; position: relative; overflow: hidden;" <?= $event_handler ?> >
+			<img id="blankimg" style="position: relative;" src="<?= $blankimg ?>" onDrag="return false;" onDragStart="return false;" onLoad="hidePleaseWait(); showAdjustControls();"/>
+			<div id="canvas" style="overflow: hidden; position: absolute; top: <?= !empty($canvas[1]) ? $canvas[1] : 0 ?>px; left: <?= !empty($canvas[0]) ? $canvas[0] : 0 ?>px; width: <?= !empty($canvas[2]) ? $canvas[2] : 0 ?>px; height: <?= !empty($canvas[3]) ? $canvas[3] : 0 ?>px; ">
+				<img id="img" style="position: absolute; top: <?= !empty($imgy)?$imgy:0?>px; left: <?= !empty($imgx)?$imgx:0?>px; height: <?= $imgheight ?>px; z-index: 5;" src="<?= $image_path ?>" class="<?= !empty($transimg) ? "hidden" : "" ?>" onLoad="$('pleasewaitbelow').addClassName('hidden');"/>
+			</div>
+			<? if(!empty($canvas2)) { ?>
+			<div id="canvas2" style="overflow: hidden; position: absolute; top: <?= !empty($canvas2[1]) ? $canvas2[1] : 0 ?>px; left: <?= !empty($canvas2[0]) ? $canvas2[0] : 0 ?>px; width: <?= !empty($canvas2[2]) ? $canvas2[2] : 0 ?>px; height: <?= !empty($canvas2[3]) ? $canvas2[3] : 0 ?>px; ">
+				<img id="img2" style="position: absolute; top: <?= !empty($imgy)?$imgy:0?>px; left: <?= !empty($imgx)?$imgx:0?>px; height: <?= $imgheight ?>px; z-index: 5;" src="<?= $image_path ?>" />
+			</div>
+			<? } ?>
+
+			<? if(!empty($transimg)) { ?>
+				<img id="transimg" style="position: absolute; top: 0px; left: 0px; z-index: 10;" src="<?= $transimg ?>" width="<?= $width ?>" onDragStart="return false;" onDrag="return false;" onLoad="$('img').removeClassName('hidden');"/>
+				<script>
+				var ua = window.navigator.userAgent;
+				if(ua.indexOf("MSIE 6") != -1)
+				{
+					$('transimg').src = "<?= $transimg_gif ?>";
+				}
+				</script>
+			<? } ?>
+
+
+			<div id="" style="cursor: pointer; overflow: hidden; position: absolute; z-index: 20; top: <?= !empty($canvas[1]) ? $canvas[1] : 0 ?>px; left: <?= !empty($canvas[0]) ? $canvas[0] : 0 ?>px; width: <?= !empty($canvas[2]) ? $canvas[2] : 0 ?>px; height: <?= !empty($canvas[3]) ? $canvas[3] : 0 ?>px; " ><img src="/images/trans.gif" width="<?= $canvas[2]; ?>" height="<?= $canvas[3] ?>"></div>
+			<? if(!empty($canvas2)) { ?>
+				<div id="" style="cursor: pointer; overflow: hidden; position: absolute; z-index: 20; top: <?= !empty($canvas2[1]) ? $canvas2[1] : 0 ?>px; left: <?= !empty($canvas2[0]) ? $canvas2[0] : 0 ?>px; width: <?= !empty($canvas2[2]) ? $canvas2[2] : 0 ?>px; height: <?= !empty($canvas2[3]) ? $canvas2[3] : 0 ?>px; " ><img src="/images/trans.gif" width="<?= $canvas[2]; ?>" height="<?= $canvas[3] ?>"></div>
+			<? } ?>
+
+			<div class="clear"></div>
+
+		</div>
+		<a id="view_larger" style="text-decoration: none !important; " class="view_larger" rel="shadowbox;player=img" href="/product_image/build_view/-900x650.png?rand=<?= time(); ?>">+ View Larger</a>
+		<script>
+		<? if(empty($this->params['isAjax'])) { ?>
+		Event.observe(window,'load', function() {
+			Shadowbox.setup("#view_larger");
+		});
+		<? } else { ?>
+		Shadowbox.setup("#view_larger");
+		<? } ?>
+		</script>
+		<? if(empty($build['Product']['is_stock_item'])) { ?>
+		<div align="center">
+		<img src="/images/icons/hand-small.png" align="middle"> Drag your picture to adjust
+		</div>
+		<? } ?>
+		<br/>
+		<br/>

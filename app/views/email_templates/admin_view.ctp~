@@ -1,0 +1,5 @@
+<script>
+hidePleaseWait();
+</script>
+<? error_log("O=$options_string"); ?>
+<?= $this->element("email_templates/".$emailTemplate['EmailTemplate']['name'],array('options_string'=>$options_string)); ?>

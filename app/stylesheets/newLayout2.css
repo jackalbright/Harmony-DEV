@@ -1,0 +1,250 @@
+div#header
+{
+	/*height: 115px;
+	overflow: overflow;
+	z-index: 10;*/
+	/*position: relative;
+	right: 0px;
+	top: 0px;
+	top: 0;
+	*/
+}
+
+body, #mainWrapper, #contentWrapper { z-index: 0; }
+
+div#main
+{
+	z-index: 0;
+	position: relative;
+	top: 10px;
+	margin: 0;
+	padding: 0;
+	float: left; /* THIS IS PPUT IN SO ANY CLEAR: BOTH, ETC WILL STAY WITHIN THIS CONTAINER.... OTHERWISE, BREAKS OUT UNTIL NEAREST FLOATED ANCESTOR... */
+	/*width: 544px;*/
+	/*overflow: visible;*/
+}
+
+#main_table
+{
+	width: 100%;
+}
+
+#main_table td
+{
+	vertical-align: top;
+}
+
+div#rightBar
+{
+	margin-top: 0px;
+	float: right;
+}
+
+div#footer
+{
+	position: relative;
+	right: 0px;
+	top: 30px;
+	margin: 30px auto 0 auto;
+	clear: both;
+	width: 965px;
+	/*width: 765px;*/
+}
+
+.stretcher
+{
+	clear: both;
+}
+#bookmark
+{
+	width: 221px;
+	background-image: url(/background-images/Bookmark-Rework.gif);
+	background-repeat: no-repeat;
+	background-position: 0 0;
+	padding: 1px 0 0 0;
+	margin: 0 0 10px 0;
+}
+#bookmark #bookBottom		
+{
+	width: 221px;
+	height: 14px;
+	background-image: url(/background-images/Bookmark-Rework-bottom.gif);
+	margin: 0;
+}
+#bookmark #bookContents
+{
+	width: 166px;
+	margin: 60px auto 14px 8px;
+	padding: 0;
+}
+input#searchTerms
+{
+	width: 164px;
+	margin: 0 auto 0 auto;
+}
+button#searchSubmit
+{
+	margin: 0 auto 0 auto;	
+}
+
+#productColumn .product
+{
+	float: left;
+	font-size: 11px;
+	text-align: center;
+	width: 70px;
+	height: 76px;
+	margin: 0.5em 2px 1.5em 2px;
+}
+
+/*#item { text-decoration: underline; }*/
+
+#rightbar
+{
+	float: right;
+	width: 275px;
+}
+
+#mainnav_new
+{
+	margin: 0px;
+	/*margin-left: 50px;*/
+	position: relative;
+}
+
+#mainnav_new, .mainnav_submenu
+{
+	/*background-color: #4BB51E;*/
+	/*background-color: #99BBAB;*/
+	/*background-color: #AF8AB6;*/
+	/*background-color: #CCFF99;*/
+	background-color: #99CC66;
+	border-collapse: collapse;
+	position: relative;
+}
+
+.mainnav_submenu
+{
+	position: relative;
+}
+.mainnav_submenu td
+{
+	padding: 0px;
+}
+
+#mainnav_submenu_products td
+{
+	width: 150px;
+}
+#mainnav_submenu_products td
+{
+}
+
+#mainnav_submenu_products a
+{
+}
+
+
+#mainnav_new .mainnav_button_left
+{
+	border-left: none;
+}
+
+#mainnav_new td.mainnav_button
+{
+	border-left: solid white 1px;
+}
+
+#mainnav_new td
+{
+	white-space: nowrap;
+	/*padding: 3px 5px 3px 5px;*/
+	font-size: 12px;
+
+	position: relative;
+}
+
+#mainnav_new td a, 
+#mainnav_new td a:visited,
+#mainnav_new td a:link,
+#mainnav_new td a:active
+{
+	text-decoration: none;
+	/*color: #FFFFFF;*/
+	color: #000;
+	display: block;
+	padding: 5px 12px 5px 12px;
+}
+
+#mainnav_new td a:hover
+{
+	text-decoration: underline;
+	background-color: #CECECE;
+}
+
+.mainnav_submenu
+{
+	display: none;
+
+	position: absolute;
+	z-index: 100;
+	margin: 0px;
+	padding: 1px;
+}
+
+.mainnav_submenu_selected
+{
+	display: table;
+}
+
+.mainnav_submenu_submenu
+{
+	display: none;
+
+	z-index: 100;
+	margin: 0px;
+}
+
+.mainnav_submenu_submenu_selected
+{
+	display: block;
+	float: left;
+	position: relative;
+	left: 125px;
+}
+
+
+
+.mainnav_subbutton, .mainnav_subbutton_top, .mainnav_subbutton_left
+{
+	border: 0px;
+	border-left: 0px;
+	border-top: solid white 1px;
+	margin: 0px;
+	padding: 0px;
+	width: 125px;
+}
+
+.mainnav_subbutton_left
+{
+	border-top: solid white 1px;
+	border-right: solid white 1px;
+}
+
+.mainnav_subbutton_top
+{
+	/*border-top: 0px;*/
+}
+
+
+#otherProductsDropdown
+{
+/*	float: right;
+	margin: 0 0 4px 10px;
+	*/
+	width: 150px;
+}
+
+
+.clear { clear: both; }
+

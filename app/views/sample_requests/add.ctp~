@@ -1,0 +1,90 @@
+<div class="sampleRequests form" style="padding: 15px;">
+<?php echo $form->create('SampleRequest',array('url'=>$this->here,'onSubmit'=>"return verifyRequiredFields(this);"));?>
+	<h4 class="bold" >Please send me a random <?= !empty($product) ? preg_replace("/custom /", "", Inflector::singularize(strtolower($product['Product']['short_name']))) : "" ?> sample</h4>
+
+	<p style="font-size: 12px;">Available to U.S. addresses only</p>
+		<br/>
+	<div>
+	<table width="100%">
+	<tr>
+	<td valign="top" rowspan=2>
+		<?= $form->input('name',array('class'=>'required')); ?>
+		<?= $form->input('organization',array('label'=>'Organization (optional)')); ?>
+		<br/>
+		<?= $form->input('address_1',array('class'=>'required')); ?>
+		<?= $form->input('address_2'); ?>
+		<?= $form->input('city',array('class'=>'required')); ?>
+		<?= $form->input('state',array('class'=>'required')); ?>
+		<?= $form->input('zip_code',array('class'=>'required')); ?>
+
+		<br/>
+		<br/>
+
+		<div class="alert bold">* Required fields</div>
+	</td>
+	<td valign="top">
+		<? 
+		if(empty($product)) { echo $form->input('product_type_id',array('label'=>'Select a product')); }
+
+		if(!empty($related_products) && count($related_products) > 1) { 
+			?> <label> Select a style </label> <div style=""> <?
+			$i = 0; foreach($related_products as $rp)
+			{
+				$pid = $rp['Product']['product_type_id'];
+				$pname = $rp['Product']['pricing_name'];
+				$pdesc = $rp['Product']['pricing_description'];
+				if($pid != 37 && !preg_match("/French Lead/", $pname)) {
+				?>
+				<input id="<?= $rp['Product']['code'] ?>" class="left" type="checkbox" name="data[SampleRequestProductType][<?=$i++ ?>][product_type_id]" value="<?= $pid ?>"/> 
+				<div style="float: left; width: 300px; margin-top: 3px;">
+					<label style="width: 100%;" for="<?= $rp['Product']['code'] ?>">
+					<?= $pname ?>
+					<? if(!empty($pdesc)) { ?>
+					<div style="font-size: 10px; margin-left: 10px;">
+						<?= $pdesc ?>
+					</div>
+					<? } ?>
+					</label>
+				</div>
+				<div class="clear"></div>
+				<?
+				}
+			}
+			?>
+			</div>
+			<?
+		} else {
+				?>
+				<input type="hidden" name="data[SampleRequestProductType][0][product_type_id]" value="<?= $product['Product']['product_type_id'] ?>"/>
+				<?
+		}
+		?>
+		<?= $form->input('comments',array('style'=>'width: 100%')); ?>
+		<br/>
+		<p>Please provide email or phone in case we have questions</p>
+		<div style="padding-right: 25px;" class="right"><input type="image" src="/images/buttons/Send-grey.gif"/></div>
+		<?= $form->input('email',array('label'=>'Email or Phone','class'=>'required')); ?>
+
+		<br/>
+		<div class="bold">Please verify the words below</div>
+		<div class="alert2"><?= $recaptcha->error(); ?></div>
+		<?= $recaptcha->show(); ?>
+	</td>
+	</tr>
+	</table>
+
+	<table>
+	<tr>
+	<td valign="middle">
+	</td>
+	<td valign="middle" align="left">
+	<div style="padding-left: 100px;">
+	</div>
+	</td>
+	</tr>
+	</table>
+
+	</div>
+
+<?php echo $form->end();?>
+</div>

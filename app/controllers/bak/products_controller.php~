@@ -1,0 +1,871 @@
+<?php
+class ProductsController extends AppController {
+
+	var $name = 'Products';
+	var $helpers = array('Html', 'Form');
+	var $uses = array("Product", "GalleryImage", "CustomImage","Charm","CharmCategory","CharmCategoryCharm","Tassel","Part","ShippingPricePoint","TrackingProductCalculatorRequest","Faq","FaqTopic","ContentSnippet");
+	var $build_page = true;
+
+	function beforeFilter()
+	{
+		
+		parent::beforeFilter();
+
+		switch($this->action)
+		{
+			case 'admin_add':
+			case 'admin_edit':
+			case 'add':
+			case 'edit':
+				if (!empty($this->data['Product']['image_type'])) { $this->data['Product']['image_type'] = join(",", $this->data['Product']['image_type']); }
+
+				break;
+		}
+	}
+
+	function beforeRender()
+	{
+		parent::beforeRender();
+
+		switch($this->action)
+		{
+			case 'admin_add':
+			case 'admin_edit':
+			case 'add':
+			case 'edit':
+				#$this->set("image_types", $this->Product->getSetValues('image_type'));
+				$this->set("stamp_types", $this->Product->getEnumValues('stamp'));
+				$this->set("image_types", $this->Product->getSetValues('image_type'));
+
+
+				break;
+		}
+		if ($this->action != 'index')
+		{
+			$this->set("current_build_step", 1);
+		}
+	}
+
+	function index() {
+		$this->Product->recursive = 1;
+		$this->body_title = "Design custom gifts created with your image or ours"; 
+		$this->bread_title = "Products";
+		#$this->set("body_title", "Select a Product:");
+		#$this->set('products', $this->paginate());
+		$this->breadcrumbs = false;
+
+		$this->rightbar_disabled = true;
+
+		#$this->set("items_per_row", $this->rightbar_disabled ? 6 : 3);
+		$this->set("items_per_row", 6);
+		#$this->set("rightbar_disabled", true);
+
+		$this->set("popular_products", $this->Product->findAll("Product.available = 'yes' AND Product.is_popular = 1 AND Product.buildable = 'yes' AND Product.is_stock_item = 0 AND Product.parent_product_type_id IS NULL", array(), 'sort_index, name'));
+		$this->set("stock_products", $this->Product->findAll("Product.available = 'yes' AND Product.is_stock_item = 1 AND Product.parent_product_type_id IS NULL", array(), 'sort_index, name'));
+		$this->set("all_products", $this->Product->findAll("Product.available = 'yes' AND Product.is_stock_item = 0 AND Product.buildable = 'yes' AND Product.is_stock_item = 0 AND Product.parent_product_type_id IS NULL", array(), 'sort_index, name'));
+		#$this->set("popular_products", $this->Product->findAll("Product.available = 'yes' AND Product.is_popular = 1 AND Product.buildable = 'yes' AND Product.is_stock_item = 0", array(), 'sort_index, name'));
+		#$this->set("stock_products", $this->Product->findAll("Product.available = 'yes' AND Product.is_stock_item = 1", array(), 'sort_index, name'));
+		#$this->set("all_products", $this->Product->findAll("Product.available = 'yes' AND Product.is_stock_item = 0 AND Product.buildable = 'yes' AND Product.is_stock_item = 0 ", array(), 'sort_index, name'));
+	}
+
+	function quantityPricing()
+	{
+		$this->body_title = "Product Pricing";
+		$this->rightbar_disabled = true;
+		$this->Product->recursive = 1;
+		$products = $this->Product->findAll("available = 'yes'", array(), "is_stock_item ASC, sort_index ASC"); # Parent products only...
+		$product_pricings = array();
+		foreach($products as $each_product)
+		{
+			$code = $each_product['Product']['code'];
+			$this->Product->recursive = 2;
+			$product = $this->Product->find("code = '$code'"); # So we get ProductPricing properly....
+			$this->Product->recursive = 1;
+			$pricing = $this->Product->generate_pricing_list($product);
+			#print_r($pricing);
+			$product_pricings[$code] = $pricing;
+		}
+		$this->set('product_pricings', $product_pricings);
+		$this->set("products", $products);
+
+		# Loop through products, if parent, print (else skip). Print parent and print related/children.
+
+	}
+
+	function select($code = null) 
+	{
+		#error_log("CODE=$code");
+
+		if (isset($_REQUEST['code'])) { $code = $_REQUEST['code']; }
+		if (isset($_REQUEST['productCode'])) { $code = $_REQUEST['productCode']; }
+
+		if (isset($_REQUEST['quantity']))
+		{
+			$this->Session->write("Build.quantity", $_REQUEST['quantity']);
+			$this->Session->write("Build.quantity_price", $this->Product->get_effective_base_price($code, $_REQUEST['quantity'], $this->Session->read("Auth.Customer")));
+		} else {
+			$this->Session->delete("Build.quantity");
+			$this->Session->delete("Build.quantity_price");
+		}
+
+		error_log(print_r($this->params,true));
+
+		if (!empty($_REQUEST['catalog_number'])) { $this->Session->write("Build.catalog_number", $_REQUEST['catalog_number']); $this->Session->delete("Build.imageID"); }
+		if (!empty($_REQUEST['imageID'])) { $this->Session->write("Build.imageID", $_REQUEST['imageID']);$this->Session->delete("Build.catalog_number");  }
+
+		$catalog_number = $this->Session->read("Build.catalog_number");
+		$image_id = $this->Session->read("Build.imageID");
+		
+		$build = $this->Session->read("Build");
+
+		# NO LONGER ASSUMING PRODUCT.
+		#if (!$code) { $code = $this->Session->read("Build.productCode"); }
+		#if (!$code) { $code = $this->Session->read("Build.prod"); }
+		$product = $code ? $this->Product->find("code = '$code'") : null;
+		#Session->read("Build.Product");
+
+		#error_log("CODE2=$code");
+
+		if (isset($this->params['url']['new']) || empty($product))
+		{
+			$code = null;
+			$this->Session->del("Build.Product");
+			$this->Session->del("Build.productCode");
+			$this->Session->del("Build.prod");
+		}
+
+		if (isset($_REQUEST['start_over'])) { $this->rightbar_disabled = true; }
+		$this->rightbar_disabled = true;
+
+		if ($code)
+		{
+			$product = $this->Product->find("code = '$code'");
+			$this->Session->write("Build.productCode", $code);
+			$this->Session->write("Build.Product", $product['Product']);
+			$this->Session->del("Build.cart_item_id"); # Don't modify cart!
+			#error_log("BUILD=".print_r($_SESSION,true));
+			#error_log("CAT=$catalog_number, IM=$image_id");
+			$image_types = split(",", $product['Product']['image_type']);
+
+			$cannot_custom_image = true;
+			$cannot_gallery_image = true;
+
+			foreach($image_types as $image_type)
+			{
+				if($image_type == 'real')
+				{
+					$cannot_gallery_image = false;
+				} else if ($image_type == 'repro') {
+					$cannot_gallery_image = false;
+				} else if ($image_type == 'custom') {
+					$cannot_custom_image = false;
+				}
+			}
+
+			#error_log("PROD_TYPE=".print_r($image_types,true));
+
+			if ($catalog_number || $image_id) # Redirect to build.
+			{
+				#$this->redirect("/product/build.php?prod=$code&catalogNumber=$catalog_number&image_id=$image_id&clear=1");
+				$this->redirect("/build/step?prod=$code&catalogNumber=$catalog_number&image_id=$image_id&clear=1");
+				# ALWAYS ASK FOR THE PRODUCT 2009-08-20
+				#$this->redirect("/build?prod=$code&catalogNumber=$catalog_number&image_id=$image_id");
+			} else if ($cannot_custom_image) { # Cannot do custom image
+				$this->redirect("/gallery/browse");
+			} else if ($cannot_gallery_image) { # Cannot do stamp
+				$this->redirect("/custom_images");
+			#} else if ($product['Product']['is_stock_item']) {
+			#	$this->redirect("/custom_images");
+#
+			} else { # Redirect to /gallery, let them choose custom vs gallery
+				$this->redirect("/gallery");
+			}
+		}
+
+		$this->set("rightbar_template", "build/rightbar");
+
+		$image_name = "";
+		if ($catalog_number)
+		{
+			$this->build['step'] = 2;
+			$image = $this->GalleryImage->find("catalog_number = '$catalog_number'");
+			$image_name = '"' . $image['GalleryImage']['stamp_name'] . '"';
+			$this->set("products", $this->getImageAvailableProducts($catalog_number));
+
+			$this->set("galleryImage", $image);
+			#$this->set("rightbar_template", "build/preview/gallery_image");
+
+			$this->action = "select_image_products";
+		} else if ($image_id) { 
+			$this->build['step'] = 2;
+			$image = $this->CustomImage->read(null, $image_id);
+			$image_name = '"' . $image['CustomImage']['Title'] . '"';
+			$this->set("products", $this->getCustomImageAvailableProducts());
+
+			$this->set("customImage", $image);
+			#$this->set("rightbar_template", "build/preview/custom_image");
+
+			$this->action = "select_image_products";
+
+		} else { # Haven't chosen one yet.
+			$this->redirect("/products");
+			# GO to homepage since no image selected...
+
+
+			$this->build['step'] = 1;
+			#$this->set("items_per_row", 6);
+			#$this->set("rightbar_disabled", true);
+			$this->Product->recursive = 1;
+			$this->set("popular_products", $this->Product->findAll("available = 'yes' AND is_popular = 1 AND buildable = 'yes'", array(), 'sort_index, name'));
+			$this->set("all_products", $this->Product->findAll("available = 'yes' AND is_stock_item = 0 AND buildable = 'yes'", array(), 'sort_index, name'));
+			$this->set("products", $this->Product->findAll("available = 'yes' AND is_stock_item = 0 AND buildable = 'yes'", array(), 'sort_index, name'));
+			$this->Product->recursive = 0;
+			# So domed shows up as 'Choose' item and bookcharm doesnt (based on buildable only)
+			#$this->set("popular_products", $this->Product->findAll("available = 'yes' AND is_popular = 1 AND buildable = 'yes' AND parent_product_type_id IS NULL", array(), 'sort_index, name'));
+			#$this->set("all_products", $this->Product->findAll("available = 'yes' AND is_stock_item = 0 AND buildable = 'yes' AND parent_product_type_id IS NULL", array(), 'sort_index, name'));
+			#$this->set("products", $this->Product->findAll("available = 'yes' AND is_stock_item = 0 AND buildable = 'yes' AND parent_product_type_id IS NULL", array(), 'sort_index, name'));
+
+			#$this->action = "index";
+			$this->action = "select_image_products";
+		}
+		$this->set("product_build_link", true);
+
+		$this->set("items_per_row", $this->rightbar_disabled ? 4 : 3);
+
+		#$this->set("body_title", "Choose a product for your $image_name gift:");
+		#$this->set("body_title", "Choose your $image_name product:");
+		$this->set("body_title", "Click on a(n) $image_name product below to get started:");
+	}
+
+	function preview_all()
+	{
+		$products = $this->Product->findAll("available = 'yes' AND buildable = 'yes' AND is_stock_item = 0");
+		$this->set("products", $products);
+	}
+
+	function preview($code = '')
+	{
+		# XXX EVENTUALLY MOVE TO COMPONENT!!!!!!!!!!!!!
+		Configure::write("debug", 0);
+		$tmpname = tempnam("/tmp", "hd_product_preview_");
+		#HOW HANDLE WARNING???
+
+		$basedir = dirname(__FILE__)."/../../images/products/blanks";
+		$vertical_dir = "$basedir/$code/vertical";
+		$horiz_dir = "$basedir/$code/horizontal";
+
+		# Determine based off of IMAGE ORIENTATION XXX TODO
+
+		#
+		$dir = "";
+		error_log("VD=$vertical_dir");
+		error_log("HD=$horiz_dir");
+		if (file_exists($vertical_dir)) { $dir = $vertical_dir; }
+		else if (file_exists($horiz_dir)) { $dir = $horiz_dir; }
+
+		$svgfile = "$dir/svg/$code.svg"; 
+		if (!file_exists($svgfile))
+		{
+			$svgfile = "$dir/svg/$code.png";
+		}
+
+		error_log("SVGFILE=$svgfile");
+
+		$svg_raw_content = file_get_contents($svgfile);
+		$svg_content = $svg_raw_content;
+
+		error_log("TMPNAME=$tmpname");
+
+		$svghandle = fopen("$tmpname.svg", "w");
+		fwrite($svghandle, $svg_content);
+		fclose($svghandle);
+
+		#$raw_image = shell_exec("convert $tmpname.svg png:-");
+		$raw_image = shell_exec("convert -resize 100x $tmpname.svg png:-");
+		# MAY BE FAULTY, freezing....
+
+		unlink("$tmpname.svg");
+	
+		header("Content-Type: image/png");
+		#header("Content-Type: text/plain");
+		$size = count($raw_image);
+		header("Length: $size");
+		echo $raw_image;
+		#echo "CRAP=$size";
+
+		exit(0);
+	}
+
+	function view($id = null) 
+	{
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid Product.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$id = preg_replace("/[.]php$/", "", $id); # If routed.
+
+		$this->Product->recursive = 2;
+		##error_log("NUM($id)=".is_numeric($id));
+		if (!is_numeric($id))
+		{
+			$product = $this->Product->findByProd($id);
+		} else {
+			$product = $this->Product->read(null, $id);
+		}
+		if (!$product)
+		{
+			$this->redirect("/products");
+			exit(0);
+		}
+		#print_r($product['RelatedProducts']);
+		$parent_id = $product['Product']['parent_product_type_id'];
+		$prod = $product['Product']['prod'];
+		$parent_product = $parent = null;
+		if ($parent_id)
+		{
+			$parent_product = $parent = $this->Product->read(null, $parent_id);
+		}
+		$this->set("parent_product", $parent);
+		$code = $product['Product']['code'];
+		$productCode = $product['Product']['prod'];
+
+		$pid = $product_type_id = $product['Product']['product_type_id'];
+		$related = $this->Product->findAll("Product.parent_product_type_id = '$pid' AND Product.buildable = 'yes'");
+		$this->set("related_products", $related);
+		$this->set("related", $related);
+		#print_r($related);
+
+		$this->breadcrumbs["/products/view/".$product['Product']['prod']] = ($product['Product']['short_name'] ?  $this->pluralize($product['Product']['short_name']) : $this->pluralize($product['Product']['name']));
+
+		# Now load list of product options
+
+		$product_option_field = "";
+		$product_options = array();
+		$default_product_option_value = "";
+
+		if ($prod == 'charm')
+		{
+			$product_options[""] = "None Selected";
+			$charms = $this->Charm->findAll("Charm.available = 'yes'", array('DISTINCT charm_id','*'), "name ASC");
+			foreach($charms as $charm)
+			{
+				$product_options[$charm['Charm']['charm_id']] = ucwords($charm['Charm']['name']);
+			}
+			$product_option_field = "charmID";
+		} else if ($prod == 'tassel') { 
+			$product_options[""] = "None Selected";
+			$tassels = $this->Tassel->findAll("Tassel.available = 'yes'", array('DISTINCT tassel_id','*'), "color_name ASC");
+			#print_r($tassels);
+			foreach($tassels as $tassel)
+			{
+				$product_options[$tassel['Tassel']['tassel_id']] = ucwords($tassel['Tassel']['color_name']);
+			}
+			$product_option_field = "tasselID";
+
+		} else {
+			if (count($related) > 0)
+			{
+				if ($parent_product)
+				{
+					$product_options[$parent_product['Product']['code']] = $parent_product['Product']['name'];
+				}
+				foreach($related as $related_product)
+				{
+					$product_options[$related_product['Product']['code']] = $related_product['Product']['name'];
+				}
+				$product_option_field = "productCode";
+				$default_product_option_value = $code;
+			}
+		}
+
+		$this->set("product_options", $product_options);
+		$this->set("product_option_field", $product_option_field);
+		$this->set("default_product_option_value", $default_product_option_value);
+
+		$this->set('product', $product);
+		$pricings = $this->Product->generate_pricing_list($product);
+		$this->set('product_pricings', $pricings);
+		$quantity = $product_minimum = count($pricings) && count($pricings[0]['pricing_data']) ? $pricings[0]['pricing_data'][0]['min_quantity'] : $product['Product']['minimum'];
+		$this->set('product_minimum', $product_minimum);
+		$this->set('quantity', $quantity);
+		$this->set("product_plural_name", $this->Product->plural_name($product));
+		$body_title = $product['Product']['body_title'];
+		if (!$body_title) { $body_title = $product['Product']['name']; }
+		$this->set("body_title", $body_title);
+		if ($product['Product']['page_title']) { $this->pageTitle = $product['Product']['page_title']; }
+
+		# NOW SET META STUFF...
+		if (!empty($product['Product']['meta_keywords'])) { $this->meta_keywords = $product['Product']['meta_keywords']; }
+		if (!empty($product['Product']['meta_desc'])) { $this->meta_description = $product['Product']['meta_desc']; }
+
+		#$minimum_price = $this->Product->get_minimum_price($code);
+		list($minimum_price,$minprice_qty) = $this->Product->get_minimum_price_qty($code);
+
+		$this->set("minimum_price", $minimum_price);
+		$this->set("minprice_qty", $minprice_qty);
+
+		#echo $product['Product']['meta_desc'].", ".$product['Product']['meta_keywords'];
+
+		# Stock items have a DIFFERENT sidebar...
+		# XXX TODO
+
+		$this->set("rightbar_disabled", true);
+		if (isset($_REQUEST['new'])) { 
+			$this->action = 'viewnew';
+			#$this->set("rightbar_disabled", false);
+			#$this->set("rightbar_template", "products/rightbar_new");
+		}
+
+		if($product['Product']['is_stock_item'])
+		{
+			$this->action = 'view_stock';
+		}
+
+		# NEW CALCULATOR ENABLED
+		$this->set("rightbar_disabled", false);
+		$this->set("rightbar_template", "products/rightbar_new");
+
+		#if ($product['Product']['is_stock_item'])
+		#{
+		#	$this->build_page = false;
+		#	$this->set("rightbar_template", "products/rightbar_stockitem");
+		#} else {
+		#	$this->set("rightbar_template", "products/rightbar");
+		#}
+
+		#if (preg_match("/malysoft/", $_SERVER['HTTP_HOST']))
+		#{
+		#} else {
+		#	$this->set("rightbar_template", null);
+		#}
+
+
+		$this->product_set_variables($product['Product']['prod']);
+
+		if (isset($this->params['url']['tab']))
+		{
+			$this->set("active_tab", $this->params['url']['tab']);
+		}
+
+		# Load faq stuff.....
+
+		$this->FaqTopic->recursive = 2;
+		$faq_topics = $this->FaqTopic->findAll("product_enabled = 1");
+		#$wholesale_topic = $this->FaqTopic->find("topic_name = 'Wholesale'");
+
+		$faq_topics_list = Set::combine($faq_topics, '{n}.FaqTopic.topic_name', '{n}');
+
+		$this->set("faqTopics", $faq_topics_list);
+		$this->set("productFaq", $this->Faq->findAll("product_type_id = '$product_type_id' AND answer != '' AND answer IS NOT NULL"));
+		#$this->set("wholesaleFaq", $wholesale_topic['Faq']);
+		$this->set("wholesaleContent", $this->ContentSnippet->find("snippet_code = 'wholesale'"));
+	}
+
+	function calculator($code)
+	{
+		if (!empty($this->params['form']['productCode']))
+		{
+			$code = $this->params['form']['productCode'];
+		}
+		if (!empty($this->params['isAjax'])) { Configure::write('debug', 0); }
+		$this->Product->recursive = 2;
+		$product = $this->Product->find("code = '$code'");
+
+		$pid = $product['Product']['product_type_id'];
+
+		# If we're a child product, find the parent product and all children from there....
+		$parent_id = $product['Product']['parent_product_type_id'];
+		if ($parent_id)
+		{
+			$parent_product = $this->Product->find("product_type_id = '$parent_id'");
+		} else {
+			$parent_id = $pid;
+			$parent_product = $product;
+		}
+		$related = $this->Product->findAll("parent_product_type_id = '$parent_id' AND Product.buildable = 'yes'");
+		$this->set("related_products", $related);
+		$this->set("parent_product", $parent_product);
+		$this->set("prod", $code);
+		$prod = $product['Product']['prod'];
+
+		$parts = array();
+
+		foreach($product['ProductPart'] as $part)
+		{
+			$part_name = $part['Part']['part_name'];
+			$parts[$part_name] = $part;
+		}
+
+		$this->set("parts", $parts);
+
+
+		$submitted = !empty($this->data);
+		$discount = 100;
+
+		$quantity = !empty($this->data['Product']['quantity']) ? ($this->data['Product']['quantity']) : $product['ProductPricing'][0]['quantity'];
+		#print_r($product);
+
+		$minimum = $product['Product']['minimum'];
+
+		if (!empty($this->data) && $_SERVER['REMOTE_ADDR'] != "71.224.15.91")
+		{
+			$zipCode = $this->data['Product']['zipCode'];
+			$options = "";
+			if (!empty($this->data['Product']['options']))
+			{
+				foreach($this->data['Product']['options'] as $part => $value)
+				{
+					$options .= "$part=$value&";
+				}
+			}
+			
+			# TRACK REQUESTS....
+			$now = date("Y-m-d H:i:s");
+			$session_id = session_id();
+			$this->TrackingProductCalculatorRequest->create();
+			$this->TrackingProductCalculatorRequest->save(array(
+				'session_id'=>$session_id,
+				'productCode'=>$code,
+				'quantity'=>$quantity,
+				'minimum'=>$minimum,
+				'date'=>$now,
+				'options'=>$options,
+				'zipCode'=>$zipCode
+			));
+
+		}
+
+
+		if ($quantity < $minimum)
+		{
+			$this->Session->setFlash("Minimum quantity is $minimum");
+			$quantity = $minimum;
+		}
+
+		# Need to add parts to and combine???
+		$discounted_base_price = $this->Product->get_effective_base_price($code, $quantity, $this->Session->read("Auth.Customer"));
+		#$part_costs = $individual_part_costs = $this->Product->get_part_costs($code, $this->data); # Dependso n what was set in form...
+		$part_costs = 0;
+		$part_price = array();
+		foreach($product['ProductPart'] as $part)
+		{
+			#error_log(print_r($part,true));
+			$partname = $part['Part']['part_code'];
+			# Get each separately so we can figure pricing for each....
+			$part_cost = $this->Product->get_options_cost($code, $quantity, array($partname=>1));
+			error_log("PN (@$quantity)=$partname = $part_cost");
+			$part_price[$partname] = $part_cost;
+			if (!empty($this->data['Product']['options'][$partname]))
+			{
+				$part_costs += $part_cost; # Add if asked for...
+			}
+		}
+		$individual_part_costs = $part_costs;
+
+		$this->set("part_price", $part_price);
+
+		# Get base pricing for quantity....
+		#$original_subtotal = ($product['Product']['base_price']+$individual_part_costs) * $quantity;
+		$original_subtotal = $this->Product->get_effective_base_price($code, $minimum, $this->Session->read("Auth.Customer")) * $quantity;
+
+		$discounted_individual = $discounted_base_price + $individual_part_costs;
+		$discounted_subtotal = $discounted_individual * $quantity;
+
+		#error_log("DISCOUNTED_EACH=$discounted_individual");
+		#error_log("TOTAL=$discounted_subtotal");
+
+		$savings_total = $original_subtotal - $discounted_subtotal;
+
+		$percent_savings = $original_subtotal > 0 ? $savings_total / $original_subtotal * 100 : 0;
+		# ???
+
+		$this->set("base_discount_percent", 100-$discount);
+		$this->set("discount_percent", $percent_savings);
+		$this->set("quantity", $quantity);
+		$this->set("base_pricing", $discounted_base_price);
+		$this->set("subtotal", $discounted_subtotal);
+		$this->set("each_total", $discounted_individual);
+		$this->set("savings_total", $savings_total);
+
+		$next_tier = "";
+
+		$i = 0;
+		foreach($product['ProductPricing'] as $pricing)
+		{
+			if ($pricing['quantity'] > $quantity && $i+1 < count($product['ProductPricing']))
+			{
+				$next_tier = $pricing['quantity'];
+				break;
+			}
+			$i++;
+		}
+
+		$this->set("next_tier", $next_tier);
+
+		$grand_total = $discounted_subtotal;
+
+		if (!empty($this->data['Product']['zipCode']))
+		{
+			$zipCode = $this->data['Product']['zipCode'];
+			# calculate shipping
+			$shippingOptions = $this->ShippingPricePoint->calculate_shipping_options($zipCode, $code, $quantity);
+			#print_r($shippingOptions);
+			$this->set("shippingOptions", $shippingOptions);
+
+			foreach($shippingOptions as $option)
+			{
+				$method_id = $option['shippingPricePoint']['shippingMethod'];
+				$grand_totals[$method_id] = $grand_total + $option[0]['cost'];
+			}
+			$this->set("grand_totals", $grand_totals);
+		}
+
+		# Now load list of product options
+
+		$product_options = array();
+		$default_product_option_value = "";
+
+		if ($prod == 'charm')
+		{
+			$product_options[""] = "None Selected";
+			$charms = $this->Charm->findAll("Charm.available = 'yes'", array('DISTINCT charm_id','*'), "name ASC");
+			foreach($charms as $charm)
+			{
+				$product_options[$charm['Charm']['charm_id']] = ucwords($charm['Charm']['name']);
+			}
+			$product_option_field = "charmID";
+		} else if ($prod == 'tassel') { 
+			$product_options[""] = "None Selected";
+			$tassels = $this->Tassel->findAll("Tassel.available = 'yes'", array('DISTINCT tassel_id','*'), "color_name ASC");
+			#print_r($tassels);
+			foreach($tassels as $tassel)
+			{
+				$product_options[$tassel['Tassel']['tassel_id']] = ucwords($tassel['Tassel']['color_name']);
+			}
+			$product_option_field = "tasselID";
+
+		} else {
+			if (count($related) > 0)
+			{
+				$product_options[$parent_product['Product']['code']] = $parent_product['Product']['name'];
+				foreach($related as $related_product)
+				{
+					$product_options[$related_product['Product']['code']] = $related_product['Product']['name'];
+				}
+				$product_option_field = "productCode";
+				$default_product_option_value = $code;
+			}
+		}
+
+		$product_list = array();
+		$product_list[$code] = $quantity;
+
+		$ships_by_time = $this->Product->get_shipment_time(array($code=>$quantity));
+		$ships_by = date("l F j, Y", $ships_by_time);
+
+		# Do multiplication, figure 
+
+		$this->set("ships_by_time", $ships_by_time);
+		$this->set("ships_by", $ships_by);
+
+		$this->set("product_options", $product_options);
+		$this->set("product_option_field", $product_option_field);
+		$this->set("default_product_option_value", $default_product_option_value);
+		$this->set("product", $product);
+		$this->set("parent_product", $parent_product);
+	}
+
+	function admin_testimonials()
+	{
+	}
+
+	function admin_images($id = null)
+	{
+		$product = $this->Product->read(null, $id);
+	}
+
+	function product_set_variables($prod)
+	{
+		# Other data per product...
+		if ($prod == 'charm') # Charms...
+		{
+			$this->CharmCategory->recursive = 1;
+			$this->set("charm_categories", $this->CharmCategory->findAll(null, array(), "category_name ASC"));
+			$this->Charm->recursive = 0;
+			$this->set("other_charms", $this->Charm->findAll("Charm.available = 'yes' AND CharmCategories.charm_id IS NULL"));
+			$this->set("charms", $this->Charm->findAll("Charm.available = 'yes'", array('DISTINCT charm_id','*'), "name ASC"));
+		} else if ($prod == 'tassel') {
+			$this->set("tassels", $this->Tassel->findAll());
+		}
+	}
+
+	function admin_index() {
+		$this->Product->recursive = 0;
+		$this->set('products', $this->paginate());
+		#$this->set('products', $this->Product->findAll());
+	}
+
+	function admin_view($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid Product.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$this->set('product', $this->Product->read(null, $id));
+	}
+
+	function admin_add() {
+		$this->set("parent_product_types", $this->Product->get_product_option_list());
+		$this->action = 'admin_edit';
+		if (!empty($this->data)) {
+			$this->Product->create();
+			if ($this->Product->save($this->data)) {
+				$this->Session->setFlash(__('The Product has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The Product could not be saved. Please, try again.', true));
+			}
+		}
+		if (empty($this->data))
+		{
+			$this->data = $this->Product->getDefaultValues();
+			#echo "DATA=".print_r($this->data,true);
+		}
+
+	}
+
+	function strip_format(&$product, $key)
+	{
+		# Get rid of everything! 
+		# (MAYBE turn newlines intor <br/> ???)
+		$content = $product[$key];
+		$lines = split("\n", $content);
+		foreach($lines as &$line)
+		{
+			$line = preg_replace("/<p[^>]*>/", "", $line);
+			$line = preg_replace("/<\/p>/", "", $line);
+			$line = preg_replace('/<span class="attribute-value">(.*)<\/span>/', "\$1", $line);
+		}
+
+		$product[$key] = join("<br/>\n", $lines);
+	}
+
+	function admin_edit_customization($id = null)
+	{
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid Product', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$this->set("product_id", $id);
+
+		$this->set("parts", $this->ProductPart->findAll());
+
+		if (!empty($this->data)) {
+			if ($this->Product->save($this->data)) {
+				$this->Session->setFlash(__('The Product has been saved', true));
+				#$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The Product could not be saved. Please, try again.', true));
+			}
+		}
+	}
+
+	function admin_edit($id = null) {
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid Product', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$this->set("product_id", $id);
+		if (!empty($this->data)) {
+			if ($this->Product->save($this->data)) {
+				$this->Session->setFlash(__('The Product has been saved', true));
+				#$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The Product could not be saved. Please, try again.', true));
+			}
+		}
+		#if (empty($this->data)) {
+		# ALWAYS GET, CUZ OF RELATED PRODUCTS, etc.
+			$this->data = $this->Product->read(null, $id);
+			$this->data['Product']['image_type'] = split(",", $this->data['Product']['image_type']);
+			#$this->data['product_pricing_matrix'] = $this->Product->create_pricing_matrix($this->data);
+			#print_r($this->data['product_pricing_matrix']);
+
+			if (empty($this->data['Product']['base_price']))
+			{
+				$this->data['Product']['base_price'] = $this->data['ProductPricing'][0]['price'];
+				$this->data['Product']['minimum'] = $this->data['ProductPricing'][0]['quantity'];
+			}
+
+			$this->strip_format($this->data['Product'], 'main_desc');
+			$this->strip_format($this->data['Product'], 'secondary_desc');
+			$this->strip_format($this->data['Product'], 'meta_desc');
+			$this->strip_format($this->data['Product'], 'meta_keywords');
+		#}
+
+		$this->breadcrumbs["/".$this->params['url']['url']] = $this->data['Product']['short_name'] ?  $this->data['Product']['short_name'] : $this->data['Product']['name'];
+
+
+		$product_count = $this->Product->find('count', array('conditions'=>array('buildable' => 'yes')));
+		$popularity_options = array(''=>'N/A');
+		for($i = 0; $i <$product_count; $i++)
+		{
+			$popularity_options[$i] = $i;
+		}
+		$this->set("popularity_ranking_options", $popularity_options);
+		$this->set("parent_product_types", $this->Product->get_product_option_list($id));
+
+		include_once("includes/image_gallery.php");
+		$count = get_gallery_file_count("details/".$this->data['Product']['name'], 'jpg');
+		#echo "C=$count, P=".$this->data['Product']['name'];
+		$this->set("gallery_image_count", $count);
+
+		$this->set("product_parts", $this->Part->create_dropdown_list('part_name'));
+	}
+
+	function admin_delete($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for Product', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if ($this->Product->del($id)) {
+			$this->Session->setFlash(__('Product deleted', true));
+			$this->redirect(array('action'=>'index'));
+		}
+	}
+
+	function admin_image_upload($id = null)
+	{
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for Product', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$this->Product->recursive = -2;
+		$product = $this->Product->read(null, $id);
+		$prefix = $product['Product']['code'];
+		$this->set("product", $product);
+		#$imgheight = 94; # Scale down to....
+		#error_log("DATA=".print_r($this->data,true));
+		if (!empty($this->data))
+		{
+			foreach($this->data as $key => $info)
+			{
+				$imgwidth = isset($info['scalewidth']) ? $info['scalewidth'] : null;
+				$imgheight = isset($info['scaleheight']) ? $info['scaleheight'] : null;
+				$basepath = "/images/products/$key";
+				#error_log("INFO ($key, W=$imgwidth, H=$imgheight)=".print_r($info,true));
+				$this->Image->force_type = "jpg";
+				$return = $this->Image->saveUpload(array($key, "file"), $basepath, $prefix, $imgwidth, $imgheight);
+				if (is_array($return))
+				{
+					$this->Session->setFlash("Could not save image: ".join("<br/>", $return[0]));
+					$this->redirect(array('action'=>"edit", $id));
+				}
+			}
+		}
+		$this->data['Product'] = $product['Product'];
+		$this->Session->setFlash("Image saved.");
+		#$this->redirect(array('action'=>"edit", $id));
+	}
+
+}
+?>

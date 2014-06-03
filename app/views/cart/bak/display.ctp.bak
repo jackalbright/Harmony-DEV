@@ -1,0 +1,208 @@
+<div class="cart">
+
+<? #print_r($cart_items); ?>
+<? $subtotal = 0; 
+if (!isset($zipCode)) { $zipCode = ""; }
+if (!isset($shippingOptions)) { $shippingOptions = array(); }
+
+?>
+
+<form action="/cart/update.php" method="POST">
+
+	<table class="" width="100%">
+	<tr>
+		<td colspan=4>
+		Not ready for checkout? <a href="/cart/save">Save For Later</a>
+		</td>
+		<td rowspan=2>
+			<img src="/images/credit_card_logos.gif">
+		</td>
+	</tr>
+	<tr>
+		<td valign=bottom>
+			<input type="image" name="action" value="changeQuantity" src="/images/buttons/Update-Qty-grey.gif"/>
+		</td>
+		<td valign=bottom>
+			<input type="image" name="action" value="checkout" src="/images/buttons/Checkout.gif"/>
+		</td>
+		<td valign=bottom>
+			<a href="/info/privacy.php">Privacy Policy</a> |
+			<a href="/info/quality.php">Quality Guarantee</a> |
+			<a href="/info/security.php">Security Info</a>
+		</td>
+		<td valign=bottom align="right">
+          <a target="_blank" href="https://www.scanalert.com/RatingVerify?ref=www.harmonydesigns.com"><img width="115" height="32" border="0" src="https://images.scanalert.com/meter/www.harmonydesigns.com/12.gif" alt="HACKER SAFE certified sites prevent over 99.9% of hacker crime." oncontextmenu="alert('Copying Prohibited by Law - HACKER SAFE is a Trademark of ScanAlert'); return false;" /></a>
+		</td>
+	</tr>
+	</table>
+	<table style="width: 1000px !important; border: solid #CCC 1px;" border=0 id="cartDisplay">
+	<tr style="background-color: #AAA; color: #FFF; ">
+		<th>Quantity</th>
+		<th>Preview</th>
+		<th>Details</th>
+		<th>Unit Price</th>
+		<th>Total</th>
+		<th style="width: 400px;">You might also like...</th>
+	</tr>
+	<? $i = 0; foreach($shoppingCart as $cartItem) { 
+		$quantity = $cartItem['quantity'];
+		$unitPrice = $cartItem['unitPrice'];
+		$productCode = $cartItem['productCode'];
+		$subtotal += $unitPrice*$quantity;
+		$cart_item_product = $product = $cartItem['Product'];
+		$baseCode = $cart_item_product['code'];
+		if ($baseCode == 'BC') { $baseCode = 'B'; }
+		if ($baseCode == 'PSF') { $baseCode = 'PS'; }
+		$customImage = $cartItem['CustomImage'];
+		$galleryImage = $cartItem['GalleryImage'];
+		$image_name = "Custom";
+		$imageID = $customImage ? $customImage['Image_ID'] : null;
+		$catalog_number = $galleryImage ? $galleryImage['catalog_number'] : null;
+		if ($customImage) { $image_name = $customImage['Title']; }
+		if ($galleryImage) { $image_name = $galleryImage['stamp_name']; }
+		if (!$image_name) { $image_name = 'Custom'; }
+
+		$product = !empty($product_map[$productCode]) ?  $product_map[$productCode] : null;
+	?>
+	<tr class="<?= ($i % 2 == 0) ? 'cart_even' : 'cart_odd' ?>">
+		<td valign=top>
+			<input type="text" size=4 id="quantity<?= $i ?>" name="quantity<?= $i ?>" value="<?=$quantity?>" onChange="return checkMinimum('<?= $cart_item_product['code'] ?>', this.value, 0);"/>
+			<br/>
+			<br/>
+			<a href="/cart/remove/<?= $i ?>">Remove</a>
+		</td>
+		<td valign=top>
+			<?= $this->element("build/preview", array('build'=>array('Product'=>$product, 'CustomImage'=>$customImage,'GalleryImage'=>$galleryImage,'cart'=>1))); ?>
+		</td>
+		<td valign=top>
+			<?= $this->element("cart/item_description", array('cart_item'=>$cartItem)); ?>
+
+			<? if(!$product['is_stock_item']) { ?>
+			<br/>
+			<div class="right_align">
+				<a href="/build/step?catalogNumber=<?= $catalog_number ?>&imageID=<?= $imageID ?>&productCode=<?= $cart_item_product['code'] ?>&cartID=<?= $i ?>">Modify this item</a>
+			</div>
+			<? } ?>
+		</td>
+		<td valign=top>
+			<?= sprintf("$%.02f", $unitPrice); ?>
+		</td>
+		<td valign=top>
+			<?= sprintf("$%.02f", $unitPrice*$quantity); ?>
+		</td>
+		<td valign=top>
+			<div class="Xhidden">
+			<? if ($galleryImage || $customImage) { ?>
+			<table width="100%" class="right_align">
+			<tr>
+				<? $total = 0; for($p = 0; $p < count($products) && $total < 1; $p++) { 
+					$n = rand(0, count($products)-1);
+					$product = $products[$n];
+					if ($product['Product']['code'] == $baseCode) { continue; }
+					$total++;
+				?>
+				<td align="right">
+					<a href="/build/step?catalogNumber=<?= $catalog_number ?>&imageID=<?= $imageID ?>&prod=<?= $product['Product']['code'] ?>">
+					<?
+			
+					echo $this->element("build/preview", array('build'=>array('Product'=>$product['Product'], 'CustomImage'=>$customImage,'GalleryImage'=>$galleryImage,'youmightalsolike'=>1)));
+					?>
+					</a>
+						<a href="/build/step?catalogNumber=<?= $catalog_number ?>&imageID=<?= $imageID ?>&prod=<?= $product['Product']['code'] ?>">"<?= $image_name ?>" <?= $product['Product']['name'] ?></a>
+							<? if(count($product['ProductPricing'])) { ?>
+							<?
+								$minimum_price = $base_price = $product['Product']['base_price'];
+								$ix = 0;
+								while($product['ProductPricing'][$ix]['price'] > 0 && $ix++ < count($product['ProductPricing'])-1)
+								{
+									$minimum_price = $base_price * $product['ProductPricing'][$ix]['percent_discount'] / 100;
+									#$minimum_price = $product['ProductPricing'][$ix]['price'];
+								}
+							?>
+							<? if($minimum_price > 0) { ?>
+							<div class="aslowas">As low as <?= sprintf("$%.02f", $minimum_price) ?> each</a></div>
+							<? } ?>
+							<? } ?>
+				</td>
+				<? } ?>
+			</tr>
+			</table>
+			<? } ?>
+			</div>
+
+			<div style="text-align: right;">
+					<? if($customImage) { ?>
+						<a href="/custom_images/edit/<?= $customImage['Image_ID'] ?>">View all "<?= $image_name ?>" products...</a>
+					<? } else if ($galleryImage) { ?>
+						<a href="/gallery/view/<?= $galleryImage['catalog_number'] ?>">View all "<?= $image_name ?>" products...</a>
+					<? } ?>
+			</div>
+		</td>
+	</tr>
+	<? $i++; } ?>
+	<tr>
+		<td colspan=3>&nbsp;</td>
+		<th colspan=1 align=right>Subtotal:</th>
+		<td>
+			<?= sprintf("$%.02f", $subtotal); ?>
+		</td>
+	</tr>
+	<tr>
+		<td colspan=3>&nbsp;</td>
+		<th colspan=1 align=right>Shipping:</th>
+		<td colspan=2 align="left">
+			Zip Code: <input align="left" type="text" size="6" name="zipCode" value="<?= $zipCode ?>"/> <input type="submit" name="action" value="Update"/>
+			<br/>
+			<? if($ships_by) { ?>
+			<i>Ships by: <?= $ships_by ?></i><br/>
+			<? } ?>
+			<? if(empty($shippingOptions)) { ?>
+			Please enter in your zip code or <a href="/account/login">login</a> to calculate shipping costs
+			<? } else { ?>
+				<select name="shipping_method" onChange="cart_updateGrandTotal(this.value);">
+				<? $i = 0; foreach($shippingOptions as $shippingOption) { ?>
+				<?
+					$dayMin = $shippingOption['shippingMethod']['dayMin'];
+					$dayMax = $delivery_days = $shippingOption['shippingMethod']['dayMax'];
+					$delivery_time = $ships_by_time + 24*60*60;
+					while($delivery_days > 0)
+					{
+						$delivery_time += 24*60*60;
+						$delivery_day = date("D", $delivery_time);
+						if ($delivery_day != "Sun" && $delivery_date != "Mon") { $delivery_days--; }
+					}
+				?>
+				<option <?= ($i++ == 0 || $defaultShippingMethod == $shippingOption['shippingPricePoint']['shippingMethod']) ? "selected='selected'" : "" ?> value="<?= $shippingOption['shippingPricePoint']['shippingMethod']?>"><?= $shippingOption['shippingMethod']['name'] ?> - <?= sprintf("$%.02f", $shippingOption[0]['cost']); ?><!--: <?= $dayMax > $dayMin ? "$dayMin - $dayMax days" : "$dayMin day" ?> --> - by <?= date("l F j, Y", $delivery_time); ?></option>
+				<? } ?>
+				</select>
+			<? } ?>
+		</td>
+	</tr>
+	<? if ($grandTotals) { ?>
+	<tr>
+		<td colspan=3>&nbsp;</td>
+		<th colspan=1 align=right>Grand Total:</th>
+		<td colspan=2>
+			<? $i = 0; foreach($grandTotals as $method_id => $grandTotal) { ?>
+			<div id="grandTotal<?= $method_id ?>" class="<?= ($i++ == 0 && !$defaultShippingMethod) || $defaultShippingMethod == $method_id ? "" : "hidden" ?> grandTotal">
+				<?= sprintf("$%.02f", $grandTotal); ?>
+			</div>
+			<? } ?>
+		</td>
+	</tr>
+	<? } ?>
+	</table>
+
+	<table class="">
+	<tr>
+		<td>
+			<input type="image" name="action" value="changeQuantity" src="/images/buttons/Update-Qty-grey.gif"/>
+		</td>
+		<td>
+		<input type="image" name="action" value="checkout" src="/images/buttons/Checkout.gif"/>
+		</td>
+	</tr>
+	</table>
+</form>
+</div>
+

@@ -1,0 +1,192 @@
+.right_align
+{
+	text-align: right;
+}
+
+.right, .right_float, .float_right
+{
+	float: right;
+}
+
+.left, .left_float, .float_left
+{
+	float: left;
+}
+
+.small_padded
+{
+	padding: 2px;
+}
+
+.padded
+{
+	padding: 5px;
+}
+
+.side_padded
+{
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.top_padded
+{
+	padding-top: 20px;
+}
+
+.small_bottom_padded
+{
+	padding-bottom: 5px;
+}
+
+.top_margin, .margin_top
+{
+	margin-top: 20px;
+}
+
+.bottom_margin, .margin_bottom
+{
+	margin-bottom: 20px;
+}
+
+.small_bottom_margin, .margin_bottom_small
+{
+	margin-bottom: 5px;
+}
+
+ul.unlabeled
+{
+	list-style: none;
+}
+
+ul.unlabeled
+{
+	padding-left: 2px;
+}
+
+ul.side_padded li
+{
+	padding: 2px 10px;
+}
+
+.nav a
+{
+	display: block;
+	/*padding: 2px 10px;*/
+	text-decoration: none;
+}
+
+.nav a:hover
+{
+	background-color: #CCC;
+	text-decoration: underline;
+}
+
+.hidden
+{
+	display: none;
+}
+
+.nowrap, .nobr
+{
+	white-space: nowrap;
+}
+.bold
+{
+	font-weight: bold;
+}
+
+a img, img
+{
+	border: 0px;
+}
+
+.inline
+{
+	display: inline;
+}
+
+.form label
+{
+	display: block;
+	font-weight: bold;
+}
+
+.form .input
+{
+	padding-top: 5px;
+}
+
+table.flat_border
+{
+	border: solid;
+	border-collapse: collapse;
+	border-width: 1px;
+	border-color: #CCC;
+}
+
+table.flat_border td, table.flat_border th
+{
+	border: solid;
+	border-width: 1px;
+	border-color: #CCC;
+}
+
+.border
+{
+	border: solid #CCC 1px;
+}
+
+.border_bottom
+{
+	border-bottom: solid #CCC 1px;
+}
+
+.underline
+{
+	text-decoration: underline !important;
+}
+
+*:hover .hover_underline
+{
+	text-decoration: underline !important;
+}
+
+.no_underline, a:hover .no_underline
+{
+	text-decoration: none;
+}
+
+.long_text
+{
+	width: 200px;
+}
+
+.full_width
+{
+	width: 100%;
+}
+
+table.grid
+{
+	border: solid #CCC 1px;
+	border-collapse: collapse;
+}
+
+table.grid tr th, table.grid tr td
+{
+	border: solid #CCC 1px;
+}
+
+.required label
+{
+	font-weight: bold;
+	color: red;
+}
+
+.required label:after
+{
+	content: ' * (required)';
+	color: red;
+	display: inline;
+}

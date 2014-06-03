@@ -1,0 +1,219 @@
+<?= $this->element("steps/steps", array('step'=>'product','stock'=>1)); ?>
+<div class="product product_view">
+<?
+if(empty($products)) { $products = $compare_products; }
+
+if(empty($product['Product']['is_stock_item']) && preg_match("/custom/", $product['Product']['image_type'])) { 
+	$upload = true;
+}
+
+?>
+<table border=0 id="view_related_chart" class="relative" cellspacing=0 cellpadding=1>
+<tr>
+	<td colspan="<?= empty($upload) ? 2 : 1 ?>" valign="top" style="">
+		<?= $hd->product_element("products/intro", $product['Product']['prod']); ?>
+	</td>
+	<? if(!empty($upload)) { ?>
+	<td align="right" valign="top">
+			<div align="left">
+				<script>
+					function loadCustomProductImages()
+					{
+						<? foreach($products as $p) { $code = $p['code']; ?>
+							/*
+							$('gallery_<?= $prod ?>_img').src = "/product_image/view/...";
+							$('gallery_<?= $prod ?>_img').removeClassName('hidden');
+							$('gallery_<?= $prod ?>_samples').addClassName('hidden');
+							*/
+
+							new Ajax.Updater('custom_gallery_<?= $code ?>', "/products/ajax_image_preview/<?= $code ?>", {asynchronous:true, evalScripts: true});
+						<? } ?>
+						showGalleryTab('gallery_type','custom');
+						$('gallery_type_tab_custom').removeClassName('hidden');
+
+						//new Ajax.Updater('go_here', "test_ajax", {method: 'get', evalScripts: true, asynchronous:true, insertion: Insertion.Bottom});
+					}
+				</script>
+
+				<div class="right">
+				<?  $name = !empty($product['Product']['short_name']) ? $product['Product']['short_name'] : $product['Product']['name']; ?>
+				<label class="bold color_steps" for="file_<?= $prod ?>">Preview your image on <?= strtolower($hd->pluralize($name)); ?></label>
+				<iframe src="/custom_images/iframe_add/<?= $prod ?>" style="border: solid black 2px; width: 450px; height: 125px; overflow: clip;" scrolling="no"></iframe>
+				</div>
+			</div>
+	</td>
+	<? } ?>
+	<td valign="top">
+		<? if(count($product['Testimonials'])) { ?>
+				<div>
+					<div id="testimonials">
+					<div class="sidebar_header">Reviews:</div>
+						<?= $this->element("products/testimonials_new", array('testimonials'=>$product['Testimonials'],'limit'=>1,'random'=>true)); ?>
+					</div>
+				</div>
+		<? } ?>
+	</td>
+</tr>
+
+<tr>
+	<? if($prod != 'RL') { ?>
+	<td valign="top" rowspan="1" style="width: 400px;" align="center">
+		<?= $hd->product_element("products/sample_gallery_tabbed",$product['Product']['prod'],array('products'=>$products)); ?>
+	</td>
+	<? } ?>
+	<td colspan="<?= $prod == 'RL' ? 3 : 1 ?>" valign="top" class="" style="<?= $prod == 'RL' ? "" : "width: 550px;"; ?>">
+		<? if($prod == 'RL') { ?>
+		<table width="100%">
+		<tr>
+		<td style="width: 450px;" valign="top" align="center">
+			<?= $hd->product_element("products/sample_gallery_tabbed",$product['Product']['prod'],array('products'=>$products,'size'=>'450')); ?>
+		</td>
+		<td valign="top">
+		<? } ?>
+		<? $i = 0; foreach($products as $pr) { 
+			$code = $prod = $pr['code'];
+			$pid = $pr['product_type_id'];
+			$p = $related_products_by_id[$pid];
+		?>
+		<div>
+			<table width="100%">
+			<tr>
+			<th colspan=4 class="product_title">
+				<h3><?= $p['Product']['pricing_name']; ?> <?= !empty($p['Product']['pricing_description']) ? "&mdash; ".$p['Product']['pricing_description'] : "" ?></h3>
+			</th>
+			</tr>
+			<? if($prod == 'PR') { ?>
+			<tr class="product">
+				<td class="gallery_col" style="" valign="top">
+					<div id="gallery_<?= $prod ?>">
+					<?= $hd->product_element("products/sample_gallery_vertical",$p['Product']['prod'],array('products'=>array($p),'class'=>'left','size'=>'-160x160','gallery_title'=>'')); ?>
+					</div>
+					<?= $p['Product']['description'] ?>
+					<div>
+						<?
+							$select_button = empty($p['Product']['is_stock_item']) ? "/images/buttons/Select.gif" : "/images/buttons/Add-to-Cart.gif";
+							if (!preg_match("/custom/", $p['Product']['image_type']))
+							{
+								$select_button = '/images/buttons/Browse-Our-Images.gif';
+							}
+							#$select_url = empty($customize) ? "/gallery?prod=$prod" : "/build/customize/$prod";
+							$select_url =  "/build/create/$prod";
+						?>
+						<? if($p['Product']['is_stock_item']) { ?>
+							<form method="POST" action="/cart/add.php" onSubmit="return (verifyRequiredFields(this.id) && assertMinimum('<?= $p['Product']['minimum'] ?>'));">
+								<input type="hidden" name="productCode" value="<?= $prod ?>"/>
+								<table>
+								<tr>
+								<td class="nobr">
+									<b class="bold">Quantity:</b>
+									<input id="quantity" name="quantity" size="3" onchange="return assertMinimum(<?= $p['Product']['minimum'] ?>);" value="<?= $p['Product']['minimum'] ?>"/>
+								</td>
+								<td>
+								<input type="image" src="/images/buttons/Add-to-Cart.gif" class="left"/>
+								</td>
+								</tr>
+								</table>
+							</form>
+						<? } else { ?>
+							<a href="<?= $select_url ?>" class="bold" onClick="track('products','get_started',{productCode: '<?= $prod ?>'});"><img src="<?= $select_button ?>"/></a>
+						<br/>
+						<? } ?>
+					</div>
+				</td>
+				<td style="width: 250px;" valign="top" align="left">
+				<div class="right">
+					<?= $this->element("build/pricing_chart_small",array('price_list'=>$price_lists[$code],'prod'=>$prod)); ?>
+					<? if(empty($p['Product']['is_stock_item'])) { ?>
+					<div class='hidden'>
+					Free setup &amp; design
+					</div>
+					<? } ?>
+					<div align="left">
+					<?= $this->element("products/links"); ?>
+					</div>
+				</div>
+				</td>
+			</tr>
+			<? } else { ?>
+			<tr class="product">
+				<td style="" valign="top">
+					<?= $p['Product']['description'] ?>
+					<div>
+						<?
+							$select_button = empty($p['Product']['is_stock_item']) ? "/images/buttons/Select.gif" : "/images/buttons/Add-to-Cart.gif";
+							if (!preg_match("/custom/", $p['Product']['image_type'])) 
+							{
+								$select_button = '/images/buttons/Browse-Our-Images.gif';
+							}
+							#$select_url = empty($customize) ? "/gallery?prod=$prod" : "/build/customize/$prod";
+							$select_url =  "/build/create/$prod";
+						?>
+						<? if($p['Product']['is_stock_item']) { ?>
+							<form method="POST" action="/cart/add.php" onSubmit="return (verifyRequiredFields(this.id) && assertMinimum('<?= $p['Product']['minimum'] ?>'));">
+								<input type="hidden" name="productCode" value="<?= $prod ?>"/>
+								<table>
+								<tr>
+								<td class="nobr">
+									<b class="bold">Quantity:</b>
+									<input id="quantity" name="quantity" size="3" onchange="return assertMinimum(<?= $p['Product']['minimum'] ?>);" value="<?= $p['Product']['minimum'] ?>"/>
+								</td>
+								<td>
+								<input type="image" src="/images/buttons/Add-to-Cart.gif" class="left"/>
+								</td>
+								</tr>
+								</table>
+							</form>
+						<? } else { ?>
+							<a href="<?= $select_url ?>" class="bold" onClick="track('products','get_started',{productCode: '<?= $prod ?>'});"><img src="<?= $select_button ?>"/></a>
+						<br/>
+						<? } ?>
+					</div>
+				</td>
+				<td style="width: 250px;" valign="top" align="left">
+				<div class="right">
+					<?= $this->element("build/pricing_chart_small",array('price_list'=>$price_lists[$code],'prod'=>$prod)); ?>
+					<? if(empty($p['Product']['is_stock_item'])) { ?>
+					<div class='hidden'>
+					Free setup &amp; design
+					</div>
+					<? } ?>
+					<div align="left">
+					<?= $this->element("products/links"); ?>
+					</div>
+				</div>
+				</td>
+			</tr>
+			<? } ?>
+			</table>
+		</div>
+		<? $i++; } ?>
+		<? if($prod == 'RL') { ?>
+		</td>
+		</tr>
+		</table>
+		<? } ?>
+	</td>
+	<? if($prod != 'RL') { ?>
+	<td rowspan="1" valign="top" align="center" class="">
+		<div align="center" class="" style="">
+		<?= $this->element("clients/clientlist", array('clients'=>$client_list,'vertical'=>true)); ?>
+		</div>
+		<div class="clear"></div>
+	</td>
+	<? } ?>
+
+</tr>
+<? if($prod == 'RL') { ?>
+<tr>
+	<td rowspan="1" colspan=3 valign="top" align="left" class="">
+		<div align="left" class="" style="border-top: solid #CCC 1px;">
+		<?= $this->element("clients/clientlist", array('clients'=>$client_list,'vertical'=>false)); ?>
+		</div>
+		<div class="clear"></div>
+	</td>
+</tr>
+<? } ?>
+
+</table>
+
+</div>

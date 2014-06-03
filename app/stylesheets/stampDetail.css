@@ -1,0 +1,83 @@
+div#main
+{
+	width: 544px;
+	float: right;
+	margin: 0;
+	padding: 0;
+}
+
+.wrapSubTitle
+{
+	clear: none;
+	margin: 0.5em 0 0.25em 0;
+}
+
+#catNum
+{
+	text-align: right;
+	clear: right;
+	float: right;
+	margin: 1px 20px 1em 1em;
+}
+
+#stamp
+{
+	margin: 0 0 5px 1em;
+	float: right;
+}
+
+.subTitle
+{
+	clear: both;
+	margin: 0.5em 0 0.25em 0;
+}
+
+div.quote { margin-bottom: 1em; }
+
+#itemSelection
+{
+	border-color: white;
+	border-width: 3px;
+	border-style: groove;
+	background-color: #FFE;
+	width: 530px;
+	clear: both;
+}
+
+#itemSelection th
+{
+	color: #FFE;
+	background-color: #060;
+	padding: 3px;
+	font-weight: bold;
+	font-family: Optima, Verdana, Helvetica,Arial, sans-serif;
+	font-size: 16pt;
+}
+
+#itemSelection td.note { padding: 0.25em; }
+
+#itemSelection td.note2
+{
+	font-style: italic;
+	color: #903;
+	font-size: 0.8em;
+}
+
+.itemBlock
+{
+	text-align: center;
+	margin: 2px;
+	vertical-align: top;
+	padding: 0.25em 1px 0.5em 1px;
+	border-bottom: gray;
+	border-width: 0 0 1px 0;
+	border-style: none none solid none;
+}
+
+.itemBlock a { text-decoration: none; }
+
+.itemBlock img
+{
+	border: 0;
+	margin: 0 0 4px 0;
+}

@@ -1,0 +1,124 @@
+div#header
+{
+	/*width: 965px;*/
+	/*width: 765px;*/
+	/*height: 95px;*/
+}
+
+#header img { border-width: 0px; }
+
+#header #logo
+{
+	/*padding-top: 20px;*/
+	/*width: 175px;*/
+	width: 200px;
+	text-align: center;
+}
+
+#header #slogan
+{
+	/*padding-left: 50px;*/
+
+}
+#header #slogan h2
+{
+	font-size: 20px;
+	/*font-family: "Times New Roman", serif;*/
+	font-family: Optima, Arial, Helvetica, sans-serif;
+}
+
+#header div#lost
+{
+	position: absolute;
+	left: 220px;
+	bottom: 24px;
+}
+#header div#holiday
+{
+	position: absolute;
+	left: 414px;
+	top: 39px;
+}
+#header td.mainnav
+{
+}
+#specialty
+{
+	/*margin-left: 50px;*/
+	margin-bottom: 5px;
+
+}
+
+#header td div#mainnav
+{
+	/*
+	margin-left: 50px;
+	*/
+}
+#header div#checkeredbar
+{
+}
+#header div#imageAlert
+{
+	width: 166px;
+	height: 15px;
+	background-color: #FFE;
+	border-color: #900;
+	border-width: 1px;
+	border-style: solid;
+	padding: 1px;
+}
+div#imageAlert p
+{
+	color: #900;
+	font-size: 0.9em;
+	margin: 0;
+	padding: 0;
+	text-align: center;
+}
+#header td#account
+{
+	text-align: right;
+}
+
+#header #cart
+{
+	text-align: right;
+	font-size: 12px;
+	font-weight: bold;
+	width: 175px;
+}
+
+#cart p
+{
+	margin: 0 0 0 0px;
+	padding: 0;
+	font-size: 0.9em;
+}
+#cart p img
+{
+	float: none;
+	margin: 0;
+	padding: 0;
+	border-width: 0;
+}
+
+#cart .carticon
+{
+	float: left;
+	margin: 0;
+	padding: 0px;
+}
+
+#cart #emptyCart div { display: none }
+
+#cart #emptyCart:hover div
+{
+	display: block;
+	width: 104px;
+	background-color: #FFE;
+	padding: 2px;
+	border-color: #903;
+	border-width: 1px;
+	border-style: solid;
+}

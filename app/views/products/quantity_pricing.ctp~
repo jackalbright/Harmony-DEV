@@ -1,0 +1,17 @@
+<div>
+	<? foreach($products as $product)
+	{
+		$code = $product['Product']['code'];
+		$product_pricing = $product_pricings[$code];
+		if (empty($product['Product']['parent_product_type_id']))
+		{
+			echo $this->element("products/pricing_grid", array('product_pricings'=>$product_pricing,'title'=>$hd->pluralize($product['Product']['short_name']),'url'=>"/details/".$product['Product']['prod'].".php"));
+		}
+		?>
+		<br/>
+		<br/>
+		
+		<?
+	} ?>
+
+</div>

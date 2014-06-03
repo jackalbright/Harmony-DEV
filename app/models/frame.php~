@@ -1,0 +1,10 @@
+<?php
+class Frame extends AppModel {
+
+	var $name = 'Frame';
+	var $useDbConfig = 'default_legacy';
+	var $useTable = 'frame';
+	var $primaryKey = 'frame_id';
+
+}
+?>

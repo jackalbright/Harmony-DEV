@@ -1,0 +1,32 @@
+<?
+	
+	$prod = $build['Product']['code'];
+?>
+<div style="padding: 10px;">
+	<div>
+			<? if(empty($customer['is_wholesale']) && !empty($settings['free_ground_shipping_minimum'])) { ?>
+                        <div class="green">
+                                Free standard shipping (continental U.S.) for orders <?= sprintf("$%u+", $settings['free_ground_shipping_minimum']); ?>
+                        </div>
+                        <? } ?>
+
+	</div>
+<table width="100%">
+<tr>
+<td width="50%" valign="top">
+	<?= $this->element("build/review"); ?>
+	<?= $this->element("build/options/comments",array('i'=>'comments')); ?>
+</td>
+<td valign="top" align="right">
+
+	<? if($prod == 'TS') { ?>
+		<?= $this->element("build/quantity_tshirt", array('url'=>'')); ?>
+	<? } else { ?>
+		<?= $this->element("build/quantity_new", array('url'=>'')); ?>
+	<? } ?>
+</td>
+</tr>
+</table>
+
+</div>
+

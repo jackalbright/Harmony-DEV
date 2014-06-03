@@ -1,0 +1,496 @@
+<?php
+class GalleryController extends AppController {
+
+	var $name = 'Gallery';
+	var $title = "Select Your Image";
+	var $helpers = array('Html', 'Form');
+	var $uses = array("GalleryCategory", "GalleryImage", "GalleryCategoryImageLink","Product","GalleryFilterKeyword");
+	var $paginate = array(
+		'GalleryCategoryImageLink'=>array(
+			'order'=>array(
+				'GalleryImage.stamp_name'=>'asc',
+			),
+			'limit'=>40,
+			'fields'=>array('DISTINCT GalleryImage.stampID', 'GalleryImage.*'),
+		),
+	);
+	var $build_page = true;
+
+	function beforeFilter()
+	{
+		#error_log("S4=".print_r($this->Session->read(),true));
+		if (isset($this->params['url']['new'])) { 
+			$this->Session->del("Build.GalleryImage"); 
+			$this->Session->del("Build.gallery_number"); 
+			$this->Session->del("Build.CustomImage"); 
+			$this->Session->del("Build.imageID"); 
+		}
+		parent::beforeFilter();
+	}
+
+	function catch_custom_only_product()
+	{
+		if (!empty($this->build["Product"]) && !preg_match("/(real|repro)/", $this->build["Product"]['image_type']))
+		{
+			#print_r($this->build['Product']);
+			$this->redirect("/gallery?custom_only=1");
+		}
+	}
+
+	function beforeRender()
+	{
+		parent::beforeRender();
+
+		$this->set("current_build_step", 2);
+		if (!isset($this->build['Product'])) { 
+			$this->set("image_select_first", true);
+		}
+	}
+
+	function index($prod = null) {
+		#$this->GalleryCategory->recursive = 0;
+		#$this->set('galleryCategories', $this->paginate());
+		if (!$prod)
+		{
+			$prod = !empty($this->params['form']['prod']) ? $this->params['form']['prod'] : $this->Session->read("Build.productCode");
+		}
+
+		$type = "";
+
+		#error_log("GALLERY PROD=$prod");
+
+		if (!empty($_REQUEST['custom_only']) && !empty($this->build["Product"]))
+		{
+			$name = !empty($this->build['Product']['short_name']) ? $this->build['Product']['short_name'] : $this->build['Product']['name'];
+			$pluralname = strtolower($this->pluralize($this->build['Product']['short_name']));
+			$this->Session->setFlash("Please note: We are not licensed to create $pluralname with stamp images. Please upload <br/>your own image (below) to create $pluralname, or choose a stamp image to create another product.");
+			$this->set("custom_only",1);
+		}
+
+		if ($prod)
+		{
+			$this->build['step'] = 2;
+			#$type = $prod_name = $this->Product->get_product_name($prod, true);
+			$product = $this->Product->find("code = '$prod'");
+			$type = $prod_name = $product['Product']['name'];
+			$this->set("product_name", $type);
+			$this->Session->write("Build.prod", $prod);
+			$this->Session->write("Build.productCode", $prod);
+			$this->Session->write("Build.Product", $product['Product']);
+			$this->Session->write("Build.prod_name", $prod_name);
+			#$this->set("rightbar_template", "build/preview/product");
+		} else {
+			$this->build['step'] = 1;
+		}
+		#$pluraltype = $this->pluralize($type);
+		if (!$type) { $type = "Gift"; }
+		$this->set("body_title", "Create Your Custom $type: Select Your Image");
+		$this->set("prod", $prod);
+		$this->set("rightbar_disabled", true);
+	}
+
+	#function generate_breadcrumbs()
+	#{
+	#	$this->breadcrumbs["/".$this->params['controller']] = "Select Your Image";
+	#}
+
+	function select($id)
+	{
+		#error_log("SESS=".print_r($this->Session->read(),true));
+		$prod = $this->Session->read('Build.prod');
+		$this->Session->delete("Build.imageID"); # Don't need to use anymore.
+		$this->Session->delete("Build.CustomImage"); # Don't need to use anymore.
+
+		$this->GalleryImage->recursive = -1;
+		$image = $this->GalleryImage->find("catalog_number = '$id'");
+		$this->Session->write("Build.catalog_number", $id);
+		$this->Session->write("Build.GalleryImage", $image['GalleryImage']);
+
+		#error_log("S=".print_r($this->Session->read("Build"),true));
+		#$this->redirect("/gallery/browse");
+		#if ($prod != "")
+		#{
+			#$this->redirect("/product/build.php?productCode=$prod&catalogNumber=$id");
+			#$this->redirect("/build");
+		#} else {
+			$this->redirect("/products/select");
+			#$this->redirect("/details");
+			# Redirect to /products if none set, or /details/build.php?whatever=here if set.
+
+		#}
+	}
+
+	function view($id, $category_id = null)
+	{
+		$this->catch_custom_only_product();
+
+		$image = $this->GalleryImage->find("catalog_number = '$id'");
+		$this->set("image", $image);
+		$this->set("body_title", 'Click on a(n) "'.$image['GalleryImage']['stamp_name'].'" product below to get started:');
+		$this->pageTitle = $image['GalleryImage']['stamp_name'] . " Gifts by Harmony Designs (Bookmarks, Paperweights, Magnets and more.)";
+		$this->meta_keywords =  $image['GalleryImage']['HTML_Keywords'];
+		$this->meta_description =  $image['GalleryImage']['stamp_name'] . " gifts -- Shop for " . $image['GalleryImage']['stamp_name'] . " gifts by Harmony Designs.  Custom bookmarks, paperweights, magnets, luggage tags, keychains and more.";
+
+		if ($category_id != null)
+		{
+			$crumbs = $this->GalleryCategory->generate_category_breadcrumb_trail($this->params['controller'].'/'.$this->params['action'], $category_id);
+			$this->breadcrumbs = array_merge($this->breadcrumbs, array_reverse($crumbs));
+		}
+
+		$this->set("stamp_surcharge", $this->StampSurcharge->find("catalog_number = '$id' "));
+
+		$this->set("rightbar_disabled", true);
+		#$this->set("rightbar_template", "build/rightbar");
+
+		$this->breadcrumbs["/".$this->params['url']['url']] = $image['GalleryImage']['stamp_name'];
+
+		$this->set("products", $this->getImageAvailableProducts($id));
+	}
+
+	function browse_filter($filter = null, $id = null)
+	{
+		# Get info of filter.
+		$this->body_title_crumbs = false;
+
+		$this->GalleryFilterKeyword->recursive = 2;
+		if (is_numeric($filter))
+		{
+			$gallery_filter = $this->GalleryFilterKeyword->find("GalleryFilterKeyword.filter_id = '$filter'");
+		} else {
+			$gallery_filter = $this->GalleryFilterKeyword->find("GalleryFilterKeyword.name = '$filter' OR GalleryFilterKeyword.path = '$filter'");
+		}
+		if (!$gallery_filter)
+		{
+			$this->redirect("/gallery/browse");
+		}
+		$subcategories = $gallery_filter['GalleryCategory'];
+
+		if (!count($subcategories))
+		{
+			#$this->redirect("/gallery/browse");
+			$this->GalleryCategory->recursive = 2;
+			$category = $this->GalleryCategory->read(null, 1);
+			$subcategories = $category['Subcategories']; # Show all...
+		}
+
+
+		$filter_name = $gallery_filter['GalleryFilterKeyword']['name'] . " Products";
+		$path = "/gallery/browse_filter/".$gallery_filter['GalleryFilterKeyword']['path'];
+		#echo "P=$path";
+		$this->set("browseurl", $path);
+
+		# Do our own breadcrumbs...
+		$this->breadcrumbs = array();
+		$this->breadcrumbs["/"] = "Home";
+		
+		# FOR NOW, ASSUME IT'S A SPECIALTY PAGE.... (maybe add flag eventually)
+		$this->breadcrumbs["/specialty_pages/view/".$gallery_filter['GalleryFilterKeyword']['path']] = $gallery_filter['GalleryFilterKeyword']['name'];
+		$this->breadcrumbs[$path] = "Products";#$filter_name;
+
+		if ($id != "")
+		{
+			$crumbs = $this->GalleryCategory->generate_category_breadcrumb_trail($path, $id);
+			$this->breadcrumbs = array_merge($this->breadcrumbs, array_reverse($crumbs));
+		}
+
+		if ($id != "" && $id != 1) # Show just that category.
+		{
+			$this->_display_category($id, $filter_name);
+			$this->action = "browse";
+		} else { # Show top level categories for filter.
+
+			$this->_display_category_list($subcategories, $filter_name);
+		}
+	}
+
+	function browse($id = null) {
+		if (!empty($_REQUEST['clear_product'])) { $this->Session->delete("Build.Product"); $this->Session->delete("Build.prod"); unset($this->build["Product"]); }
+		
+		$this->catch_custom_only_product();
+
+
+		$product_code = $this->Session->read('Build.prod');
+		$product = $this->Session->read("Build.Product");
+
+		$type = $product['name'];
+		if (!$type || $type == "") { $type = "Product"; }
+		$pluraltype = $this->pluralize($type);
+
+		$this->action = "browse"; # Default.
+
+
+		if ($product_code)
+		{
+			$this->filterImagesForProduct($product_code);
+		}
+
+		#$this->set("rightbar_template", "build/rightbar");
+
+		# WE NEED TO SOMEHOW GRAB ALL CATEGORIES, no matter how deep, with a specific filter set...
+		# WE SHOULD PROBABLY JUST SHOW A FLAT VIEW OF ALL CATEGORIES WHO USE THIS....
+		# AND ONCE THEY CLICK ON A CATEGORY, IT"LL drill down and let one go back via the breadcrumbs....
+
+		if (!$id || $id === 1 || $id === '1' || (!is_numeric($id) && preg_replace("/[+_]/", " ", $id) == "All Subjects")) {
+		#echo "I=$id";
+			$this->GalleryCategory->recursive = 2;
+			$category = $this->GalleryCategory->read(null, 1);
+
+			#$type = "Product";
+			#$pluraltype = $this->pluralize($type);
+			$type = $product['name'];
+			if (!$type || $type == "") { $type = "Product"; }
+			$pluraltype = $this->pluralize($type);
+
+			$this->_display_category_list($category['Subcategories'], $pluraltype);
+		} else {
+			$type = $product['name'];
+			if (!$type || $type == "") { $type = "Product"; }
+			$pluraltype = $this->pluralize($type);
+
+			$this->_display_category($id, $pluraltype, $product);
+		}
+		$this->set("products", $this->Product->findAll("available = 'yes' AND buildable = 'yes' AND is_stock_item = 0",null,"sort_index,name"));
+		$this->set("path", $id);
+	}
+
+	function _display_category_list($categories, $name = null)
+	{
+		$this->set("categories", $categories);
+		$this->set("product_name", $name);
+		if ($name)
+		{
+			$this->set("body_title", "Create Custom $name: Select an Image Category");
+		}
+		if (!isset( $this->breadcrumbs["/".$this->params['url']['url']]))
+		{
+			$this->breadcrumbs["/".$this->params['url']['url']] = "Select an Image Category";
+		}
+
+		$this->set("rightbar_disabled", true);
+		$this->set("cols_per_row", 4);
+
+
+		$this->action = "browse_root";
+	}
+
+	function _display_category($id, $name = 'Products', $product = null)
+	{
+		$this->GalleryCategory->recursive = 2;
+		if (!is_numeric($id)) # By name, Air+Space, Air Space, Air_Space, etc...
+		{
+			# Split at ';', loop from start to finish to find children who match next part....
+			$catnames = split(";", $id);
+			$parent_catid = 1;
+			foreach($catnames as $catname)
+			{
+				if ($catname === '1' || $catname === 1) { continue; }
+				$catname = preg_replace("/'/", "\\'", preg_replace("/[+_]/", " ", $catname));
+				#Escape apostrophes!
+				$category = $this->GalleryCategory->find("(GalleryCategory.browse_node_id = '$catname' OR GalleryCategory.browse_name = '$catname') AND ParentCategory.browse_node_id = '$parent_catid'");
+				$parent_catid = $category['GalleryCategory']['browse_node_id'];
+			}
+
+			$id = $category['GalleryCategory']['browse_node_id'];
+		} else {
+			$category = $this->GalleryCategory->read(null, $id);
+		}
+		$this->set('galleryCategory', $category);
+		$this->set("body_title", "Create Custom $name: " . $category['GalleryCategory']['browse_name']);
+		$path = "/".$this->params['controller']."/".$this->params['action'];
+		$crumbs = $this->GalleryCategory->generate_category_breadcrumb_trail($path, $id);
+		$this->breadcrumbs = array_merge($this->breadcrumbs, array_reverse($crumbs));
+
+		$this->set("rightbar_disabled", true);
+		#$this->set("cols_per_row", 3);
+
+		$product_stamp_conditions = array();
+
+		if ($product)
+		{
+
+			# Product filter.
+			$product_image_type_list = split(",", $product['image_type']);
+			$product_filter = array();
+	
+			$product_stamp_image_types = array();
+	
+			foreach($product_image_type_list as $product_image_type)
+			{
+				$product_stamp_image_types[$product_image_type] = true;
+			}
+	
+		# stamp can be:
+	
+		# Only = reproduced but NOT the real stamp
+		# yes = reproduced AND real
+		# no = real, but NOT reproduced
+	
+	
+			if (isset($product_stamp_image_types['repro']) && !isset($product_stamp_image_types['real'])) 
+			# repro
+			{
+				$product_stamp_conditions[] = "Only";
+				$product_stamp_conditions[] = "Yes";
+			}
+			else if (!isset($product_stamp_image_types['repro']) && isset($product_stamp_image_types['real']))
+			# real
+			{
+				$product_stamp_conditions[] = "No";
+				$product_stamp_conditions[] = "Yes";
+			}
+			else if (isset($product_stamp_image_types['repro']) && isset($product_stamp_image_types['real']))
+			# either real or repro
+			{
+				$product_stamp_conditions[] = "Yes";
+				$product_stamp_conditions[] = "No";
+				$product_stamp_conditions[] = "Only";
+			}
+			else 
+			# Default. All.
+			{
+				$product_stamp_conditions[] = "Yes";
+				$product_stamp_conditions[] = "No";
+				$product_stamp_conditions[] = "Only";
+			}
+		}
+
+		if (!count($product_stamp_conditions))
+		{
+			$product_stamp_conditions[] = "Yes";
+			$product_stamp_conditions[] = "No";
+			$product_stamp_conditions[] = "Only";
+		}
+
+
+		
+		
+
+
+		$idlist = $this->GalleryCategory->get_self_and_ancestor_ids($id);
+		$images = $this->paginate("GalleryCategoryImageLink", array('GalleryCategoryImageLink.browse_node_id'=>$idlist,'GalleryImage.stampID IS NOT NULL','GalleryImage.reproducible'=>$product_stamp_conditions));
+		$this->set("galleryImages", $images);
+
+		$limit = null;
+		if (!empty($this->params['url']['limit'])) { $limit = $this->params['url']['limit']; }
+		if (!$limit && !empty($this->passedArgs['limit']))
+		{
+			$limit = $this->passedArgs['limit'];
+		}
+		if (!$limit) { $limit = 40; }
+		$this->javascript_sets['limit'] = $limit; # dropdown for template to set.
+
+		if (isset($category['GalleryCategory']['meta_desc'])) { $this->meta_description = $category['GalleryCategory']['meta_desc']; }
+		if (isset($category['GalleryCategory']['meta_keywords'])) { $this->meta_description = $category['GalleryCategory']['meta_keywords']; }
+		if (isset($category['GalleryCategory']['browse_name'])) { $this->pageTitle = $category['GalleryCategory']['browse_name'] . " gifts by Harmony Designs Inc. - Bookmarks, Paperweights, Magnets and more."; }
+	}
+
+	function add() {
+		if (!empty($this->data)) {
+			$this->GalleryCategory->create();
+			if ($this->GalleryCategory->save($this->data)) {
+				$this->Session->setFlash(__('The GalleryCategory has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The GalleryCategory could not be saved. Please, try again.', true));
+			}
+		}
+		$images = $this->GalleryCategory->Image->find('list');
+		$parentCategories = $this->GalleryCategory->ParentCategory->find('list');
+		$this->set(compact('images', 'parentCategories'));
+	}
+
+	function edit($id = null) {
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid GalleryCategory', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if (!empty($this->data)) {
+			if ($this->GalleryCategory->save($this->data)) {
+				$this->Session->setFlash(__('The GalleryCategory has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The GalleryCategory could not be saved. Please, try again.', true));
+			}
+		}
+		if (empty($this->data)) {
+			$this->data = $this->GalleryCategory->read(null, $id);
+		}
+		$images = $this->GalleryCategory->Image->find('list');
+		$parentCategories = $this->GalleryCategory->ParentCategory->find('list');
+		$this->set(compact('images','parentCategories'));
+	}
+
+	function delete($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for GalleryCategory', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if ($this->GalleryCategory->del($id)) {
+			$this->Session->setFlash(__('GalleryCategory deleted', true));
+			$this->redirect(array('action'=>'index'));
+		}
+	}
+
+
+	function admin_index() {
+		$this->GalleryCategory->recursive = 0;
+		$this->set('galleryCategories', $this->paginate());
+	}
+
+	function admin_view($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid GalleryCategory.', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		$this->set('galleryCategory', $this->GalleryCategory->read(null, $id));
+	}
+
+	function admin_add() {
+		if (!empty($this->data)) {
+			$this->GalleryCategory->create();
+			if ($this->GalleryCategory->save($this->data)) {
+				$this->Session->setFlash(__('The GalleryCategory has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The GalleryCategory could not be saved. Please, try again.', true));
+			}
+		}
+		$images = $this->GalleryCategory->Image->find('list');
+		$parentCategories = $this->GalleryCategory->ParentCategory->find('list');
+		$this->set(compact('images', 'parentCategories'));
+	}
+
+	function admin_edit($id = null) {
+		if (!$id && empty($this->data)) {
+			$this->Session->setFlash(__('Invalid GalleryCategory', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if (!empty($this->data)) {
+			if ($this->GalleryCategory->save($this->data)) {
+				$this->Session->setFlash(__('The GalleryCategory has been saved', true));
+				$this->redirect(array('action'=>'index'));
+			} else {
+				$this->Session->setFlash(__('The GalleryCategory could not be saved. Please, try again.', true));
+			}
+		}
+		if (empty($this->data)) {
+			$this->data = $this->GalleryCategory->read(null, $id);
+		}
+		$images = $this->GalleryCategory->Image->find('list');
+		$parentCategories = $this->GalleryCategory->ParentCategory->find('list');
+		$this->set(compact('images','parentCategories'));
+	}
+
+	function admin_delete($id = null) {
+		if (!$id) {
+			$this->Session->setFlash(__('Invalid id for GalleryCategory', true));
+			$this->redirect(array('action'=>'index'));
+		}
+		if ($this->GalleryCategory->del($id)) {
+			$this->Session->setFlash(__('GalleryCategory deleted', true));
+			$this->redirect(array('action'=>'index'));
+		}
+	}
+
+}
+?>

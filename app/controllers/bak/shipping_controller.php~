@@ -1,0 +1,63 @@
+<?php
+class ShippingController extends AppController {
+
+	var $name = 'Shipping';
+	var $helpers = array('Html', 'Form');
+	var $uses = array("Product", "ShippingPricePoint");
+
+	function beforeFilter()
+	{
+		
+		parent::beforeFilter();
+
+		switch($this->action)
+		{
+			case 'admin_add':
+			case 'admin_edit':
+			case 'add':
+			case 'edit':
+				break;
+		}
+	}
+
+	function beforeRender()
+	{
+		parent::beforeRender();
+
+		switch($this->action)
+		{
+			case 'admin_add':
+			case 'admin_edit':
+			case 'add':
+			case 'edit':
+				break;
+		}
+	}
+
+	function calculator($prod = null)
+	{
+		Configure::write("debug", 0);
+		if (!empty($this->data))
+		{
+			$quantity = $this->data['Shipping']['quantity'];
+			$zipCode = $this->data['Shipping']['zipCode'];
+			if (!$prod) { $prod = $this->data['Shipping']['prod']; }
+			$shippingOptions = $this->ShippingPricePoint->calculate_shipping_options_us($zipCode, $prod, $quantity);
+			#print_r($shippingOptions);
+			$this->set("shippingOptions", $shippingOptions);
+		}
+		#$this->Product->recursive = -2;
+		$this->set("products", $this->Product->findAll("available = 'yes' AND buildable = 'yes' AND parent_product_type_id IS NULL", array(),"name ASC"));
+		if ($prod)
+		{
+			$this->set("prod", $prod);
+			$product = $this->Product->find("code = '$prod'");
+			$this->set("product", $product);
+			if (!isset($this->data['Shipping']['quantity']))
+			{
+				$this->data['Shipping']['quantity'] = $product['ProductPricing'][0]['quantity'];
+			}
+		}
+	}
+}
+?>

@@ -1,0 +1,151 @@
+<div class="clear">
+
+<div class="left" align="left"> <a href="Javascript:void('quote');" onClick="showBuildStepNext('<?= $option_code ?>');"><img src="/images/buttons/small/Next-green.gif"></a> </div>
+<div class="clear"></div>
+
+<div>
+			<table style="padding: 5px;" width="100%">
+			<tr>
+				<td align="left" width="100">
+				<input type="radio" name="data[options][centerQuote]" value="0" <?= empty($build['options']['centerQuote']) ? "checked='checked'" : "" ?> onChange="updateBuild('quote');"/> <img align="top" src="/images/icons/dropcap.png"/>
+				</td>
+				<td align="left">
+				<input type="radio" name="data[options][centerQuote]" value="1" <?= !empty($build['options']['centerQuote']) ? "checked='checked'" : "" ?> onChange="updateBuild('quote');"/> <img align="top" src="/images/icons/centered_text.png"/>
+				</td>
+				<td width="215" style="border-left: solid #CCC 1px; padding-left: 25px;">
+				Text placement:<br/>
+					<input type="radio" name="data[options][alignQuote]" <?= empty($build['options']['alignQuote']) || $build['options']['alignQuote'] == 'top' ? "checked='checked'":""?> value="top" onClick="updateBuild('quote');"/> Top
+					<input type="radio" name="data[options][alignQuote]" <?= !empty($build['options']['alignQuote']) && $build['options']['alignQuote'] == 'middle' ? "checked='checked'":""?>value="middle" onClick="updateBuild('quote');"/> Middle
+					<input type="radio" name="data[options][alignQuote]" <?= !empty($build['options']['alignQuote']) && $build['options']['alignQuote'] == 'bottom' ? "checked='checked'":""?>  value="bottom" onClick="updateBuild('quote');"/> Bottom
+				</td>
+			</tr>
+			</table>
+</div>
+
+<?
+$recommendedQuoteIDs = !empty($recommendedQuotes) ? Set::classicExtract($recommendedQuotes, "{n}.Quote.quote_id") : array();
+?>
+
+
+	<table style="margin-left: 5px; " class="tab_list" cellpadding=0 cellspacing=0>
+	<tr>
+		<? if(!empty($recommendedQuotes)) { ?>
+		<td id="stamp_spacer" class="spacer quotes_spacers <?= empty($build['options']['quoteID']) || in_array($build['options']['quoteID'], $recommendedQuoteIDs) ? "selected_spacer" : "" ?>">&nbsp;</td>
+		<td id="stamp_tab" class="quotes_tabs tab <?= empty($build['options']['quoteID']) || in_array($build['options']['quoteID'], $recommendedQuoteIDs) ? "selected_tab" : "" ?>">
+			<a href="Javascript:void(0)" onClick="selectTabNew('stamp','quotes');">Suggested for Image</a>
+		</td>
+		<? } ?>
+		<td id="custom_spacer" class="spacer quotes_spacers <?= empty($recommendedQuotes) && empty($build['options']['quoteID']) ? "selected_spacer" : "" ?>">&nbsp;</td>
+		<td id="custom_tab" class="quotes_tabs tab <?= empty($recommendedQuotes) && empty($build['options']['quoteID']) ? "selected_tab" : "" ?>">
+			<a href="Javascript:void(0)" onClick="selectTabNew('custom','quotes');">Your Text</a>
+		</td>
+		<td id="browse_spacer" class="spacer quotes_spacers <?= !empty($build['options']['quoteID']) && !in_array($build['options']['quoteID'], $recommendedQuoteIDs) ? "selected_spacer" : "" ?>">&nbsp;</td>
+		<td id="browse_tab" class="quotes_tabs tab <?= !empty($build['options']['quoteID']) && !in_array($build['options']['quoteID'], $recommendedQuoteIDs) ? "selected_tab" : "" ?>">
+			<a href="Javascript:void(0)" onClick="selectTabNew('browse','quotes'); loadQuoteLibrary();">Browse Library</a>
+		</td>
+		<? if(!empty($productQuotes)) { ?>
+		<td id="suggested_spacer" class="spacer quotes_spacers">&nbsp;</td>
+		<td id="suggested_tab" class="quotes_tabs tab">
+			<a href="Javascript:void(0)" onClick="selectTabNew('suggested','quotes');">Suggested for Product</a>
+		</td>
+		<? } ?>
+	</tr>
+	</table>
+
+<div style="border: solid #666 1px; padding: 5px; margin: 5px; margin-top: 0px; z-index: 0; position: relative;">
+
+<? if(!empty($recommendedQuotes)) { ?>
+<div id="stamp" class="quotes <?= empty($build['options']['quoteID']) || in_array($build['options']['quoteID'], $recommendedQuoteIDs) ? "" : "hidden" ?>">
+		<div style="max-height: 350px; overflow: auto;">
+		<table width="90%" cellspacing=0>
+		<? $qi = 0; foreach($recommendedQuotes as $quote) { ?>
+		<tr style="background-color: <?= $qi++ % 2 == 0 ? "#FFF" : "#CCC"; ?>;">
+			<td valign="top">
+				<input type="radio" name="data[options][quoteID]" <? if(!empty($build['options']['quoteID']) && $build['options']['quoteID'] == $quote['Quote']['quote_id']) { echo "checked='checked'"; } ?> value="<?= $quote['Quote']['quote_id'] ?>" onClick="$('option_quote').value = ''; updateBuild('<?=$i?>'); "/>
+			</td>
+			<td valign="top">
+				<div class="quoteText">
+					<?= $quote['Quote']['text']; ?>
+				</div>
+	
+				<? if(!empty($quote['Quote']['attribution'])) { ?>
+				<div class="quoteAttribution">
+					<br/>- <?= $quote['Quote']['attribution']; ?>
+				</div>
+				<? } ?>
+			</td>
+		</tr>
+		<? } ?>
+		</table>
+		</div>
+</div>
+<? } ?>
+
+<div id="custom" class="quotes <?= empty($recommendedQuotes) && empty($build['options']['quoteID']) ? "" : "hidden" ?>">
+			<input id="other_quoteID" type="radio" name="data[options][quoteID]" value="" <? if(empty($build['options']['quoteID'])) { echo "checked='checked'"; } ?> > 
+	<textarea name="data[options][customQuote]" id="option_quote" style="width: 95%; height: 100px; "
+		onchange="changedQuote('<?= $build['Product']['quote_limit'] ?>'); typingQuote('<?= $build['Product']['quote_limit'] ?>'); $('other_quoteID').checked = 'checked'; updateBuild('<?=$i?>');" 
+		onblur="changedQuote('<?= $build['Product']['quote_limit'] ?>'); " onkeyup="typingQuote('<?= $build['Product']['quote_limit'] ?>');"><?= !empty($build['options']['customQuote']) ? $build['options']['customQuote'] : "" ?></textarea>
+
+			<?  $quoteLength = !empty($build['options']['customQuote']) ? strlen($build['options']['customQuote']) : 0; ?>
+
+			<div class="right" style='padding-right: 25px;'>
+				<a href="Javascript:void(0)" onClick="updateBuildImage();"><img src="/images/buttons/small/Preview-grey.gif"/></a>
+			</div>
+
+			<div class="note">
+				<span id="customQuoteLength"><?= !empty($quoteLength) ? $quoteLength : "0" ?></span> of <?= $build['Product']['quote_limit'] ?> characters.
+			</div>
+			<div class="clear"></div>
+</div>
+
+<script>
+enableDefaultText($('option_quote'), 'Type your text here...');
+
+var loaded = false;
+function loadQuoteLibrary()
+{
+	if(!loaded)
+	{
+		new Ajax.Updater("browse", "/quotes/index/<?= $build['Product']['code'] ?>", { asynchronous: false, evalScripts: true });
+		loaded = true;
+	}
+}
+</script>
+
+<div id="browse" class="quotes <?= !empty($build['options']['quoteID']) && !in_array($build['options']['quoteID'], $recommendedQuoteIDs) ? "" : "hidden" ?>" style="max-height: 350px; overflow: auto;">
+	<?= $this->requestAction("/quotes/index/".$build['Product']['code'], array('return')); ?>
+</div>
+
+<div id="suggested" class="quotes hidden">
+		<div style="max-height: 350px; overflow: auto;">
+		<table width="90%">
+		<? $qi = 0; foreach($productQuotes as $quote) { ?>
+		<tr style="background-color: <?= $qi++ % 2 == 0 ? "#FFF" : "#CCC"; ?>;">
+			<td valign="top">
+				<input type="radio" name="data[options][quoteID]" <? if(!empty($build['options']['quoteID']) && $build['options']['quoteID'] == $quote['Quote']['quote_id']) { echo "checked='checked'"; } ?> value="<?= $quote['Quote']['quote_id'] ?>" onClick="$('option_quote').value = ''; updateBuild('<?=$i?>'); "/>
+			</td>
+			<td valign="top">
+				<div class="quoteText">
+					<?= $quote['Quote']['text']; ?>
+				</div>
+	
+				<? if(!empty($quote['Quote']['attribution'])) { ?>
+				<div class="quoteAttribution">
+					<br/>- <?= $quote['Quote']['attribution']; ?>
+				</div>
+				<? } ?>
+			</td>
+		</tr>
+		<? } ?>
+		</table>
+		</div>
+</div>
+
+</div>
+
+
+
+
+</div>
+

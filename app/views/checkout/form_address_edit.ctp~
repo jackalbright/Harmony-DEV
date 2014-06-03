@@ -1,0 +1,69 @@
+<?
+$other_address_type = ($address_type == 'shipping') ? 'billing' : 'shipping';
+?>
+<div class="form_address_edit">
+<? if($address_type == 'billing') { ?>
+<input type="checkbox" name="data[billing_same]" value="1" onClick="if(this.checked) { billingSameAsShipping(); }"/> Use same address for billing
+<? } ?>
+
+<?
+$key = Inflector::classify("{$address_type}_address");
+$id = !empty($this->data[$key]['Contact_ID']) ? $this->data[$key]['Contact_ID'] : null;
+?>
+<?= $form->hidden("$key.Contact_ID"); ?>
+<table>
+<tr>
+<td width="50%"> <?= $form->input("$key.Name.0", array('label'=>'First Name','class'=>'required','type'=>'text','size'=>20)); ?></td>
+<td colspan=2> <?= $form->input("$key.Name.1", array('label'=>'Last Name','class'=>'required','type'=>'text','size'=>20)); ?></td>
+</tr>
+<tr>
+<td colspan=2> <?= $form->input("$key.Company", array('label'=>'Company (optional)','type'=>'text','size'=>20)); ?></td>
+</tr>
+<tr>
+<td> <?= $form->input("$key.Address_1", array('label'=>'Address','class'=>'required','size'=>20)); ?></td>
+<td colspan=2> <?= $form->input("$key.Address_2", array('label'=>'Address 2','size'=>20)); ?></td>
+</tr>
+<? if($address_type == 'shipping') { ?>
+<tr>
+<td colspan=2> <?= $form->input("$key.is_po_box", array('label'=>'This is a PO Box (cannot ship via FedEx)','type'=>'checkbox')); ?></td>
+</tr>
+<? } ?>
+<tr>
+<td> <?= $form->input("$key.City", array('class'=>'required','size'=>20)); ?></td>
+<td> <?= $form->input("$key.State", array('class'=>'','size'=>4)); # Not required, since intl may not have... ?></td>
+<td> 
+<?
+$zipChange = $address_type == 'shipping' ? "loadShipping();" : null;
+$zipChangeKeyUp = $address_type == 'shipping' ? "endZip();" : null;
+$zipChangeKeyUpNow = $address_type == 'shipping' ? "endZip(5);" : null;
+$zipChangeKeyDown = $address_type == 'shipping' ? "startZip();" : null;
+?>
+
+<?= $form->input("$key.Zip_Code", array('class'=>'required','label'=>'Zip/Postal Code','size'=>6,'onChange'=>$zipChangeKeyUpNow,'onKeyUp'=>$zipChangeKeyUp,'onKeyDown'=>$zipChangeKeyDown)); ?>
+</tr>
+<tr>
+<td colspan=2>
+<?
+		$countries_map = array();
+		foreach($countries as $c)
+		{
+			$countries_map[$c['Country']['iso_code']] = $c['Country']['name'];
+		}
+		asort($countries_map);
+		
+		$country = !empty($this->data[$key]['Country']) ? $this->data[$key]['Country'] : 'US';
+?>
+<?= $form->input("$key.Country", array('options'=>$countries_map,'style'=>'width: 250px;','selected'=>$country,'onChange'=>$zipChange)); ?>
+</td>
+<td>
+	<? if(!empty($customer_id) && empty($customer['guest'])) { ?>
+	<?= $ajax->submit('Save address',array('url'=>array('action'=>'form_address_edit',$address_type,$id),'update'=>"{$address_type}_info")); ?>
+	<? } ?>
+</td>
+</tr>
+</table>
+<? if(!empty($addresses) && count($addresses) > 1) { ?>
+<br/>
+<?= $ajax->link("Choose/Add new address", array('action'=>'form_address_select',$address_type), array('update'=>"{$address_type}_info")); ?>
+<? } ?>
+</div>

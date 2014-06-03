@@ -1,0 +1,32 @@
+<? if(empty($size)) { $size = "-200x200"; } ?>
+<? if(empty($product) && !empty($_SESSION['Build']['Product'])) { $product = array('Product', $_SESSION['Build']['Product']); } ?>
+<? if (!empty($product) && (!empty($_SESSION['Build']['CustomImage']) || !empty($_SESSION['Build']['GalleryImage']))) { ?>
+		<?
+			$template = !empty($_SESSION['Build']['template']) ? $_SESSION['Build']['template'] : "";
+			if($template == 'imageonly' && !empty($_SESSION['Build']['options']['fullbleed'])) { $template = 'fullbleed'; }
+			if($template) { $template = "-$template"; }
+			$name = "Your custom";
+			$imgtype = "_";
+			$imgid = "_";
+			if (!empty($_SESSION['Build']['CustomImage']))
+			{
+				if (!empty($_SESSION['Build']['CustomImage']['Title'])) { $name = "&quot;".$_SESSION['Build']['CustomImage']['Title']."&quot;"; }
+				$imgtype = "Custom";
+				$imgid = $_SESSION['Build']['CustomImage']['Image_ID'];
+			} else if (!empty($_SESSION['Build']['GalleryImage'])) { 
+				if (!empty($_SESSION['Build']['GalleryImage']['stamp_name'])) { $name = "&quot;".$_SESSION['Build']['GalleryImage']['stamp_name']."&quot;"; }
+				$imgtype = "Gallery";
+				$imgid = $_SESSION['Build']['GalleryImage']['catalog_number'];
+			}
+		?>
+		<!-- we need a form to include the product, since we might change via dropdown -->
+		<div>
+			<img style="vertical-align: middle;" src="/images/preview/<?= $product['Product']['code'] ?><?=$template?>/<?= $imgtype ?>/<?= $imgid ?>/<?=$size?>.png"/>
+		</div>
+		<? if(empty($no_title)) { ?>
+		<div>
+			<?= $name ?> <?= $product['Product']['name'] ?>
+		</div>
+		<? } ?>
+
+<? } ?>

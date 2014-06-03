@@ -1,0 +1,48 @@
+<?php
+class CartItem extends AppModel {
+
+	var $name = 'CartItem';
+	var $primaryKey = 'cart_item_id';
+
+	function assignToCustomer($session_id, $customer_id)
+	{
+		$items = $this->findAll(" session_id = '$session_id' ");
+		$customer_model = $this->get_model('Customer');
+		$product_model = $this->get_model('Product');
+		$surcharge_model = $this->get_model('StampSurcharge');
+
+		$customer = $customer_model->read(null, $customer_id);
+		$pricing_level = $customer['Customer']['pricing_level'];
+
+		foreach($items as $item)
+		{
+			$item['CartItem']['customer_id'] = $customer_id;
+			$code = $item['CartItem']['productCode'];
+			$quantity = $item['CartItem']['quantity'];
+
+			$parts = unserialize($item['CartItem']['parts']);
+			$catalogNumber = !empty($parts['catalogNumber']) ? $parts['catalogNumber'] : null;
+			$repro = !empty($parts['reproductionStamp']) ? strtolower($parts['reproductionStamp']) : null;
+			$stamp_surcharge = null;
+			if (!empty($repro) && $repro != 'no' && $catalogNumber)
+			{
+				$stamp_surcharge = $surcharge_model->find("Catalog_number = '$catalogNumber'");
+			}
+			#error_log("CODE=$code, Q=$quantity, C=".print_r($customer['Customer'],true));
+			#error_log("CN=$catalogNumber, REPRO=$repro, SS=".print_r($stamp_surcharge,true));
+			#error_log("PARTS=".print_r($parts,true));
+
+			$unitPrice = $product_model->get_effective_base_price($code, $quantity, $customer['Customer'], $stamp_surcharge, $parts, $catalogNumber);
+
+			error_log("UNITPRICE=".print_r($unitPrice,true));
+
+			$item['CartItem']['unitPrice'] = $unitPrice['total'];
+
+			# ALSO switch pricing over to wholesale, if set....
+
+
+			$this->save($item);
+		}
+	}
+}
+?>

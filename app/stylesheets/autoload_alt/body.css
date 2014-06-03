@@ -1,0 +1,18 @@
+body
+{
+	width: 1020px;
+	border: solid #CECECE 1px;
+	position: relative;
+}
+
+#contentWrapper
+{
+	/*float: left;*/
+}
+
+#leftbar
+{
+	/*float: right;
+	position: absolute;
+	right: 0px;*/
+}

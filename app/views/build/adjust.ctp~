@@ -1,0 +1,424 @@
+<script>
+var start_event = null;
+var finish_event = null;
+var dragging = false;
+var dragged = false;
+var timeoutId = 0;
+
+function startDrag(e)
+{
+	dragging = true;
+	dragged = true;
+	start_event = Event.extend(e);
+	return true;
+}
+
+function doDrag(e)
+{
+	finish_event = Event.extend(e);
+	if(dragging)
+	{
+		moveImage();
+		
+		/*
+		clearTimeout(timeoutId);
+		timeoutId = setTimeout("moveImage()", 20);
+		*/
+	} else if (dragged) { // Get one last position after mouse up.
+		dragging = false;
+		dragged = false;
+		//moveImage();
+		/*clearTimeout(timeoutId);
+		timeoutId = setTimeout("moveImage()", 20);
+		*/
+	}
+}
+
+function endDrag(e)
+{
+	if(dragging)
+	{
+	dragging = false;
+	finish_event = Event.extend(e);
+	/*
+	clearTimeout(timeoutId);
+	timeoutId = setTimeout("moveImage()", 20);
+	*/
+	moveImage();
+	}
+	return true;
+}
+
+function moveImage()
+{
+	var x1 = parseInt($('img').getStyle("left"));
+	var y1 = parseInt($('img').getStyle("top"));
+	var w = parseInt($('img').getStyle("width"));
+	var h = parseInt($('img').getStyle("height"));
+	//alert(x1+", "+y1);
+
+	var dx = finish_event.pointerX()-start_event.pointerX();
+	var dy = finish_event.pointerY()-start_event.pointerY();
+
+	start_event = finish_event; // Start next move where left off. don't double/exaggerate.
+
+	var ix1 = x1+dx;
+	var iy1 = y1+dy;
+
+	var ix2 = ix1+w;
+	var iy2 = iy1+h;
+
+	// Not adjust constraints so cant move too far off canvas.
+	var cx1 = 0;//parseInt($('canvas').getStyle('left'));
+	var cy1 = 0;//parseInt($('canvas').getStyle('top'));
+	// image is relative to canvas!
+	var cw = parseInt($('canvas').getStyle('width'));
+	var ch = parseInt($('canvas').getStyle('height'));
+	var cx2 = cx1 + cw;
+	var cy2 = cy1 + ch;
+
+	// Keep picture constrained within canvas, so dont add padding
+
+	//alert( "PIC="+ix1+","+iy1+"="+ix2+","+iy2 + "CANVAS="+cx1+","+cy1+"="+cx2+","+cy2);
+
+	// For each side, if a side sticks inside the canvas,
+	// and the opposite side sticks out, move toward edge
+	// until that side hits the edge or other side hits edge or is inside
+
+	//alert(ix1+" > "+cx1+", "+ix2 + ">"+cx2);
+
+	while(ix1 > cx1 && ix2 > cx2)
+	{
+		ix1--;
+		ix2--;
+	}
+	//alert("NOW="+ix1+", "+iy1);
+	while(ix2 < cx2 && ix1 < cx1)
+	{
+		ix1++;
+		ix2++;
+	}
+	while(iy1 > cy1 && iy2 > cy2)
+	{
+		iy1--;
+		iy2--;
+	}
+	while(iy1 < cy1 && iy2 < cy2)
+	{
+		iy1++;
+		iy2++;
+	}
+
+
+	//alert("MOVING "+x1+ ", "+y1+", TO="+ix1+", "+iy1);
+	// is this relative to before, or absolute?
+	$('img').setStyle({top: iy1+"px", left: ix1+"px"});
+	//alert("DID="+$('img').getStyle('left')+", "+$('img').getStyle('top'));
+	setCoords();
+}
+
+function zoomIn(fullbleed)
+{
+	var factor = 1.1;
+
+	var w2h = parseFloat($('imgw2h').value);
+	var w = parseInt($('img').getStyle('width'));
+	var h = parseInt($('img').getStyle('height'));
+	var newh = Math.ceil(h * factor);
+	var neww = Math.ceil(newh * w2h);
+
+	$('img').setStyle({height: newh+"px"});//, width: neww+"px"});
+
+	recenterImage(w,h);
+
+	optimizeImageFit(fullbleed);
+
+}
+
+function zoomOut(fullbleed)
+{
+	var factor = 0.9;
+
+	var w2h = parseFloat($('imgw2h').value);
+	var w = parseInt($('img').getStyle('width'));
+	var h = parseInt($('img').getStyle('height'));
+	var newh = Math.ceil(h * factor);
+	var neww = Math.ceil(newh * w2h);
+
+	var ix = parseInt($('img').getStyle('left'));
+	var iy = parseInt($('img').getStyle('top'));
+
+	var cw = parseInt($('canvas').getStyle('width'));
+	var ch = parseInt($('canvas').getStyle('height'));
+
+	// Apply.
+	$('img').setStyle({height: newh+"px"});//, width: neww+"px"});
+
+	// Now apply constraints. Stop zooming out when longer side fits container (if imageonly) or shorter side fits container (if fullbleed)
+	//optimizeImageFit(w2h, fullbleed);
+	// broken? wrong? XXX TODO
+
+ 	if(!fullbleed)
+ 	{
+ 		// Fit shorter side to container
+		if(neww < newh && neww < cw)
+ 		{
+			neww = cw;
+			newh = Math.ceil(neww / w2h);
+
+		} else if (newh < neww && newh < ch) {
+			newh = ch;
+			neww = Math.ceil(newh * w2h);
+
+ 		}
+
+ 	} else {
+ 		// Fit longer side to container.
+		//alert("NEWW="+neww+" > "+newh+", "+neww +" < "+cw);
+		//alert("NEWH="+newh+" > "+neww+", "+newh +" < "+ch);
+		if(neww > newh && neww < cw)
+ 		{
+			neww = cw;
+			newh = Math.ceil(neww / w2h);
+
+		} else if (newh > neww && newh < ch) {
+			newh = ch;
+			neww = Math.ceil(newh * w2h);
+
+ 		}
+
+ 	}
+
+	$('img').setStyle({height: newh+"px", top: iy+"px", left: ix+"px"});
+
+	// Now adjust the left/right, depends on previous size/coords.
+	recenterImage(w,h);
+
+	// Now make sure not zooming in too far...
+
+	optimizeImageFit(fullbleed);
+
+}
+
+function rotateImageClockwise(id, fullbleed)
+{
+	var angle = parseInt($('rotate').value);
+	if(angle >= 270) { angle = 0; }
+	else { angle += 90; }
+
+	$('rotate').value = angle;
+	var w2h = parseFloat($('imgw2h').value);
+	var new_w2h = 1/w2h; // Invert, since, rotating.
+	$('imgw2h').value = new_w2h;
+
+	showPleaseWait();
+
+	$('img').src = "/product_image/image_rotate/"+id+"/"+angle;
+	// May need to adjust position?
+
+	// Now grow it until it fits best.
+	// XXX MAYTBE it doesnt get coords for new image, but keeps old until new one is done loading??
+	$('img').observe('load', function() { optimizeImageFit(fullbleed); hidePleaseWait(); });
+	
+}
+
+function rotateImageCounterClockwise(id, fullbleed)
+{
+	var angle = parseInt($('rotate').value);
+	if(angle <= 0) { angle = 270; }
+	else { angle -= 90; }
+
+	$('rotate').value = angle;
+	var w2h = parseFloat($('imgw2h').value);
+	var new_w2h = 1/w2h; // Invert, since, rotating.
+	$('imgw2h').value = new_w2h;
+
+	showPleaseWait();
+
+	$('img').src = "/product_image/image_rotate/"+id+"/"+angle;
+	// May need to adjust position?
+
+	// Now grow it until it fits best.
+	$('img').observe('load', function() { optimizeImageFit(fullbleed); hidePleaseWait(); });
+}
+
+function recenterImage(w,h) // When zooming, pass old w,h so know how to adjust.
+{
+	var neww = parseInt($('img').getStyle('width'));
+	var newh = parseInt($('img').getStyle('height'));
+
+
+	var dx = -(Math.ceil((neww - w)/2));
+	var dy = -(Math.ceil((newh - h)/2));
+
+	var newx = x = parseInt($('img').getStyle('left'));
+	newx += dx;
+	var newy = y = parseInt($('img').getStyle('top'));
+	newy += dy;
+
+	//alert("OLD_x,y="+x+", "+y+", OLD_W,H="+w+","+h+", NEW_W,H="+neww+", "+newh+ ", NEW_X,Y="+newx+", "+newy);
+
+	// ??? TODO
+	// now if we're beyond borders, should we move so not too far in (whitespace)?
+
+	$('img').setStyle({left: newx+"px", top: newy+"px"});
+	setCoords();
+}
+
+function centerImage()
+{
+	// Now move coordinates so stay on center.
+	var ih = parseInt($('img').getStyle('height'));
+	var iw = parseInt($('img').getStyle('width'));
+	var cw = parseInt($('canvas').getStyle('width'));
+	var ch = parseInt($('canvas').getStyle('height'));
+	var newx = Math.ceil((cw - iw)/2);
+	var newy = Math.ceil((ch - ih)/2);
+
+	$('img').setStyle({left: newx+"px", top: newy+"px"});
+	setCoords();
+}
+
+function optimizeImageFit(fullbleed)
+{ // dont let image get too small...
+	// DOESNT WORK ONCE IMAGE MOVED/PANNED
+
+	//alert("FB="+fullbleed);
+	var w2h = parseFloat($('imgw2h').value);
+	var cw = parseInt($('canvas').getStyle('width'));
+	var ch = parseInt($('canvas').getStyle('height'));
+
+	var iw = parseInt($('img').getStyle('width'));
+	var ih = parseInt($('img').getStyle('height'));
+	
+	var ix = parseInt($('img').getStyle('left'));
+	var iy = parseInt($('img').getStyle('top'));
+
+
+
+	if(fullbleed)
+	{
+		// Fit longer side to container
+		if(iw < ih && iw < cw)
+		{
+			iw = cw;
+			ih = Math.ceil(iw / w2h);
+		} else if (ih < iw && ih < ch) {
+			ih = ch;
+			iw = Math.ceil(ih * w2h);
+		}
+
+	} else { // not fullbleed, so we can have whitespace on the longer side.
+		// Fit shorter side to container.
+		if(iw > ih && iw < cw) // landscape.
+		{
+			iw = cw;
+			ih = Math.ceil(iw / w2h);
+
+		} else if (ih > iw && ih < ch) { // portrait.
+			ih = ch;
+			iw = Math.ceil(ih * w2h);
+
+		}
+	}
+
+	// Needs to consider x,y coordinates as well...
+
+	/*
+		if ix > 0, set ix = 0 ?
+		if iy > 0, set iy = 0 ?
+		if ix+iw < cw, set ix = cw - iw ? 
+		if iy+ih < ch, set iy = ch - ih ? 
+	*/
+	//alert("IX,IY="+ix+", "+iy+", IW,IH="+iw+", "+ih+", CW,CH="+cw+", "+ch);
+	if(ix+iw < cw) { ix = cw - iw; }
+	if(iy+ih < ch) { iy = ch - ih; }
+	if(ix > 0) { ix = 0; }
+	if(iy > 0) { iy = 0; }
+
+	//alert("IX2,IY2="+ix+", "+iy);
+
+	$('img').setStyle({height: ih+"px", top: iy+"px", left: ix+"px"});
+	setCoords();
+
+	// Now don't let any whitespace show if possible, with minimal disruption of location.
+
+	// Now center image.
+	//centerImage();
+}
+
+function setCoords()
+{
+	var ix = parseInt($('img').getStyle('left'));
+	var iy = parseInt($('img').getStyle('top'));
+	var iw = parseInt($('img').getStyle('width'));
+	var ih = parseInt($('img').getStyle('height'));
+
+	var cw = parseInt($('canvas').getStyle('width'));
+	var ch = parseInt($('canvas').getStyle('height'));
+
+	var full_imgwidth = parseFloat($('full_imgwidth').value);
+	var full_imgheight = parseFloat($('full_imgheight').value);
+	var factor = full_imgwidth / iw;
+
+	var visw = cw * full_imgwidth / iw;
+	var vish = ch * full_imgheight / ih;
+
+	$('coord_x').value = parseInt(-ix * factor);
+	$('coord_y').value = parseInt(-iy * factor);
+	$('coord_w').value = parseInt(visw);
+	$('coord_h').value = parseInt(vish);
+	// when we zoom in, w,h should get smaller, zoom out, w,h bigger
+
+	// AJAX submission... (timeout-based!)
+
+}
+
+</script>
+<table width="100%" border=1>
+<tr>
+	<td width="400">
+		<div style="width: 275px; background-color: green; position: relative; overflow: hidden;" onDragGesture="" onDragStart="">
+			<img style="position: relative;" src="<?= $blankimg ?>" />
+			<div id="canvas" style="overflow: hidden; position: absolute; top: <?= !empty($canvas[1]) ? $canvas[1] : 0 ?>px; left: <?= !empty($canvas[0]) ? $canvas[0] : 0 ?>px; width: <?= !empty($canvas[2]) ? $canvas[2] : 0 ?>px; height: <?= !empty($canvas[3]) ? $canvas[3] : 0 ?>px; ">
+				<img id="img" style="position: absolute; top: <?= !empty($imgy)?$imgy:0?>px; left: <?= !empty($imgx)?$imgx:0?>px; height: <?= $imgheight ?>px; z-index: 5;" src="<?= $image_path ?>"/>
+			</div>
+			<img style="position: absolute; top: 0px; left: 0px; z-index: 10;" src="<?= $transimg ?>" width="275" onMouseDown="return startDrag(event);" onMouseOut="return endDrag(event); " onMouseUp="return endDrag(event);" onMouseMove="return doDrag(event);" onDrag="return false;" onDragStart="return false;"/>
+			</div>
+			<div class="clear"></div>
+
+		</div>
+	</td>
+	<td valign="top">
+		<a href="Javascript:void(0)" onClick="return zoomOut('<?= $fullbleed ?>');">[-] SHRINK</a>
+		&nbsp;
+		&nbsp;
+		&nbsp;
+		&nbsp;
+		<a href="Javascript:void(0)" onClick="return zoomIn('<?= $fullbleed ?>');">[+] GROW</a>
+
+		<br/>
+		<br/>
+		<br/>
+
+		<input id="rotate" name="rotate" value="0"/>
+		<input id="imgw2h" name="imgw2h" value="<?= $imgw2h ?>"/>
+		<br/>
+		<input id="full_imgwidth" name="full_imgwidth" value="<?= $full_imgwidth ?>"/>
+		<input id="full_imgheight" name="full_imgheight" value="<?= $full_imgheight ?>"/>
+		<br/>
+		<input id="coord_x" name="coord_x" value="" size="5"/>, 
+		<input id="coord_y" name="coord_y" value="" size="5"/>; 
+		<input id="coord_w" name="coord_w" value="" size="5"/> x 
+		<input id="coord_h" name="coord_h" value="" size="5"/>
+		<br/>
+
+		<a href="Javascript:void(0)" onClick="return rotateImageCounterClockwise('<?= $imgid ?>','<?= $fullbleed ?>'); ">&laquo; COUNTER-CLOCKWISE</a>
+		&nbsp;
+		&nbsp;
+		&nbsp;
+		&nbsp;
+		<a href="Javascript:void(0)" onClick="return rotateImageClockwise('<?= $imgid ?>','<?= $fullbleed ?>'); ">CLOCKWISE &raquo;</a>
+	</td>
+</tr>
+</table>

@@ -1,0 +1,15 @@
+<? if(empty($i)) { $i = 0; } ?>
+<?
+$class = !empty($required) ? "required" : "";
+?>
+<tr id="">
+<td colspan=2>
+	<?= $form->select("Products.$i.code",array_merge(array(''=>'[Choose a product]'), $all_products_map),null,array('class'=>$class),false);
+	//$form->select("Products.$i.code",array_merge(array(''=>'[Select a product]'), $all_products_map),null,array('onChange'=>'shipping_calc_new_field("row_template");'),false);
+	?>
+</td>
+<td align="right">
+	<?= $form->text("Products.$i.quantity",array('size'=>5,'class'=>$class)); ?>
+</td>
+</tr>
+

@@ -1,0 +1,99 @@
+<?
+$this->set("cropper",true);
+$rotate = !empty($build['rotate']) ? $build['rotate'] : null;
+?>
+	<script>
+	function setLayout(layout)
+	{
+		showPleaseWait();
+		document.location.href = '<?= $url ?>?step=layout&next=1&layout='+layout;
+	}
+	</script>
+<div style="padding: 10px;">
+	<!--<input type="hidden" name="data[options][fullbleed]" value="<?= !empty($build['options']['fullbleed']) ?>"/>-->
+
+	<table>
+	<tr>
+	<? if(empty($product_config['image.2'])) { ?>
+		<? if(!empty($build['Product']['imageonly']) || !empty($build['Product']['fullbleed'])) { ?>
+		<td valign="bottom" width="200" align="center">
+			<?=
+				$this->element("build/preview", array('template'=>'imageonly','no_view_larger'=>1,'fullbleed'=>0,'set_layout_link'=>1,'scale'=>'-115x115','rotate'=>$rotate)); 
+			?>
+		</td>
+		<? } ?>
+		<td valign="bottom" width="200" align="center">
+			<?= $this->element("build/preview", array('template'=>'standard','no_view_larger'=>1,'fullbleed'=>0,'set_layout_link'=>1,'scale'=>'-115x115','rotate'=>$rotate)); ?>
+			<?
+				$texttype = 'text';
+				$standard_options_map = Set::combine($standard_options, '{n}.Part.part_code', '{n}');
+				if(!empty($standard_options_map['quote']) && !empty($standard_options_map['personalization']))
+				{
+					$texttype = 'quotation/personalization';
+				} else if (!empty($standard_options_map['quote'])) { 
+					$texttype = 'quotation';
+				} else if (!empty($standard_options_map['personalization'])) { 
+					$texttype = 'personalization';
+				}
+
+
+			?>
+		</td>
+	<? } else { ?>
+		<td valign="bottom" width="200" align="center">
+			<?= $this->element("build/preview", array('template'=>'imageonly','no_view_larger'=>1,'fullbleed'=>0,'set_layout_link'=>1,'rotate'=>$rotate)); ?>
+		</td>
+		<td valign="bottom" width="200" align="center">
+			<?= $this->element("build/preview", array('template'=>'standard','no_view_larger'=>1,'fullbleed'=>0,'set_layout_link'=>1,'rotate'=>$rotate)); ?>
+		</td>
+	<? } ?>
+	</tr>
+	<tr>
+	<? if(empty($product_config['image.2'])) { ?>
+		<? if(!empty($build['Product']['imageonly']) || !empty($build['Product']['fullbleed'])) { ?>
+		<td valign="top" width="200" align="center">
+
+			<label>
+			<input type="radio" name="data[template]" value="imageonly" <?= ($build['template'] == 'imageonly') ? "checked='checked'" : "" ?> onClick="setLayout(this.value);"/> Image only<br/>
+			</label>
+		</td>
+		<? } ?>
+		<td valign="top" width="200" align="center">
+			<?
+				$texttype = 'text';
+				$standard_options_map = Set::combine($standard_options, '{n}.Part.part_code', '{n}');
+				if(!empty($standard_options_map['quote']) && !empty($standard_options_map['personalization']))
+				{
+					$texttype = 'quotation/personalization';
+				} else if (!empty($standard_options_map['quote'])) { 
+					$texttype = 'quotation';
+				} else if (!empty($standard_options_map['personalization'])) { 
+					$texttype = 'personalization';
+				}
+
+
+			?>
+
+			<label>
+			<input type="radio" name="data[template]" value="standard" <?= ($build['template'] == 'standard' || empty($build['template'])) ? "checked='checked'" : "" ?> onClick="setLayout(this.value);"/> Image and <?= $texttype ?><br/>(customize below)
+			</label>
+		</td>
+	<? } else { ?>
+		<td valign="top" width="200" align="center">
+			<label>
+			<input type="radio" name="data[template]" value="imageonly" <?= ($build['template'] == 'imageonly' && empty($build['options']['fullbleed'])) ? "checked='checked'" : "" ?> onClick="setLayout(this.value);"/> Image on both sides
+			</label>
+		</td>
+		<td valign="top" width="200" align="center">
+			<label>
+			<input type="radio" name="data[template]" value="standard" <?= ($build['template'] == 'standard' || empty($build['template'])) ? "checked='checked'" : "" ?> onClick="setLayout(this.value);"/> Image on front, text on back
+			</label>
+		</td>
+	<? } ?>
+	</tr>
+	</table>
+
+
+
+</div>
+	

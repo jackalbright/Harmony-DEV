@@ -1,0 +1,163 @@
+<?php
+class Product extends AppModel {
+
+	var $name = 'Product';
+	var $primaryKey = 'product_id';
+
+	//The Associations below have been created with all possible keys, those that are not needed can be removed
+	var $hasMany = array(
+			'ProductCustomizationOption' => array('className' => 'ProductCustomizationOption',
+								'foreignKey' => 'product_id',
+								'dependent' => false,
+								'conditions' => '',
+								'fields' => '',
+								'order' => '',
+								'limit' => '',
+								'offset' => '',
+								'exclusive' => '',
+								'finderQuery' => '',
+								'counterQuery' => ''
+			),
+			'ProductTestimonial' => array('className' => 'ProductTestimonial',
+								'foreignKey' => 'product_id',
+								'dependent' => false,
+								'conditions' => '',
+								'fields' => '',
+								'order' => '',
+								'limit' => '',
+								'offset' => '',
+								'exclusive' => '',
+								'finderQuery' => '',
+								'counterQuery' => ''
+			),
+			'ProductPricing' => array('className' => 'ProductPricing', # One for each max quantity...
+								'foreignKey' => 'product_id',
+								'dependent' => false,
+								'conditions' => '',
+								'fields' => '',
+								'order' => 'max_quantity ASC',
+								'limit' => '',
+								'offset' => '',
+								'exclusive' => '',
+								'finderQuery' => '',
+								'counterQuery' => ''
+			),
+	);
+
+	function plural_name($product)
+	{
+		$name = $product['Product']['name'];
+		return $name . "s";
+	}
+
+	function generate_pricing_list($data)
+	{
+		$pricing_list = array();
+
+		$base_name = ucwords($data['Product']['pricing_name']);
+		if (!$base_name) { $name = ucwords($data['Product']['name']); }
+		$name = $base_name;
+
+		$pricings = $data['ProductPricing'];
+
+		# Eventually do a foreach given customization options.
+		$pricing_data = array();
+
+		foreach($pricings as $pricing)
+		{
+			$pricing_data[$pricing['max_quantity']] = $pricing['pricing'];
+		}
+
+
+		$pricing_list[] = array(
+			'name'=>$name,
+			'pricing_data'=>$pricing_data,
+		);
+
+		return $pricing_list;
+	}
+
+	function create_pricing_matrix_old($data)
+	{
+		# { name=>X, pricing=>{ 25=>1.2, 50=>1.1, 200=>0.9, 500=>0.2 } }
+		$matrix = array();
+
+		#print_r($data);
+	
+		$product = $data['Product'];
+		$base_pricing = $data['ProductPricing'];
+		$pricing_list = $this->create_pricing_list($base_pricing);
+
+		$matrix[] = array(
+			'name'=>ucwords($product['name']),
+			'pricing'=>$pricing_list,
+		);
+
+		#$options = $data['ProductCustomizationOption'];
+		$options = !empty($data['CustomizationOption']) ? $data['CustomizationOption'] : null; # NOT SURE IF RIGHT....
+		$i = 0;
+		if (is_array($options))
+		{
+			foreach($options as $option)
+			{
+				if ($option['pricing'] > 0)
+				{
+					$pricing_list = $this->create_pricing_list($base_pricing, $option['pricing']);
+					$matrix[] = array(
+						'name'=>ucwords($product['name'] . " with " . $option['option_name']),
+						'pricing'=>$pricing_list,
+					);
+					$i++;
+				}
+			}
+		}
+
+		#echo "PRICING=";
+
+		#print_r($matrix);
+
+		return $matrix;
+	}
+
+	function create_pricing_list($pricings, $adjustment = 0)
+	{
+		$pricing_list = array();
+		foreach($pricings as $pricing)
+		{
+			$pricing_list[$pricing['max_quantity']] = $pricing['pricing'] + $adjustment;
+		}
+
+		return $pricing_list;
+	}
+
+	function get_product_name($prod)
+	{
+		$names = array(
+			'B'=>'bookmark',
+			'CH'=>'charm',
+			'DPW'=>'domed paperweight',
+			'FS'=>'framed stamp',
+			'KC'=>'keychain',
+			'MG'=>'mug',
+			'MM'=>'magnet',
+			'MP'=>'mousepad',
+			'ORN'=>'ornament',
+			'P'=>'pin',
+			'PC'=>'postcard',
+			'PR'=>'presidents ruler',
+			'PS'=>'poster',
+			'PW'=>'paperweight',
+			'PWK'=>'paperweight kit',
+			'PZ'=>'puzzle',
+			'RL'=>'custom ruler',
+			'ST'=>'stamp on card',
+			'TA'=>'tassel',
+			'TB'=>'tote bag',
+			'TS'=>'t-shirt',
+		);
+
+		return $names[$prod];
+	}
+
+}
+?>

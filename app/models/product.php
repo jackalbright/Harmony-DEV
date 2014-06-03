@@ -1,0 +1,1038 @@
+<?php
+class Product extends AppModel {
+
+	var $name = 'Product';
+	var $primaryKey = 'product_type_id';
+	var $useTable = "product_type";
+	var $displayField = 'name';
+	var $virtualFields2 = array(
+		'long_name'=>"CONCAT(Product.pricing_name, IF(Product.pricing_description != '', CONCAT(' - ', Product.pricing_description),''))"
+	);
+
+	var $validate = array(
+		'prod'=>array(
+			'rule'=>'notEmpty',
+			'required'=>true,
+		),
+		'code'=>array(
+			'rule'=>'notEmpty',
+			'required'=>true,
+		),
+		'name'=>array(
+			'rule'=>'notEmpty',
+			'required'=>true,
+		),
+		#'weight_oz'=>array(
+		#	'rule'=>'notEmpty',
+		#	'required'=>true,
+		#),
+		'weight'=>array(
+			'rule'=>'notEmpty',
+			'required'=>true,
+		),
+		#'page_title'=>array(
+		#	'rule'=>'notEmpty',
+		#	'required'=>true,
+		#),
+		#'body_title'=>array(
+		#	'rule'=>'notEmpty',
+		#	'required'=>true,
+		#),
+	);
+
+	//The Associations below have been created with all possible keys, those that are not needed can be removed
+	var $hasMany = array(
+			'ProductPricing'=> array('className' => 'ProductPricing',
+				#'foreignKey' => false,
+				#'conditions' => 'Product.code = ProductPricing.productCode',
+				'order' => 'quantity ASC',
+			),
+			'ProductPart' => array('className' => 'ProductPart', 'foreignKey' => 'product_type_id'),
+			'ProductDescription' => array('className' => 'ProductDescription', 'conditions'=>"ProductDescription.title != '' OR ProductDescription.content != ''", 'foreignKey' => 'product_type_id','order'=>'ProductDescription.ix IS NULL, ProductDescription.ix ASC'),
+	);
+
+	var $belongsTo = array(
+		# THIS MESSES THINGS UP, MAKES ALL QUERIES NEED TO BE ABSOLUTE..
+		#'ParentProduct'=>array(
+		#	'className'=>'Product',
+		#	'foreignKey'=>'parent_product_type_id',
+		#),
+
+	);
+
+	var $hasAndBelongsToMany = array(
+			#'CustomizationOptions' => array('className' => 'CustomizationOption', 'joinTable' => 'product_part', 'associationForeignKey' => 'part_id',
+			#			'foreignKey' => 'product_type_id', 'order' => 'CustomizationOptions.sort_index ASC'),
+	);
+
+	var $otherAssociations = array(
+		'hasMany'=>array(
+			'AllRelatedProducts' => array('className' => 'Product', 'foreignKey' => 'parent_product_type_id', 'conditions' => "AllRelatedProducts.available = 'yes'",'order'=>'choose_index ASC'),
+			'RelatedProducts' => array('className' => 'Product', 'foreignKey' => 'parent_product_type_id', 'conditions' => "RelatedProducts.available = 'yes' AND RelatedProducts.buildable = 'yes'"),
+			'RelatedBuildableProducts'=> array('className' => 'Product', 'foreignKey' => 'parent_product_type_id',
+				'conditions' => "RelatedBuildableProducts.available = 'yes' AND RelatedBuildableProducts.buildable = 'yes'"),
+			'ProductSampleImages' => array('className' => 'ProductSampleImage', 'foreignKey' => 'product_type_id', 'order' => 'sort_index ASC'),
+			'ProductPart' => array('className' => 'ProductPart', 'foreignKey' => 'product_type_id'),
+		),
+
+		'hasAndBelongsToMany'=>array(
+			'Testimonials' => array('className' => 'Testimonial', 'joinTable' => 'product_testimonials',
+						'associationForeignKey' => 'testimonial_id', 'foreignKey' => 'product_type_id', 'order' => 'Testimonials.sort_index ASC'),
+
+		)
+	);
+
+	function get_products_by_id()
+	{
+		$products = $this->find('all');
+		return Set::combine($products, '{n}.Product.product_type_id','{n}');
+	}
+
+
+	function get_product_template_names()
+	{
+		return array(
+			'imageonly'=>'Image Only',
+			'textonly'=>'Text Only'
+		);
+	}
+
+	function link_product_customization()
+	{
+		$this->link('hasAndBelongsToMany','CustomizationOptions');
+		$this->link('hasMany','ProductPart');
+	}
+
+	function link_product_details()
+	{
+		$this->link('hasAndBelongsToMany','Testimonials');
+		$this->link('hasMany','ProductSampleImages');
+		$this->link_related_products();
+	}
+
+	function link_related_products()
+	{
+		#$this->link('hasMany', array('AllRelatedProducts','RelatedProducts','RelatedBuildableProducts'));
+		$this->link('hasMany', array('AllRelatedProducts'));#,'RelatedProducts','RelatedBuildableProducts'));
+	}
+
+	function generate_cart_items($product_list)
+	{
+		$db_cart_items = array();
+			foreach($product_list as $code => $quantity)
+			{
+				$unitPrice = $this->getUnitPrice($code, $quantity);
+				$db_cart_items[] = array('CartItem'=>array(
+					'productCode'=>$code,
+					'quantity'=>$quantity,
+					'unitPrice'=>$unitPrice,
+				));
+			}
+		return $db_cart_items;
+	}
+
+	function get_max_rush_charges($db_cart_items)
+	{
+			# 
+			$max_extra_costs = 0;
+
+			# Figure maximum rush charges.
+			foreach($db_cart_items as $cart_item)
+			{
+				$code = $cart_item['CartItem']['productCode'];
+				$quantity = $cart_item['CartItem']['quantity'];
+				$cart_item['CartItem']['unitPrice'];
+
+				$unitPrice = $this->getUnitPrice($code, $quantity);
+
+				$product = $this->find("code = '$code'");
+
+				$cart_item_cost = $quantity * $unitPrice;
+				
+				$rush_cost_percentage = $product['Product']['rush_cost_percentage'];
+				# ADDITIONAL costs, based on price, for rush ordering.
+				# 50% means half of the order extra. 100% means double the costs.
+	
+	
+				$max_extra_costs += round($cart_item_cost * $rush_cost_percentage / 100, 2);
+			}
+			return $max_extra_costs;
+	}
+
+	function get_rush_dates($availableShippingOptions, $product_list, $db_cart_items = array()) # really what we need...
+	{
+			# GET SHIPSBY_START...
+			#
+			#
+			list($ship_by_start, $ship_by_end, $rush_ship_by_start, $rush_ship_by_end) = $this->get_shipment_times($product_list);
+
+			list($fastestDay, $fastestShippingMethodID) = $this->get_rush_shipping_method($availableShippingOptions);
+
+			$rush_dates = array();
+
+			$fastest_standard_datetime = $ship_by_start + $fastestDay*24*60*60;
+			$rush_earliest_datetime = $rush_ship_by_start + $fastestDay*24*60*60;
+
+
+			if(empty($db_cart_items)) { $db_cart_items = $this->generate_cart_items($product_list); }
+
+			$max_extra_costs = $this->get_max_rush_charges($db_cart_items);
+
+			$days_total = ($fastest_standard_datetime - $rush_earliest_datetime) / (24*60*60) + 1;
+			# Now get list of days can rush to.
+			for($dt = $fastest_standard_datetime-24*60*60; $dt >= $rush_earliest_datetime; $dt -= 24*60*60)
+			{
+			     	while(date("D", $dt) == "Sun" || date("D", $dt) == "Sat")
+			        {
+					$dt -= 24*60*60;
+			        }
+				$raw_date = date("Y-m-d", $dt);
+
+				$diff_time = ($fastest_standard_datetime - $dt);
+				$secs_in_day = (24*60*60);
+				$days_sooner = floor($diff_time / $secs_in_day) + 1;
+
+				$extra_cost = round($max_extra_costs * $days_sooner/$days_total,2);
+				if($dt >= $rush_earliest_datetime)
+				{
+					$rush_dates[$raw_date] = $extra_cost;
+				}
+			}
+			return array($rush_dates, $fastestShippingMethodID);
+	}
+
+	function get_rush_shipping_method($availableShippingOptions)
+	{
+		$fastestDay = min(array_keys($availableShippingOptions));
+		$fastestShippingOption = $availableShippingOptions[$fastestDay];
+		$fastestShippingMethodID = $fastestShippingOption['shippingPricePoint']['shippingMethod'];
+		return array($fastestDay, $fastestShippingMethodID);
+	}
+
+	function get_shipment_times($product_list)
+	{
+		$biz_days = $rush_biz_days = 0;
+
+		foreach($product_list as $code => $quantity)
+		{
+			$product = $this->find("code = '$code'");
+			$production_quantity_per_day = $product['Product']['production_quantity_per_day'];
+			$rush_production_quantity_per_day = $product['Product']['rush_quantity_per_day'];
+			if (!empty($production_quantity_per_day)) { 
+				$biz_days += $quantity / $production_quantity_per_day;
+			}
+
+			if (!empty($rush_production_quantity_per_day)) { 
+				$rush_biz_days += $quantity / $rush_production_quantity_per_day;
+			}
+		}
+		$biz_days = ceil($biz_days);
+		$hour_of_day = date("H");
+		#$rush_biz_days = $hour_of_day <= 12 ? floor($rush_biz_days) : ceil($rush_biz_days);
+		#### Save a day if before noon.
+		$rush_biz_days = ceil($rush_biz_days);
+		# Never do same day if rush and small order...
+
+		$ships_by_time = time();
+		$rush_ships_by_time = time();
+		while($biz_days > 0)
+		{
+			$ships_by_time += 24*60*60;
+			$ships_by_day = date("D", $ships_by_time);
+			if ($ships_by_day != "Sun" && $ships_by_day != 'Sat') { $biz_days--; }
+		}
+		while($rush_biz_days > 0)
+		{
+			$rush_ships_by_time += 24*60*60;
+			$rush_ships_by_day = date("D", $rush_ships_by_time);
+			if ($rush_ships_by_day != "Sun" && $rush_ships_by_day != 'Sat') { $rush_biz_days--; }
+		}
+		$buffer_days = $this->get_config_value("ship_buffer_days");
+		$rush_buffer_days = 0;
+
+		#$buffer_days = 0; # 2;
+
+		#if (!empty($buffer)) { 
+		#	$buffer_days = $buffer['Config']['value'];
+		#}
+
+		#$rush_ships_by_time -= 24*60*60; # Always do day before (ie quicker)
+
+		$ships_by_buffer = $ships_by_time;
+		$rush_ships_by_buffer = $rush_ships_by_time;
+		while($buffer_days > 0)
+		{
+			$ships_by_buffer += 24*60*60;
+			$rush_ships_by_buffer += 24*60*60;
+			$ships_by_day = date("D", $ships_by_buffer);
+			if ($ships_by_day != "Sun" && $ships_by_day != 'Sat') { $buffer_days--; }
+		}
+		$ships_by_time = $ships_by_buffer; # To make calls to get_shipment_time() and get_shipment_times() match.
+
+		return array($ships_by_time, $ships_by_buffer, $rush_ships_by_time, $rush_ships_by_buffer);
+	}
+
+	function get_shipment_time($product_list)
+	{
+		list($ships_by_time) = $this->get_shipment_times($product_list);
+		return $ships_by_time;
+
+		# OLD....
+
+		$biz_days = 0;
+
+		foreach($product_list as $code => $quantity)
+		{
+			$product = $this->find("code = '$code'");
+			$production_quantity_per_day = $product['Product']['production_quantity_per_day'];
+			if (!empty($production_quantity_per_day))
+			{
+				$biz_days += $quantity / $production_quantity_per_day;
+			}
+		}
+		$factor = 2; # 2 days...
+		# Pad by a factor (employees out, holidays, etc...)
+		# Figure in biz days too...
+		$biz_days += $factor + 1;
+
+		#error_log("BIZ_DAYS=$biz_days");
+
+		# Convert to biz days..... add days, skipping sundays and saturdays....
+
+		$ships_by_time = time();
+		while($biz_days > 0)
+		{
+			$ships_by_time += 24*60*60;
+			$ships_by_day = date("D", $ships_by_time);
+			if ($ships_by_day != "Sun" && $ships_by_day != "Sat") { $biz_days--; }
+		}
+		#$ships_by_time += 24*60*60; # ALWAYS add a day
+
+		return $ships_by_time;
+	}
+
+	function plural_name($product)
+	{
+		$name = strtolower($product['Product']['name']);
+		return $name . "s";
+	}
+
+
+	function get_effective_base_price_list($code, $customer = null, $stamp_surcharge = null, $options = array(), $catalogNumber = '')
+	{
+		if (empty($code))
+		{
+			return 0;
+		}
+
+		if (is_array($code) && !empty($code['ProductPricing']))
+		{
+			$product = $code;
+		} else {
+			$this->recursive = 1;
+			#$this->unbindModel(array('hasMany'=>array('AllRelatedProducts','RelatedProducts','RelatedBuildableProducts')));
+			$product = $this->find("code = '$code' OR prod = '$code' OR product_type_id = '$code' ");
+		}
+
+		#echo "C ($code)=".print_r($product['ProductPricing'],true);
+		#print_r($code['ProductPricing']);
+
+		$price_list = array();
+		for($i = 0; $i < count($product['ProductPricing']); $i++)
+		{
+			$qty = $product['ProductPricing'][$i]['quantity'];
+			$price = $this->get_effective_base_price($code, $qty, $customer, $stamp_surcharge, $options, $catalogNumber);
+			#echo "QTYT=$qty, PR=$price";
+
+			$price_list[] = array('quantity'=>$qty, 'price'=>$price['total']);
+		}
+
+		return $price_list;
+	}
+
+	function get_effective_base_price($code, $quantity, $customer = null, $stamp_surcharge = null, $options = array(), $catalog_number = null)
+	{
+	                #error_log(__FILE__.":".__FUNCTION__.".".__LINE__.": ".time());
+
+		if (empty($code))
+		{
+			return 0;
+		}
+
+		if (is_array($code) && !empty($code['ProductPricing']))
+		{
+			$product = $code;
+		} else {
+			$this->recursive = 1;
+			#$this->unbindModel(array('hasMany'=>array('AllRelatedProducts','RelatedProducts','RelatedBuildableProducts')));
+			$product = $this->find("code = '$code' OR prod = '$code' OR product_type_id = '$code' ");
+		}
+
+		# Get the users effective quantity based on pricing level.
+		$effective_quantity = Configure::read('wholesale_site') ? 100 : (isset($customer) ? $customer['pricing_level'] : $quantity);
+
+		#error_log("EFFECT_Q=$effective_quantity WS=".Configure::read('wholesale_site'));
+
+		#error_log("CUST=".print_r($customer,true));
+
+		if ($effective_quantity <= 1 || $effective_quantity < $quantity) { $effective_quantity = $quantity; }
+		# Not wholesale OR not asking for enough.
+		$discount = 100;
+
+		$discounted_base_price = 0;
+
+		#error_log("EFFECTIVE_QUAN=$effective_quantity");
+
+		if (!empty($product['ProductPricing']))
+		{
+			foreach($product['ProductPricing'] as $pricing_level)
+			{
+				#if($pricing_level['quantity'] <= $effective_quantity && $pricing_level['percent_discount'] > 0)
+				if($pricing_level['quantity'] <= $effective_quantity && $pricing_level['price'] > 0)
+				{
+					#$base_pricing = $pricing_level['price'];
+					$discounted_base_price = $pricing_level['price'];
+					#$discount = $pricing_level['percent_discount'];
+				}
+			}
+		}
+
+		if(empty($discounted_base_price))
+		{
+			$discounted_base_price = $product['ProductPricing'][0]['price']; # Somehow below minimum
+		}
+
+		$pricing['base'] = $discounted_base_price;
+
+		#
+		#$base_price = $product['Product']['base_price'];
+		$productCode = $product['Product']['code'];
+		# Calculate discount.
+		#$discounted_base_price = round($base_price * $discount/100,2);
+
+
+		if (!empty($options))
+		{
+			#error_log("OPT=".print_r($options,true));
+
+			# need to get setup charge, if any..... saved into 'setup'...
+
+			$options_cost = $this->get_options_cost($productCode, $effective_quantity, $options);
+
+			#error_log("OPTIONS=".print_r($options,true));
+			#error_log("OPTIONS_COST=".print_r($options_cost,true));
+
+			foreach($options_cost as $option => $cost)
+			{
+				#error_log("ADDING $option => $cost");
+				if ($option == 'total') { continue; }
+				$pricing[$option] = $cost;
+				if(!in_array($option, array('setup'))) { # Don't add setup to per-item cost.
+					$discounted_base_price += $cost;
+				}
+			}
+		}
+		#error_log("OPTCOST=$options_cost");
+
+		#print_r($stamp_surcharge);
+
+
+		$surcharge = $this->get_stamp_surcharge($stamp_surcharge, $quantity);
+
+
+		#echo ", SUR0=$surcharge, ";
+
+
+
+		#echo "SUR_TOTAL=$surcharge<br/>";
+
+		#error_log("PR=$discounted_base_price, SUR=".print_r($surcharge,true));
+
+		#error_log("S=$surcharge, SS=".print_r($stamp_surcharge,true));
+
+		$image_type = $product['Product']['image_type'];
+
+		$real_only_stamp = (!empty($stamp_surcharge['GalleryImage']) && $stamp_surcharge['GalleryImage']['reproducible'] == 'No');
+		#error_log("IMG=".print_r($stamp_surcharge,true));
+
+		$real_only_product = (preg_match("/real/", $image_type) && !preg_match("/repro/", $image_type));
+		#error_log("IT=$image_type, REAL_ONLY=$real_only_stamp, $real_only_product");
+
+		if (!empty($catalog_number) && !in_array($productCode, array('ST','P')))
+		{
+			$base_surcharge = $this->get_config_value("base_stamp_surcharge");
+			#echo "ADDING BASESUR=$base_surcharge, ";
+			$surcharge += $base_surcharge;
+		}
+
+		if ($surcharge && preg_match("/real/", $image_type) && ($real_only_stamp || $real_only_product || (!empty($options['reproductionStamp']) && $options['reproductionStamp'] == 'no')))
+		{
+			#error_log("SUR=$surcharge");
+			$pricing['stamp'] = $surcharge;
+			$discounted_base_price += $surcharge;
+		}
+
+		if($code == 'TS') # May have surcharge based on sizes...
+		{
+			$shirt_surcharge = $this->get_tshirt_surcharge($quantity, $options);
+
+			if(!empty($shirt_surcharge))
+			{
+				$pricing['surcharge'] = $shirt_surcharge;
+				# XXX TODO
+				# This is not a per-item surcharge, so we need to
+				# put this AFTER the qty*price
+			}
+			# Need to add to grand total, not base price
+			#$discounted_base_price += $shirt_surcharge;
+
+			#error_log("TSHIRT3=$shirt_surcharge");
+		}
+
+		$pricing['total'] = $discounted_base_price;
+
+		#error_log("DISC_PRICE=$discounted_base_price");
+		#error_log("PRIC=".print_r($pricing,true));
+		#error_log("SUR=".print_r($stamp_surcharge,true));
+
+		return $pricing;
+	}
+
+	function getUnitPrice($code, $quantity)
+	{
+		$pricing = $this->get_effective_base_price($code, $quantity);
+		return $pricing['total'];
+	}
+
+	function get_options_cost($code, $quantity, $options = array())
+	{
+		#error_log("ASKINGFOR=".print_r($options,true));
+	        #error_log(__FILE__.":".__FUNCTION__.".".__LINE__.": ".time());
+
+
+		$costs = array('total'=>0);
+
+		$product = $this->find("code = '$code'");
+		$product_id = $product['Product']['product_type_id'];
+
+		if (is_object($options) && is_object($options->parts)) { $options = get_object_vars($options->parts); }
+		else if (is_object($options)) { $options = get_object_vars($options); }
+		#error_log("CUST_OPT=".print_r($options,true));
+
+		if ($code == 'BC') { 
+			$code = 'B'; 
+			$options['charm'] = 1;
+		} # proper pricing....
+		if ($code == 'PSF') { 
+			$code = 'PS'; 
+			#$options['poster_frame'] = 1;
+		} # proper pricing....
+
+		$part_code_list = array();
+
+		#error_log("OPTIONS=".print_r($options,true));
+
+		foreach($options as $k=>$v)
+		{
+			#error_log("$k = $v<br/>");
+			#if (empty($v)) { continue; } # skip if '0'
+			if ($v == '' || $v === 0 || (!is_array($v) && strtolower($v) === 'no')) { continue; } # skip if '0', but -1 is OK!
+			#echo "K=$k, ";
+			if (preg_match("/(.*)ID$/", $k, $match))
+			{
+				$part_code_list[] = "'".$match[1]."'";
+			}
+			else if (preg_match("/custom(.*)$/", $k, $match))
+			{
+				$part_code_list[] = "'".$match[1]."'";
+			} else {
+				$part_code_list[] = "'$k'";
+			}
+		}
+		$part_code_csv = join(",", $part_code_list);
+		#error_log("CSV=$part_code_csv");
+		if (empty($part_code_csv)) { return $costs; } # Nothing set.
+
+		$this->link_product_customization();
+
+		$this->ProductPart->recursive = 2;
+		$product_parts = $this->ProductPart->findAll("product_type_id = '$product_id' AND Part.part_code IN ($part_code_csv) ");
+
+		$setup_charge = 0;
+
+		foreach($product_parts as $product_part)
+		{
+			$part = $product_part['Part'];
+			$part_code = $part['part_code'];
+			$value = !empty($options[$part_code."ID"]) ? $options[$part_code."ID"] : null;
+			if (!$value && !empty($options[$part_code])) { $value = $options[$part_code]; }
+
+			#error_log("FOR $part_code, VAL=$value");
+
+			$custom_value = !empty($options["custom".ucfirst($part_code)]) ?  $options["custom".ucfirst($part_code)] : null;
+			#error_log("C=$part_code, V=$value, C=$custom_value, PRICE=".$part['price']);
+			#if ($value != 'None' && $part['price'] > 0 && $product_part['ProductPart']['optional'] == 'yes' && (!empty($value) || is_numeric($value) || is_numeric($custom_value))) # We are set.
+			#echo("PRICE($part_code) = $value; OPT=".$product_part['ProductPart']['optional']);
+			if ($value !== 'None' && $value !== '-1' && $product_part['ProductPart']['optional'] == 'yes' && (!empty($value) || is_numeric($value) || is_numeric($custom_value))) # We are set.
+			{
+				#echo("CHECKPRICE $part_code, ");
+				if (!empty($part['PartPricing']))
+				{
+					$part_price = 0;
+					$setup = 0;
+					foreach($part['PartPricing'] as $pricing)
+					{
+						if ($pricing['quantity'] <= $quantity)
+						{
+							$part_price = $pricing['price'];
+							$setup = $pricing['setup_charge'];
+						}
+					}
+					
+					$costs[$part_code] = $part_price;
+					$costs['total'] += $part_price;
+					if(!empty($setup))
+					{
+						$setup_charge += $setup;
+					}
+				}
+			#} else if ($part['price'] > 0 && $product_part['optional'] == 'yes' && (!is_numeric($value) && !is_numeric($custom_value))) # We are set.
+			#{
+			#####	
+			}
+			# Excluded, subtract.
+			if ($value == -1 && $product_part['ProductPart']['optional'] != 'yes')
+			{
+				if (!empty($part['PartPricing']))
+				{
+					$part_price = 0;
+					foreach($part['PartPricing'] as $pricing)
+					{
+						if ($pricing['quantity'] <= $quantity)
+						{
+							$part_price = $pricing['price'];
+						}
+					}
+					
+					$costs[$part_code] = -$part_price;
+					$costs['total'] -= $part_price;
+				}
+			}
+		}
+
+		if(!empty($setup))
+		{
+			$costs['setup'] = $setup;
+			$costs['total'] += $setup;
+		}
+
+		#error_log("OPT_COST=".print_r($costs,true));
+
+		return $costs;
+	}
+
+	function get_options_cost_old($code, $options = array())
+	{
+		$price = 0;
+
+		$product = $this->find("code = '$code'");
+		$product_id = $product['Product']['product_type_id'];
+
+		if (is_object($options) && is_object($options->parts)) { $options = get_object_vars($options->parts); }
+		else if (is_object($options)) { $options = get_object_vars($options); }
+		#error_log("CUST_OPT=".print_r($options,true));
+
+		if ($code == 'BC') { 
+			$code = 'B'; 
+			$options['charm'] = 1;
+		} # proper pricing....
+		if ($code == 'PSF') { 
+			$code = 'PS'; 
+			$options['poster_frame'] = 1;
+		} # proper pricing....
+
+		$this->ProductPart->recursive = 2;
+		$product_parts = $this->ProductPart->findAll("product_type_id = '$product_id'");
+
+		foreach($product_parts as $product_part)
+		{
+			$part = $product_part['Part'];
+			$part_code = $part['part_code'];
+			$value = !empty($options[$part_code."ID"]) ? $options[$part_code."ID"] : null;
+			if (!$value && !empty($options[$part_code])) { $value = $options[$part_code]; }
+
+			$custom_value = !empty($options["custom".ucfirst($part_code)]) ?  $options["custom".ucfirst($part_code)] : null;
+			#error_log("C=$part_code, V=$value, C=$custom_value, PRICE=".$part['price']);
+			if ($value != 'None' && $part['price'] > 0 && $product_part['ProductPart']['optional'] == 'yes' && (!empty($value) || is_numeric($value) || is_numeric($custom_value))) # We are set.
+			{
+				$price += $part['price'];
+			#} else if ($part['price'] > 0 && $product_part['optional'] == 'yes' && (!is_numeric($value) && !is_numeric($custom_value))) # We are set.
+			#{
+			#####	# Excluded, subtract.
+			}
+		}
+
+		return $price;
+	}
+
+	function get_tshirt_surcharge($quantity, $options)
+	{
+		$surcharge = 0;
+
+		#error_log("REQ=".print_r($_REQUEST,true));
+		#error_log("BUILD=".print_r($_SESSION['Build'],true));
+
+		#error_log("OPTIONS (reqd o-qs)=".print_r($options,true));
+
+		if(empty($options['quantity_size'])) { return 0; }
+
+		#error_log("TSHIRT SIZES=".print_r($options['quantity_size'],true));
+
+		$product = $this->find('first',array('conditions'=>array('code'=>'TS')));
+
+		foreach($options['quantity_size'] as $size=> $qty)
+		{
+			if(empty($qty)) { continue; }
+			$size_surcharge = !empty($product['Product']["surcharge_$size"]) ? 
+				$product['Product']["surcharge_$size"] : 0;
+			$surcharge += $size_surcharge*$qty;
+		}
+
+		#error_log("SURCH=$surcharge");
+
+		return $surcharge;
+	}
+
+	function get_stamp_surcharge($stamp_surcharge, $quantity)
+	{
+		$surcharge = $base_surcharge = 0;
+
+		if (!empty($stamp_surcharge['StampSurcharge']))
+		{
+
+			foreach($stamp_surcharge['StampSurcharge'] as $key => $value)
+			{
+				if (preg_match("/^per(\d+)$/", $key, $matches))
+				{
+					$perqty = $matches[1];
+					#echo "XXX ($quantity) $perqty = $value";
+					if ($perqty <= $quantity)
+					{
+						$surcharge = $base_surcharge + $value;
+					}
+				}
+			}
+		}
+		return $surcharge;
+	}
+
+	function generate_pricing_list($data, $include_related_products = true, $stampSurcharge = null, $pricing_level = 1)
+	{
+		if(Configure::read("wholesale_site")) { $pricing_level = 100; }
+		#error_log("GENPRLIST=$pricing_level");
+
+		if(!is_array($data) && $data != "")
+		{
+			$this->recursive = 2;
+			$data = $this->find("prod = '$data' OR code = '$data'");
+		}
+
+		$pricing_items = array();
+
+		$name = $data['Product']['name'];
+		if ($data['Product']['pricing_name'])
+		{
+			$name = $data['Product']['pricing_name'];
+		}
+		$pid = $data['Product']['product_type_id'];
+
+
+		#$pricing_items[] = 
+		#	array(
+		#		'name'=> $name,
+		#		'pricing_data'=>$this->generate_pricing_list_item($data, $stampSurcharge),
+		#	);
+		#$related_products = $data['AllRelatedProducts'];
+
+		$all_related_products = $this->findAll("available = 'yes' AND (product_type_id = '$pid' OR parent_product_type_id = '$pid') ",null,"choose_index ASC");
+		$related_products = $all_related_products;
+
+		#$related_products = $data['RelatedProducts'];
+		if ($related_products && count($related_products) && $include_related_products)
+		{
+			foreach($related_products as $related_product)
+			{
+				$related_name = $related_product['Product']['name'];
+				if ($related_product['Product']['pricing_name'])
+				{
+					$related_name = $related_product['Product']['pricing_name'];
+				}
+				$desc = $related_product['Product']['pricing_description'];
+
+				$pricing_items[] = 
+					array(
+						'name'=> $related_name,
+						'desc'=> $desc,
+						'pricing_data'=>$this->generate_pricing_list_item($related_product, $stampSurcharge, $pricing_level),
+					);
+			}
+		} else {
+				$name = $data['Product']['name'];
+				if ($data['Product']['pricing_name'])
+				{
+					$name = $data['Product']['pricing_name'];
+				}
+				$desc = $data['Product']['pricing_description'];
+
+				$pricing_items[] = 
+					array(
+						'name'=> $name,
+						'desc'=> $desc,
+						'pricing_data'=>$this->generate_pricing_list_item($data, $stampSurcharge, $pricing_level),
+					);
+		}
+		return $pricing_items;
+	}
+
+	function generate_pricing_list_item($data, $stampSurcharge = null, $pricing_level = 1)
+	{
+		# [ { name => NAME, min_quantity => a, max_quantity => b, price => X }, ... ]
+		# max can be null, meaning 'or more'
+		#
+
+		$customer =& ClassRegistry::getObject("account");
+		#print_r($customer);
+		if (!empty($customer->pricing_level))
+		{
+			$pricing_level = $customer->pricing_level;
+		}
+		if (!$pricing_level) { $pricing_level = 1; }
+
+		$pricing_list = array();
+
+		#if (empty($data['Product']))
+		#{
+		#	print_r($data);
+		#	debug_print_backtrace();
+		#}
+
+		$product = isset($data['Product']) ? $data['Product'] : $data;
+		#$product = $data['Product'];
+
+		$base_price = $product['base_price'];
+
+		$pricings = $data['ProductPricing']; # quantity = min, price, productCode
+
+		$wholesale_ix = 0;
+
+		for($i = 0; $i < count($pricings); $i++)
+		{
+			$pricing = $pricings[$i];
+			$price = $pricing['price'];
+			#$percent = $pricing['percent_discount'];
+			# DISCOUN APPLIED HERE...
+
+			#if ($percent > 0 && $base_price > 0)
+			#{
+			#	$price = round($base_price * $percent / 100, 2);
+			#}
+
+			# Only add base surcharge if a stamp...
+#
+			$surcharge = $this->get_stamp_surcharge($stampSurcharge, $pricing['quantity']);
+
+			$price += $surcharge;
+
+			# Adjust pricing for wholesale...
+
+			$pricing_list[$i]['price'] = $price;
+			$pricing_list[$i]['min_quantity'] = $pricing['quantity'];
+
+			if ($pricing['quantity'] <= $pricing_level)
+			{
+				$wholesale_ix = $i;
+			}
+
+			if ($i > 0)
+			{
+				$pricing_list[$i-1]['max_quantity'] = $pricing['quantity']-1;
+			}
+		}
+
+		for($i = 0; $i < $wholesale_ix; $i++)
+		{
+			$pricing_list[$i]['price'] = $pricing_list[$wholesale_ix]['price'];
+		}
+
+		#print_r($pricing_list);
+
+		return $pricing_list;
+	}
+
+	function get_minimum_price($code)
+	{
+		list($min_price, $minprice_qty) = $this->get_minimum_price_qty($code);
+		return $min_price;
+	}
+
+	function get_minimum_price_qty($code)
+	{
+		$pricing = $this->generate_pricing_list($code);
+		$product = $this->find(" code = '$code' ");
+		$min_pricing_data = $pricing[0];
+		if (!count($min_pricing_data['pricing_data'])) { return array($product['Product']['base_price'], $product['Product']['minimum']); }
+		$min_price = $min_pricing_data['pricing_data'][count($min_pricing_data['pricing_data'])-2]['price'];
+		$min_qty = $min_pricing_data['pricing_data'][count($min_pricing_data['pricing_data'])-2]['min_quantity'];
+		#print_r($pricing);
+		return array($min_price, $min_qty);
+	}
+
+	function create_pricing_list($pricings, $adjustment = 0)
+	{
+		$pricing_list = array();
+		foreach($pricings as $pricing)
+		{
+			$pricing_list[$pricing['max_quantity']] = $pricing['pricing'] + $adjustment;
+		}
+
+		return $pricing_list;
+	}
+
+	function get_product_name($prod, $ucwords = false)
+	{
+		$product = $this->find("code = '$prod'");
+		$name = $product['Product']['name'];
+		return $ucwords ? $name : strtolower($name);
+	}
+
+	function get_product_option_list($id = null)
+	{
+		$this->recursive = -1;
+		$products = $this->find("all", array('fields'=>array('product_type_id','name')));
+		$product_options = array(null=>"None");
+		foreach ($products as $product)
+		{
+			if ($id != null && $id == $product['Product']['product_type_id']) { continue; } # Skip self.
+			$product_options[$product['Product']['product_type_id']] = $product['Product']['name'];
+		}
+		return $product_options;
+	}
+
+	function get_product_name_old($prod)
+	{
+		$names = array(
+			'B'=>'bookmark',
+			'CH'=>'charm',
+			'DPW'=>'domed paperweight',
+			'FS'=>'framed stamp',
+			'KC'=>'keychain',
+			'MG'=>'mug',
+			'MM'=>'magnet',
+			'MP'=>'mousepad',
+			'ORN'=>'ornament',
+			'P'=>'pin',
+			'PC'=>'postcard',
+			'PR'=>'presidents ruler',
+			'PS'=>'poster',
+			'PW'=>'paperweight',
+			'PWK'=>'paperweight kit',
+			'PZ'=>'puzzle',
+			'RL'=>'custom ruler',
+			'ST'=>'stamp on card',
+			'TA'=>'tassel',
+			'TB'=>'tote bag',
+			'TS'=>'t-shirt',
+		);
+
+		return $names[$prod];
+	}
+
+	function get_pricing_chart_pricings($pricing_level = 1)
+	{
+		$products = $this->findAll("available = 'yes'", array(), "is_stock_item ASC, sort_index ASC"); # Parent products only...
+		$product_pricings = array();
+		foreach($products as $each_product)
+		{
+			$code = $each_product['Product']['code'];
+			$this->recursive = 2;
+			$product = $this->find("code = '$code'"); # So we get ProductPricing properly....
+			$this->recursive = 1;
+			$pricing = $this->generate_pricing_list($product, true, null, $pricing_level);
+			#print_r($pricing);
+			$product_pricings[$code] = $pricing;
+		}
+		return $product_pricings;
+	}
+	
+	function read($q, $id)
+	{
+		$data = parent::read($q, $id);
+
+		# Now convert weight, width and height as separate fields.
+		$data['Product']['width_in'] = empty($data['Product']['width']) ? 0 : $this->mm2in($data['Product']['width']);
+		$data['Product']['height_in'] = empty($data['Product']['height']) ? 0 : $this->mm2in($data['Product']['height']);
+		list($data['Product']['weight_oz'], $data['Product']['weight_oz_count']) = empty($data['Product']['weight']) ? array(0,1) : $this->gm2oz($data['Product']['weight']);
+
+		return $data;
+	}
+
+	function beforeValidate() # Since validation related!
+	{
+		# W/h is kinda obsolete.
+		if(empty($this->data['Product']['width']) && !empty($this->data['Product']['width_in']))
+		{
+			$this->data['Product']['width'] = $this->in2mm($this->data['Product']['width_in']);
+		}
+		if(empty($this->data['Product']['height']) && !empty($this->data['Product']['height_in']))
+		{
+			$this->data['Product']['height'] = $this->in2mm($this->data['Product']['height_in']);
+		}
+		if(empty($this->data['Product']['weight']) && !empty($this->data['Product']['weight_oz']))
+		{
+			$this->data['Product']['weight'] = $this->oz2gm($this->data['Product']['weight_oz'], $this->data['Product']['weight_oz_count']);
+		}
+
+		return true;
+		
+		#return parent::save($data);
+	}
+
+	function get_minimum($product, $customer)
+	{
+		if(empty($product['Product']) && is_string($product))
+		{
+			$code = $product;
+			$product = $this->find(" code = '$code' ");
+		}
+
+		# TODO check against customer.
+		# if wholesale pricing, force to be 12. (can set variable if want to change later)
+
+		return $product['Product']['minimum'];
+	}
+
+	function allProductMap()
+	{
+		$rootProducts = $this->find('all', array('conditions'=>array("available"=>'yes', "parent_product_type_id"=>null),'order'=>'pricing_name'));
+
+		$productMap = array();
+		foreach($rootProducts as $root)
+		{
+			$productMap[$root['Product']['code']] = $root['Product']['pricing_name'];
+			$pid = $root['Product']['product_type_id'];
+			$children = $this->find('all', array('conditions'=>array("parent_product_type_id"=>$pid,"available"=>'yes'),'order'=>'pricing_name'));
+			if(!empty($children))
+			{
+				foreach($children as $child)
+				{
+					$productMap[$child['Product']['code']] = $child['Product']['pricing_name'];
+				}
+			}
+		}
+
+		return $productMap;
+	}
+
+
+}
+?>

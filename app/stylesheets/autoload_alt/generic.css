@@ -1,0 +1,19 @@
+.left
+{
+	float: left;
+}
+
+.right
+{
+	float: right;
+}
+.inline
+{
+	display: inline;
+}
+
+table td
+{
+	vertical-align: top;
+}
+

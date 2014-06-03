@@ -1,0 +1,132 @@
+div#main { width: 544px; }
+#main ul { margin: 0 0 0.5em 1em; }
+div#rightBar { display: none; }
+
+.error, #error
+{
+	color: #FF0000;
+	font-size: larger;
+	font-weight: bold;
+}
+#warning { color: #C99; }
+table#dataEntry
+{
+	border-width: 3px;
+	border-style: groove;
+	border-color: #FFF;
+	background-color: #FFE;
+}
+#dataEntry td { padding: 3px; }
+#dataEntry th
+{
+	background-color: #060;
+	color: #FFE;
+	padding: 3px;
+	text-align: left;
+	font-family: Optima, Verdana, Helvetica,Arial, sans-serif;
+	font-weight: bolder;
+	font-size: 1.2em;
+}
+table.dataEntry
+{
+	border-width: 3px;
+	border-style: groove;
+	border-color: #FFF;
+	background-color: #FFE;
+}
+.dataEntry td { padding: 3px; }
+.dataEntry th
+{
+	background-color: #060;
+	color: #FFE;
+	padding: 3px;
+	text-align: left;
+	font-family: Optima, Verdana, Helvetica,Arial, sans-serif;
+	font-weight: bold;
+	font-size: 1.1em;
+}
+.formLabel
+{
+	text-align: right;
+	font-weight: bold;
+	font-size: 0.8em;
+	vertical-align: text-top;
+	line-height: 1.2em;
+}
+.formField { text-align: left; }
+.formField input
+{
+	padding: 2px;
+	margin: 0;
+}
+.dataList
+{
+	border-color: white;
+	border-width: 2px 0 0 0;
+	border-style: groove;
+	padding: 1em 0 0 0;
+}
+.dataDisplay
+{
+	border-bottom: white;
+	border-width: 0 0 2px 0;
+	border-style: none none groove none;
+	padding: 0 0 0.5em 0;
+	width: 400px;
+	margin: 0.25em 0 1em 0;
+}
+.dataDisplay .label
+{
+	font-size: smaller;
+	font-style: italic;
+	color: #333;
+	float: left;
+	clear: both;
+	width: 60px;
+}
+.dataDisplay .value { margin: 0 0 0 4px; }
+
+.dataDisplay img.thumbnail
+{
+	float: left;
+	margin: 0 0.5em 0.5em 0;
+}
+
+ul.option
+{
+	clear: left;
+	margin: 0.5em 0px 0.25em 0px;
+	padding: 0;
+}
+
+ul.option li { margin: 0.1em 0 0.2em 0; }
+
+ul.option select { margin: 0; padding: 0; }
+
+ul.option form { margin: 0; padding: 0; }
+
+ul.option button
+{
+	margin: 0;
+	padding: 1px 3px 1px 3px;
+	background-color: #039;
+	color: white;
+	font-weight: bold;
+	font-family: Optima, Verdana, Helvetica,Arial, sans-serif;
+	border-color: white;
+	border-width: 4px;
+	border-style: outset;
+}
+
+.formButtons
+{
+	text-align: left;
+}
+.accountMenu
+{
+	margin-left: 1em;
+}
+#accountMenu
+{
+	margin-left: 1em;
+}

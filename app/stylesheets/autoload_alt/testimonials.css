@@ -1,0 +1,39 @@
+#testimonials_sidebar
+{
+	margin: 0px;
+	border: solid #CCC 1px;
+	padding: 2px;
+	display: block;
+	clear: both;
+	width: 215px;
+}
+
+#testimonials_sidebar h3
+{
+	text-align: center;
+	background-color:  #99CC66;
+	padding: 5px;
+	margin: 0px;
+}
+
+#testimonial_sidebar .testimonial_quote
+{
+}
+
+.testimonial
+{
+	text-align: left;
+	color: #060;
+	font-style: italic;
+	font-weight: bold;
+	margin: 10px;
+	margin-bottom: 0.25em;
+}
+
+.attribution
+{
+	text-align: right;
+	color: #060;
+	font-style: italic;
+	margin-top: 0.25em;
+}

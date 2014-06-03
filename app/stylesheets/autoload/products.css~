@@ -1,0 +1,73 @@
+#pricing_chart
+{
+	width: 100%;
+}
+
+#pricing_chart .product_spacer
+{
+	padding-top: 5px;
+}
+
+#pricing_chart .product_heading
+{
+	border: solid #CCC 1px;
+	background-color: #FFFFAA;
+	text-align: left;
+	text-transform: uppercase;
+}
+
+#pricing_chart .pricing_title
+{
+	text-align: left;
+	font-weight: bold;
+}
+
+#pricing_chart td, #pricing_chart th
+{
+	padding: 5px;
+}
+
+.next_step button
+{
+	font-size: 16px;
+	font-weight: bold;
+}
+
+#next_step_primary 
+{
+	position: relative;
+}
+
+#next_step_secondary
+{
+}
+
+#product_diagram
+{
+	float: left;
+}
+
+#more_info
+{
+	float: right;
+}
+
+#testimonials_sidebar
+{
+	border: solid #CCC 1px;
+	padding: 2px;
+	display: block;
+	clear: both;
+}
+
+#testimonials_sidebar h3
+{
+	text-align: center;
+	background-color:  #99CC66;
+	padding: 5px;
+	margin: 0px;
+}
+
+#detail_content
+{
+}

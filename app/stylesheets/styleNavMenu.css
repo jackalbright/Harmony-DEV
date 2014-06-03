@@ -1,0 +1,77 @@
+
+.nav-button-left {
+	background: url(/images-shared/backgroundTopNavButtonLeft.gif) #fff top left repeat-x;
+	margin : 0px 0px 0px 0px;
+	border-width: 0px 0px 0px 0px;
+	border-style: solid;
+	border-color: #000000;
+	float: left;
+	text-align: center;
+	padding: 0px 8px 0px 10px;
+	height: 20px;
+}
+
+.nav-button {
+	background: url(/images-shared/backgroundTopNavButton.gif) #fff top left repeat-x;
+	margin : 0px 0px 0px 0px;
+	border-width: 0px 0px 0px 0px;
+	border-style: solid;
+	border-color: #000000;
+	float: left;
+	text-align: center;
+	padding: 0px 10px 0px 15px;
+	height: 20px;
+}
+
+.nav-button-right {
+	background: url(/images-shared/backgroundTopNavButton.gif) #fff top left repeat-x;
+	margin : 0px 0px 0px 0px;
+	border-width: 0px 1px 0px 0px;
+	border-style: solid;
+	border-color: #DCDCDC;
+	float: left;
+	text-align: center;
+	padding: 0px 8px 0px 10px;
+	height: 20px;
+}
+
+.toggle-button {
+	margin: 0px 0px 3px 0px;
+}
+
+A.nav:link
+	{
+		COLOR: #000000;
+		TEXT-DECORATION: none;
+		font-family : Arial;
+		font-size : 12px;
+		font-weight: 400;
+		line-height: 20px;
+}
+A.nav:visited
+	{
+		COLOR: #000000;
+		TEXT-DECORATION: none;
+		font-family : Arial;
+		font-size : 12px;
+		font-weight: 400;
+		line-height: 20px;
+}
+A.nav:hover
+	{
+		COLOR: #000000;
+		TEXT-DECORATION: underline;
+		font-family : Arial;
+		font-size : 12px;
+		font-weight: 400;
+		line-height: 20px;
+}
+A.nav:active
+	{
+		COLOR: #000000;
+		TEXT-DECORATION: none;
+		font-family : Arial;
+		font-size : 12px;
+		font-weight: 400;
+		line-height: 20px;
+}

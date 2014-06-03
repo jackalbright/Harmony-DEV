@@ -1,0 +1,10 @@
+<?php
+class HandlingCharge extends AppModel {
+
+	var $name = 'HandlingCharge';
+	var $useDbConfig = 'default_legacy';
+	var $useTable = 'handlingCharge';
+	var $primaryKey = 'handlingChargeID';
+
+}
+?>

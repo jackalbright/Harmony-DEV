@@ -1,0 +1,77 @@
+<? if (!isset($images_per_row)) { $images_per_row = 4; } ?>
+
+<? $width = intval(80 / $images_per_row); ?>
+
+<div class="customImage index">
+
+<? if(!$customer_id) { ?>
+<p><a class="bold" href='/account/login'>Signup or login</a> to save your image for future orders.</p>
+<? } ?>
+<div class="bold" style="">
+	<a href="/custom_images/add?clear=1"><img src="/images/buttons/Upload-New-Image-grey.gif"></a>
+</div>
+<br/>
+
+<table width="100%">
+<tr>
+	<td align="left">
+		<?php
+		echo $paginator->counter(array(
+			'format' => __('%start% - %end% of %count%', true)
+		));
+		?></p>
+	</td>
+	<td align="right">
+		<?php echo $paginator->prev('<< '.__('previous', true), array(), null, array('class'=>'disabled'));?>
+ 	| 	<?php echo $paginator->numbers();?>
+		<?php echo $paginator->next(__('next', true).' >>', array(), null, array('class'=>'disabled'));?>
+	</td>
+</tr>
+</table>
+<br/>
+
+<br/>
+<? if (count($customImages)) { ?>
+Click on an image to view larger, remove, or replace with a new image.
+<? } ?>
+<br/>
+
+<table cellpadding="15" cellspacing="0" border="1" width="100%" class="flat_border">
+<?php
+$i = 0;
+foreach ($customImages as $customImage):
+	$class = null;
+	if ($i++ % 2 == 0) {
+		$class = ' class="altrow"';
+	}
+
+	if ($i % $images_per_row == 0 && $i > 0) { ?> </tr> <? }
+	if ($i % $images_per_row == 0) { ?> <tr> <? }
+?>
+	<td align="center" valign="bottom" width="<?= $width ?>%">
+		<a href="/custom_images/edit/<?= $customImage['CustomImage']['Image_ID'] ?>">
+			<img src="<?= $customImage['CustomImage']['thumbnail_location'] ?>">
+		</a>
+		<br/>
+		<a href="/custom_images/edit/<?= $customImage['CustomImage']['Image_ID'] ?>">
+			<?= $customImage['CustomImage']['Title']; ?>
+		</a>
+		<br/>
+		<br/>
+		<a href="/custom_images/select/<?= $customImage['CustomImage']['Image_ID'] ?>?clear=1">
+			<img src="/images/buttons/Build-Products.gif" name="" value="Build Products"/>
+		</a>
+	</td>
+<?php endforeach; ?>
+<? while($i++ % $images_per_row != 0) 
+{ 
+	echo "<td width='$width%'>&nbsp;</td>";
+}
+?>
+	
+</table>
+</div>
+<div class="actions">
+	<ul>
+	</ul>
+</div>

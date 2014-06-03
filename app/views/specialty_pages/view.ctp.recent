@@ -1,0 +1,16 @@
+<div class="specialtyPage view">
+<p>
+	<? if (isset($specialtyPage['SpecialtyPage']['introduction'])) { echo $specialtyPage['SpecialtyPage']['introduction']; } ?>
+</p>
+
+<table width="100%">
+<? foreach($specialtyPage['SpecialtyPageSectionContent'] as $section) { ?>
+<tr>
+	<td valign=top class="top_padded">
+		<? if($section['title'] != "") { ?><h3><?= $section['title'] ?></h3><? } ?>
+		<?= $section['content'] ?>
+	</td>
+</tr>
+<? } ?>
+</table>
+</div>

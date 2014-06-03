@@ -1,0 +1,119 @@
+<? if(empty($product['Product']['is_stock_item'])) { ?>
+<div align="left" style="margin: 5px; border: solid #AAA 1px; background-color: white;">
+	<h6 style="background-color: #CCC; padding: 5px; font-weight: bold;">Calculate Pricing</h6>
+	<div align="center" class="padded" id="mini_calc">
+
+	<?= $this->element("../products/mini_calc"); ?>
+	</div>
+</div>
+
+<div align="left" style="margin: 5px; border: solid #AAA 1px; background-color: white;">
+	<h6 style="background-color: #CCC; padding: 5px; font-weight: bold;">
+		<?= !preg_match("/custom/", $product['Product']['image_type']) ? " How to Order" : "Order in 3 Easy Steps" ?>
+	</h6>
+	<div align="center" class="padded">
+
+	<? if(preg_match("/custom/", $product['Product']['image_type'])) { ?>
+	<ul style="text-align: left; margin-left: 10px;">
+		<li>Upload your art, logo, photo<br/>
+		<li>Personalize your <?= Inflector::pluralize(strtolower($product['Product']['short_name'])) ?><br/>
+		<li>Preview your design and
+		order in 10 minutes or less
+	</ul>
+	<? } ?>
+	<div class="bold">
+		Minimum: <?= $product['Product']['minimum'] ?>
+	</div>
+	<!--
+	<p>Upload your art, personalize<br/>and order online in<br/> 10 minutes or less</p>
+	-->
+
+	<form method="GET" action="/gallery">
+		<input type="hidden" id="gallery_prod" name="prod" value="<?= $product['Product']['code'] ?>"/>
+		<? if(preg_match("/custom/", $product['Product']['image_type'])) { ?>
+			<input type="image" src="/images/buttons/Get-Started.gif"/>
+		<? }  else { ?>
+			<input type="image" src="/images/buttons/Browse-Stamps.gif"/>
+		<? } ?>
+	</form>
+	<!--
+	<div class="bold">
+		Or order by phone:<br/>
+		888.293.1109
+	</div>
+	-->
+	</div>
+</div>
+
+<div align="left" style="margin: 5px; border: solid #AAA 1px; background-color: white;">
+	<h6 style="background-color: #CCC; padding: 5px; font-weight: bold;">Learn more</h6>
+	<div style="padding: 5px;">
+		<div style="">
+			<div>
+				<div class="right"><img src="/images/icons/small/request-icon-grey.png"/></div>
+				<div class="font14 bold">Request</div>
+				<div> <a rel="shadowbox;type=html;width=625;height=625" href="/sample_requests/add/<?= $prod ?>">Free random sample</a></div>
+				<? if(preg_match("/custom/", $product['Product']['image_type'])) { ?>
+					<div> <a rel="shadowbox;type=html;width=625;height=625" href="/template_requests/add/<?= $prod ?>">Free template</a></div>
+				<? } ?>
+				<div> <a rel="shadowbox;type=html;width=625;height=625" href="/quote_requests/add/<?= $prod ?>">Free written price quote</a></div>
+
+				<div class="clear"></div>
+			</div>
+
+			<br/>
+
+			<div> 
+				<div class="right"><img src="/images/icons/small/calculator.png"/> </div>
+				<div class="font14 bold">Calculate</div>
+				<a rel="shadowbox;type=html;width=700;height=500" href="/products/calculator/<?= $prod ?>">Pricing, Shipping &amp; Production time</a>
+
+				<div class="clear"></div>
+			</div>
+
+			<? if(preg_match("/custom/", $product['Product']['image_type'])) { ?>
+			<br/>
+			<div>
+				<div class="right"><img src="/images/icons/small/phone-grey.png"/> </div>
+				<div class="font14 bold">Call</div>
+				<div> For a free consultation<br/>888.293.1109</div>
+
+				<div class="clear"></div>
+				
+			</div>
+			<? } ?>
+
+			<br/>
+
+			<div>
+				<div class="right"><img src="/images/icons/small/email-grey.png"/> </div>
+				<div class="font14 bold">Email</div>
+				<div> <a href="mailto:info@harmonydesigns.com">info@harmonydesigns.com</a> </div>
+
+				<div class="clear"></div>
+				
+			</div>
+		</div>
+	</div>
+</div>
+
+<div align="left" style="margin: 5px; border: solid #AAA 1px; background-color: white;">
+	<h6 style="background-color: #CCC; padding: 5px; font-weight: bold;">In a hurry?</h6>
+	<div style="padding: 5px;">
+	<p>Rush service is our specialty.</p>
+	<p>Specify 'Rush Processing' at checkout, or contact us for more info:</p>
+	<div>
+		888.293.1109<br/>
+		<a href="mailto:info@harmonydesigns.com?subject=Rush Service">info@harmonydesigns.com</a>
+	</div>
+	</div>
+</div>
+
+<? } else { ?>
+<div style="border: solid #AAA 1px; background-color: white; width: 225px;">
+	<h6 align="left" style="background-color: #CCC; padding: 5px; font-weight: bold;">Order <?= Inflector::pluralize($product['Product']['short_name']) ?></h6>
+	<?= $this->element("products/stock_calc_container",array('p'=>$product['Product'])); ?>
+</div>
+<br/>
+<?= $this->element("build/pricing_chart_small",array('price_list'=>$price_lists[$product['Product']['code']])); ?>
+<? } ?>

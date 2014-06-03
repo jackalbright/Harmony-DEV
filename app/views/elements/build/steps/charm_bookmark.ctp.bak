@@ -1,0 +1,96 @@
+<div class="clear">
+<h2><?php echo ++$counter;?>. Choose your charm <span class="note">(Optional)</span></h2>
+		<p class="note">
+			Adds $1.00 more per bookmark. (12 or more: cost varies, see <a href="/info/quantityPricing.php">quantity pricing</a>.)
+		</p>
+		<span class="charmSelect">
+			<label>
+				<?php
+					$defaultCharmSet = false;
+					echo '<input type="radio" class="charmID" name="charmID" value="None" ';
+					if ($isNewItem || !isset ($currentItem->parts->charmID) ) {
+						echo 'checked="checked"';
+						$defaultCharmSet = true;
+					}
+					echo ' />';
+				?>
+				No Charm
+				<br />
+				<img src="/charms/no-charm.jpg" width="50" height="50" class="charm" alt="no charm" />
+			</label>
+		</span>
+		<?php
+			foreach ($image->listCharms() as $record) {
+				echo '<span class="charmSelect">' . "\n";
+				echo '<label>' . "\n";
+				echo '<input type="radio" class="charmID" name="charmID" value="';
+				echo $record->id;
+				echo '"';
+				if (isset($currentItem->parts->charmID) && !$defaultCharmSet && $record->id == $currentItem->parts->charmID ) {
+					echo ' checked="checked"';
+					$defaultCharmSet = true;
+				}
+				echo ' />' . "\n";
+				echo $record->name . "\n";
+				echo '<br />' . "\n";
+				echo '<img src="';
+				echo $record->image;
+				echo '" alt="';
+				echo $record->name;
+				echo '" class="charm" />' . "\n";
+				echo '</label>' . "\n";
+				echo '</span>' . "\n";
+			}
+		?>
+		<span class="charmSelect customSelection">
+			<label>
+				<input type="radio" id="customCharm" name="charmID" value="Custom"<?php if (!$defaultCharmSet) echo 'checked="checked"'; ?> />
+				Other:
+			</label>
+			<a class="info" href="#" onclick="javascript:return displayPartOptions('charm')">(show all)</a>
+			<br />
+			<label for="customCharm">
+			<?php
+				$borderimage="";#/charms/blank.gif";
+				foreach ($charms as $record) {
+					if ($record->charm_id == $currentItem->parts->charmID){
+						$borderimage=$record->graphic_location;
+					};
+				}
+
+				if ($borderimage == "")
+				{
+					$borderimage = "/charms/no-charm.jpg";
+					#$borderimage = $charms[0]->graphic_location;
+					#echo "IM=$borderimage";
+				}
+			?>
+
+				<img src="<?php echo $borderimage; ?>" alt="" class="charm"  id="customCharmDisplay" />
+			</label>
+			<select name="customCharm" id="customCharmSelect" onchange="changedPart(event)">
+				<option value=""></option>
+				<!--
+				<option label="Choose One" <?php if (!$defaultCharmSet) echo 'selected="selected"'; ?> value="none" disabled="disabled">Choose One</option>
+				<option label=" " value="none" disabled="disabled"> </option>
+				-->
+				<?php
+					foreach ($charms as $record) {
+						echo '<option label="';
+						echo $record->name;
+						echo '" value="';
+						echo $record->charm_id;
+						echo '"';
+						if (!$defaultCharmSet && $record->charm_id == $currentItem->parts->charmID ) {
+							echo ' selected="selected"';
+							$defaultCharmSet = true;
+						}
+						echo ' >';
+						echo $record->name;
+						echo '</option>';
+					}
+				?>
+			</select>
+		</span>
+</div>
+

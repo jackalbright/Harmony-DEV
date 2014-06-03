@@ -1,0 +1,33 @@
+<div>
+
+	<table>
+	<? $i = 0; foreach($addresses as $address) { ?>
+	<tr>
+	<td>
+	<div style="padding: 10px;">
+		<?= !empty($address['ContactInfo']['In_Care_Of']) ? $address['ContactInfo']['In_Care_Of'] : "<i>No name specified</i>" ?>,
+		<?= $address['ContactInfo']['Address_1'] ?><? if(!empty($address['ContactInfo']['Address_2'])) { ?>
+			<?= $address['ContactInfo']['Address_2'] ?>
+		<? } ?>, 
+		<?= $address['ContactInfo']['City'] ?>,
+		<?= $address['ContactInfo']['State'] ?>
+		<?= $address['ContactInfo']['Zip_Code'] ?>
+		<?= $address['ContactInfo']['Country'] ?>
+	</div>
+	</td>
+	<td align="right">
+		<a href="/account/address_edit/<?= $address['ContactInfo']['Contact_ID'] ?>">Update address</a>
+	</td>
+	</tr>
+	<? } ?>
+	<tr>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td align="right"> <a href="/account/address_edit">Add new address</a> </td>
+	</tr>
+	</table>
+	<br/>
+
+</div>

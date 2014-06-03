@@ -1,0 +1,18 @@
+<?
+	include("includes/image_gallery.php");
+	#print_r($this->viewVars);
+	$name = $product['Product']['short_name'] ? $product['Product']['short_name'] : $product['Product']['name']; 
+	display_gallery("details/".$product['Product']['prod'], null, "Sample ".$hd->pluralize($product['Product']['short_name'],true));
+	$subProducts = $product['RelatedProducts'];
+	if(count($subProducts)) {
+		foreach($subProducts as $subProduct) {
+			if ($subProduct['buildable'] == 'yes')
+			{
+				$name = $subProduct['short_name'] ? $subProduct['short_name'] : $subProduct['name']; 
+				display_gallery("details/".$subProduct['prod'], null, "Sample ".$hd->pluralize($name,true));
+			}
+		}
+	}
+?>
+
+<?= $this->element("sidebars/testimonials", array('testimonials'=>$product['Testimonials'])); ?>

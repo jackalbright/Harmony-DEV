@@ -1,0 +1,30 @@
+<div class="product product_view">
+
+<table width="100%">
+<tr>
+<td valign="top">
+<?
+$products = array($product);
+
+if (count($related_products) > 0) { 
+	$products = array_merge($products, $related_products);
+}
+echo $hd->product_element("products/sample_gallery_album",$product['Product']['prod'],array('products'=>$products));
+?>
+</td>
+<td valign="top">
+<?= $hd->product_element("products/select_button", $product['Product']['prod'], $this->viewVars); ?>
+
+</td>
+
+</table>
+
+<br/>
+
+
+<div>
+	<?= $this->element("products/tabbed_details"); ?>
+</div>
+
+
+</div>

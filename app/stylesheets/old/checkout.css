@@ -1,0 +1,157 @@
+div#main		
+{
+	width: 540px;
+}
+p.productInfo		
+{
+	font-size: 0.9em;
+	margin: 0 0 0.25em 96px;
+	width: 204px;
+}
+div.cartItem { margin: 0.25em 0 1.25em 0; }
+
+div.quantity
+{
+	clear: both;
+}
+div.itemComment		
+{
+	margin: 0.5em 0 0.5em 0;
+	clear: both;
+	padding-top: 0.25em;
+	border-color: gray;
+	border-width: 1pt;
+	border-style: solid none none none;
+}
+p.productInfoHeading		
+{
+	float: left;
+	clear: both;
+	font-style: italic;
+	font-size: 0.9em;
+	margin: 0 0 0.1em 0;
+	width: 86px;
+	text-align: right;
+	color: gray;
+}
+p.summaryInfo		
+{
+	font-size: 0.9em;
+	margin-left: 64px;
+	width: 66px;
+	text-align: right;
+}
+p.summaryInfoHeading		
+{
+	float: left;
+	clear: both;
+	font-style: italic;
+	font-size: 0.9em;
+	margin: 0;
+	width: 60px;
+	text-align: right;
+	color: gray;
+}
+#checkoutDisplay
+{
+	border-width: 3px;
+	border-style: groove;
+	border-color: #FFF;
+	background-color: #FFE;
+	margin: 0.5em 0 2em 0;
+}
+#checkoutDisplay  td		
+{
+	padding: 3px;
+	vertical-align: top;
+}
+td.quantity { text-align: right; }
+td.quantityUpdate		
+{
+	text-align: right;
+	border-color: gray;
+	border-width: 1px 1px 0 0;
+	border-style: solid;
+	vertical-align: middle;
+	padding: 0px;
+}
+td.price { text-align: right; }
+#checkoutDisplay td.total		
+{
+	text-align: right;
+	border-color: gray;
+	border-width: 1px;
+	border-style: solid;
+	vertical-align: middle;
+}
+#checkoutDisplay  th		
+{
+	/*background-color: #060;
+	color: #FFE;*/
+	background-color: #99CC66;
+	padding: 3px;
+	text-align: left;
+	font-family: Optima, Verdana, Helvetica,Arial, sans-serif;
+	font-weight: bold;
+}
+#checkoutDisplay th.total		
+{
+	vertical-align: middle;
+	text-align: right;
+}
+.boldHead
+{
+	/*background-color: #060;
+	color: #FFE;*/
+	background-color: #99CC66;
+	padding: 2px 3px 2px 3px;
+	text-align: left;
+	margin: 0;
+}
+#checkoutDisplay #submit		
+{
+}
+#checkoutDisplay #submit .imgButton
+{
+	margin: 3px;
+}
+#submit p { margin: 0 4px 0.25em 4px; }
+#checkoutDisplay input { text-align: right; }
+td div.section
+{
+	border-width: 0 0 2px 0;
+	border-style: none none solid none;
+	padding: 3px 0 3px 0;
+	margin-bottom: 0.25em;
+	border-color: #99CC66;
+}
+td#divider
+{
+	/*background-color: #060;*/
+	background-color: #99CC66;
+	padding: 1px;
+}
+td#blank
+{
+	padding: 0;
+}
+p.option		
+{
+	padding: 0 0 0 1.7em;
+	text-indent: -1.7em;
+	font-size: 0.85em;
+}
+p.customerInfo
+{
+	margin: 0.5em 0 1em 1.7em;
+	font-size: 0.85em;
+}
+p.option input { vertical-align: middle; }
+#infoNeeded
+{
+	color: red;
+}
+#orderSubmit
+{
+	width: 176px;
+}

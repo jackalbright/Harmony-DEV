@@ -1,0 +1,46 @@
+<div class="productSampleImage form">
+<?
+	#echo "<div class='right_align top_padded small_bottom_padded'>";
+	#echo $html->link(__("View All " . $product['Product']['name'] . " Images", true), array('action'=>'index',$product_id));
+	#echo "</div>";
+?>
+	<fieldset>
+	<table border="0" width="100%">
+	<tr>
+		<td valign="top">
+		<?php echo $form->create('ProductSampleImage',array('type'=>'file','target'=>'_parent','url'=>$this->here)); ?>
+			<? echo $form->input('product_image_id'); ?>
+			<? echo $form->hidden('product_type_id'); ?>
+			<? echo $form->input('title',array('label'=>'Alt Tag')); ?>
+			<? echo $form->input('description'); ?>
+			<? echo $form->input('file',array('type'=>'file','label'=>"Upload File")); ?>
+			<br/>
+
+		<? if ($mode == 'edit') { ?>
+			<input type="submit" value="Update Image"/>
+			&nbsp;&nbsp;&nbsp;
+			&nbsp;&nbsp;&nbsp;
+			<!-- <a href="/admin/product_sample_images/delete/<?= $this->data['ProductSampleImage']['product_image_id'] ?>" onClick="return confirm('Are you sure you want to delete this image?');"> -->
+			<a target="_top" href="/admin/product_sample_images/delete/<?= $this->data['ProductSampleImage']['product_image_id'] ?>">
+				Delete Image
+			</a>
+		<? } else { ?>
+			<input type="submit" value="Add Image"/>
+		<? } ?>
+			<?php echo $form->end(); ?>
+		</td>
+		<td width="50%" align="center" valign="top">
+			<? if($mode == 'edit') { ?>
+			<a href="/images/galleries/products/<?= $product['Product']['prod'] ?>/<?= $this->data['ProductSampleImage']['product_image_id']; ?>.<?= $this->data['ProductSampleImage']['file_ext']; ?>">
+				<img src="/images/galleries/products/<?= $product['Product']['prod'] ?>/thumbs/<?= $this->data['ProductSampleImage']['product_image_id']; ?>.<?= $this->data['ProductSampleImage']['file_ext']; ?>"/>
+			</a>
+			<br/>
+
+			<? } else { ?>
+			&nbsp;
+			<? } ?>
+		</td>
+	</tr>
+	</table>
+	</fieldset>
+</div>

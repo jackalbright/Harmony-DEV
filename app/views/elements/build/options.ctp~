@@ -1,0 +1,276 @@
+<? $code = $build['Product']['code'] ?>
+<?  $all_options_by_code = Set::combine($all_options, "{n}.Part.part_code", "{n}"); ?>
+<?
+	$step = !empty($_REQUEST['step']) ? $_REQUEST['step'] : null;
+?>
+		<div class="build">
+			<?= $this->element("build/free"); ?>
+			<?
+				$i = 0;
+			?>
+
+			<? if(count($related_products) > 1) { ?>
+
+			<? $option_code = 'style'; ?>
+			<div id="step_<?= $option_code ?>" class="step <?= empty($step) || $step == $option_code ? "selected_step" : "" ?> <?= empty($build['complete']['product']) ? "incomplete_step" : "" ?>" valign="top">
+					<table id="header_part_settings_<?= $option_code ?>" width="100%" class="step_header">
+					<tr>
+						<th align="left">
+							<a class="bold" href="Javascript:void(0)" onClick="showBuildStep('style');">  
+								STEP <?= $i+1 ?>. Select a Style
+							</a>
+						</th>
+						<td align="right" style="width: 175px;">
+							<div id="done_part_settings_<?= $option_code ?>" class="complete">
+							<span style="color: green; font-weight: bold; font-size: 1.2em;"><img src="/images/icons/check.png"/></span>
+								<span style="font-weight: bold;">COMPLETED</span>
+							</div>
+						</td>
+						</td>
+					</tr>
+					</table>
+
+
+					<div id="part_settings_style" style="<?= $i > 1 ? "display: none;" : "" ?>" class="part_settings part_settings_<?= $i ?>">
+						<?
+							$imgtype = null;
+							$imgid = null;
+							if(!empty($build["CustomImage"]))
+							{
+								$imgtype = 'Custom';
+								$imgid = $build['CustomImage']['Image_ID'];
+							} else if(!empty($build["GalleryImage"])) { 
+								$imgtype = 'Gallery';
+								$imgid = $build['GalleryImage']['catalog_number'];
+							}
+
+							$blankProd = $build['Product']['code'];
+							if(in_array($blankProd, array('BC'))) { $blankProd = 'B'; }
+							if(in_array($blankProd, array('PSF'))) { $blankProd = 'PS'; }
+							$blankdir = "/images/products/blanks/{$blankProd}";
+							$vimg = "$blankdir/vertical/small/{$blankProd}.png";
+							$himg = "$blankdir/horizontal/small/{$blankProd}.png";
+							$img = file_exists(APP."/..".$himg) ? $himg : $vimg;
+						?>
+
+						<table width="100%">
+						<tr>
+							<? foreach($related_products as $rp) { ?>
+							<td style="margin-bottom: 5px;" valign="bottom" width="<?= intval(100/count($related_products)); ?>%">
+								<a href="/build/customize/<?= $rp['Product']['code'] ?>">
+								<? /* ?><img src="/images/preview/<?= $rp['Product']['code'] ?><?= !empty($build['template']) ? "-{$build['template']}" : "" ?>/<?= $imgtype ?>/_<?= $imgid ?>/-150x150.png"/> <? */ ?>
+								<img src="/product_image/blank/<?= $rp['Product']['code'] ?>/x75.png<?= !empty($build['template']) ? "?template={$build['template']}" : "" ?>&noimage=1"/>
+								</a>
+							</td>
+							<?  } ?>
+						</tr>
+						<tr>
+							<? foreach($related_products as $rp) { ?>
+							<td valign="top">
+								<label>
+								<input type="radio" style="vertical-align: middle;" name="prod" onClick="showPleaseWait(); document.location.href = '/build/customize/'+this.value;" <?= $build['Product']['code'] == $rp['Product']['code'] ? "checked='checked'" : ""; ?> value="<?= $rp['Product']['code'] ?>"> 
+								<?= !empty($rp['Product']['pricing_name']) ? strip_tags($rp['Product']['pricing_name']) : strip_tags($rp['Product']['name']); ?>
+									<? if(!empty($rp['Product']['pricing_description'])) { ?>
+									<div style="font-size: 10px;">
+										<br/>
+										<?= $rp['Product']['pricing_description'] ?>
+									</div>
+									<? } ?>
+								</label>
+									<? if(!empty($rp['Product']['build_notes'])) { ?>
+									<div class="relative">
+									<a href="Javascript:void(0)" onClick="$('info_style_<?= $rp['Product']['code'] ?>').toggle()"><img src="/images/icons/info.png"/></a>
+									<div class="part_info" id="info_style_<?= $rp['Product']['code'] ?>" style="display: none; background-color: #FFF; border: solid #666 2px; color: #000; position: absolute; top: 25px; right: 0px; width: 300px; font-weight: normal; padding: 10px;">
+										<div align="right">
+											<a style="color: blue;" href="Javascript:void(0)" onClick="$('info_style_<?= $rp['Product']['code'] ?>').hide();">Close</a>
+										</div>
+										<div>
+											<?= $rp['Product']['build_notes'] ?>
+										</div>
+									</div>
+									</div>
+									<? } ?>
+							</td>
+							<? } ?>
+						</tr>
+						</table>
+
+						<br/>
+
+						<div align="left">
+							<a href="Javascript:void('style');" onClick="showBuildStepNext('<?= $option_code ?>');"><img src="/images/buttons/small/Next-green.gif"></a>
+						</div>
+					</div>
+			</div>
+			<? $i++; } ?>
+
+			<? 
+			$product_templates = split(",", $build['Product']['product_template']);
+
+			$layouts = array();
+			if(!empty($build['Product']['image_and_text'])) { $layouts[] = 'standard'; }
+			if(!empty($build['Product']['imageonly'])) { $layouts[] = 'imageonly'; }
+			if(!empty($build['Product']['fullbleed']) && empty($build['Product']['imageonly'])) { $layouts[] = 'imageonly'; }
+			$default_layout = !empty($build['template']) ? $build['template'] : (!empty($layouts) ? $layouts[0] : 'standard');
+
+			?>
+			<? if(true) { ?>
+
+			<? if($build['Product']['code'] != 'P' && count($layouts) >= 2 && !empty($build['CustomImage'])) { $option_code = 'layout'; ?>
+			<div id="step_<?= $option_code ?>" class="step <?= $step == $option_code || $i == 0 ? "selected_step" : "" ?> <?= empty($build['complete'][$option_code]) ? "incomplete_step" : "" ?>" valign="top">
+					<table id="header_part_settings_<?= $option_code ?>" width="100%" class="step_header">
+					<tr>
+						<th align="left">
+							<a class="bold" href="Javascript:void(0)" onClick="showBuildStep('<?=$option_code?>');">  
+								STEP <?= $i+1 ?>. Choose Layout
+							</a>
+						</th>
+						<td align="right" style="width: 175px;">
+							<div id="done_part_settings_<?= $option_code ?>" class="complete">
+							<span style="color: green; font-weight: bold; font-size: 1.2em;"><img src="/images/icons/check.png"/></span>
+								<span style="font-weight: bold;">COMPLETED</span>
+							</div>
+						</td>
+					</tr>
+					</table>
+
+					<div id="part_settings_<?=$option_code?>" style="<?= $i == 0 || $step == $option_code ? "" : "display: none;"  ?> " class="part_settings part_settings_<?= $i ?>">
+						<?=
+							$this->element("build/step", array('option_code'=>$option_code,'top_next'=>true)); 
+						?>
+					</div>
+			</div>
+			<? $i++; } else { ?>
+				<input id="layout" type="hidden" name="data[template]" value="<?= $default_layout ?>"/>
+				<!-- gets changed by form itself... based on presence of quote -->
+			<? } ?>
+
+			<? } ?>
+
+			<? if(false && !empty($build['CustomImage'])) { $option_code = 'adjust'; ?>
+			<div id="step_<?= $option_code ?>" class="step <?= $step != $option_code ? "" : "selected_step" ?> <?= empty($build['complete'][$option_code]) ? "incomplete_step" : "" ?>" valign="top">
+					<table id="header_part_settings_<?= $option_code ?>" width="100%" class="step_header">
+					<tr>
+						<th align="left">
+							<a class="bold" href="Javascript:void(0)" onClick="showBuildStep('<?=$option_code?>');">  
+								STEP <?= $i ?>. Crop/Adjust Image
+							</a>
+						</th>
+						<td align="right" style="width: 175px;">
+							<div id="done_part_settings_<?= $option_code ?>" class="complete">
+							<span style="color: green; font-weight: bold; font-size: 1.2em;"><img src="/images/icons/check.png"/></span>
+								<span style="font-weight: bold;">COMPLETED</span>
+							</div>
+						</td>
+					</tr>
+					</table>
+
+					<div id="part_settings_<?=$option_code?>" style="display: none;" class="part_settings part_settings_<?= $i ?>">
+						<?= $this->element("build/step", array('option_code'=>$option_code,'top_next'=>true)); ?>
+					</div>
+			</div>
+			<? $i++; } else { ?>
+			<? } ?>
+			<? $zindex = 800; ?>
+
+			<? foreach($options as $option) { 
+				$option_code = $option['Part']['part_code'];
+				#if($option_code == 'personalization' || $option_code == 'quote') { continue; }
+			?>
+				<div id="step_<?= $option_code ?>" colspan=1 class="step <?= empty($build['complete'][$option_code]) ? "incomplete_step" : "" ?> <?= ($i == 0 || $step == $option_code) ? "selected_step" : "" ?>" valign="top">
+					<?
+					$extra_charge = !empty($option['Part']['price']) ? " extra charge" : "";
+					?>
+
+					<table id="header_part_settings_<?= $option_code ?>" width="100%" class="step_header">
+					<tr>
+						<th align="left" style="">
+						<div style="position: relative; z-index: <?= $zindex-- ?>;">
+							<? if(!empty($option['Part']['part_description'])) { ?>
+							<div class="right">
+							<a href="Javascript:void(0)" onClick="$('info_<?= $option['Part']['part_code'] ?>').toggle()"><img src="/images/icons/info.png"/></a>
+							<div class="part_info" id="info_<?= $option['Part']['part_code'] ?>" style="display: none; background-color: #FFF; border: solid #666 2px; color: #000; position: absolute; top: 25px; right: 0px; width: 450px; font-weight: normal; padding: 10px;">
+								<div align="right">
+									<a style="color: blue;" href="Javascript:void(0)" onClick="$('info_<?= $option['Part']['part_code'] ?>').hide();">Close</a>
+								</div>
+								<div>
+									<?= $option['Part']['part_description'] ?>
+								</div>
+							</div>
+							</div>
+							<? } ?>
+							<a class="bold" href="Javascript:void(0)" onClick="showBuildStep('<?= $option_code ?>');" style="position: relative;">  
+								STEP <?= $i+1 ?>. <?= $option['Part']['part_name'] ?> <? if($option['ProductPart']['optional'] == 'yes') { echo "(opt.) $extra_charge"; } ?>
+							</a>
+							<div class="clear"></div>
+						</div>
+						</th>
+						<td align="right" style="width: 175px;">
+							<div id="done_part_settings_<?= $option_code ?>" class="complete">
+							<span style="color: green; font-weight: bold; font-size: 1.2em;"><img src="/images/icons/check.png"/></span>
+								<span style="font-weight: bold;">COMPLETED</span>
+							</div>
+						</td>
+					</tr>
+					</table>
+
+					<div id="part_settings_<?= $option_code ?>" style="<?= $i > 0 ? "display: none;" : "" ?>" class="part_settings part_settings_<?= $i ?>">
+						<?= $this->element("build/step", array('option_code'=>$option_code,'option'=>$option)); ?>
+					</div>
+				</div>
+			<? $i++; } $option_code = 'comments'; ?>
+
+			<? if($code != 'P') { ?>
+
+				<? $option_code = 'proof'; ?>
+				<div id="step_<?= $option_code ?>" class="step <?= $i == 1 || $step == $option_code ? "selected_step" : "" ?> <?= empty($build['complete'][$option_code]) ? "incomplete_step" : "" ?>">
+					<table id="header_part_settings_<?= $option_code ?>" width="100%" class="step_header">
+					<tr>
+						<th align="left">
+							<a class="bold" href="Javascript:void(0)" onClick="showBuildStep('<?=$option_code?>');">STEP <?= $i+1 ?>. Proof (optional)</a>
+						</th>
+						<td align="right" style="width: 175px;">
+							<div id="done_part_settings_<?= $option_code ?>" class="complete">
+							<span style="color: green; font-weight: bold; font-size: 1.2em;"><img src="/images/icons/check.png"/></span>
+								<span style="font-weight: bold;">COMPLETED</span>
+							</div>
+						</td>
+					</tr>
+					</table>
+
+					<div style="<?= $step == $option_code || $i == 1 ? "" : "display: none;" ?>" class="part_settings part_settings_<?= $i+1 ?>" id="part_settings_<?=$option_code?>" >
+						<?= $this->element("build/step", array('option_code'=>$option_code)); ?>
+					</div>
+				</div>
+				<? $i++; ?>
+			<? } ?>
+
+				<? $option_code = 'cart'; ?>
+				<div id="step_<?= $option_code ?>" class="step <?= $step == $option_code ? "selected_step" : "" ?> ">
+					<table id="header_part_settings_<?= $option_code ?>" width="100%" class="step_header">
+					<tr>
+						<th align="left">
+							<a class="bold" href="Javascript:void(0)" XonClick="showBuildStep('<?=$option_code?>');">STEP <?= $i+1 ?>. Review &amp; Add to Cart</a>
+						</th>
+						<td align="right">
+						</td>
+					</tr>
+					</table>
+
+					<div id="step_cart" style="">
+						<div id="review_container">
+						<?= $this->element("build/cart"); ?>
+						</div>
+					</div>
+				</div>
+		</div>
+
+<script>
+<? if(!empty($_REQUEST['step'])) { ?>
+	<? if(!empty($_REQUEST['next'])) { ?>
+	document.observe('dom:loaded', function() { showBuildStepNext('<?= $_REQUEST['step'] ?>'); });
+	<? } else { ?>
+	document.observe('dom:loaded', function() { showBuildStep('<?= $_REQUEST['step'] ?>'); });
+	<? } ?>
+<? } ?>
+</script>

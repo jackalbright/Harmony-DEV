@@ -1,0 +1,62 @@
+<table width="100%">
+<tr>
+	<td>
+<div>
+		<form id="preview_form" method="GET">
+		<b>View all images on:</b> 
+		<br/>
+		<select id="prod" name="browse_prod" onChange="showPleaseWait(); $('preview_form').submit();">
+			<option value="">View stamp only (all products)</option>
+			<? foreach($products as $p) { ?>
+				<option value="<?= $p['Product']['code'] ?>" <?= (!empty($product['Product']['code']) && $product['Product']['code'] == $p['Product']['code']) ? "selected='selected'" : "" ?> ><?= ucwords($hd->pluralize($p['Product']['name'])); ?></option>
+			<? } ?>
+		</select>
+		<a href="Javascript:void(0)" onClick="$('prod').value = ''; showPleaseWait(); $('preview_form').submit();">View stamp only</a>
+		</form>
+</div>
+	</td>
+	<td align=center valign=top colspan=1>
+<div align="center">
+	<? echo $paginator->counter(array( 'format' => __('Items %start% - %end% of %count%', true))); ?>
+	<br/>
+	<?php echo $paginator->options(array('url' => $this->passedArgs)); ?>
+	<?php echo $paginator->prev('<< '.__('previous', true), array(), null, array('class'=>'disabled inline'));?>
+ | 	<?php echo $paginator->numbers();?>
+ |	<?php echo $paginator->next(__('next', true).' >>', array(), null, array('class'=>'disabled inline'));?>
+</div>
+<br/>
+	</td>
+	<td align="right">
+	
+ 	<select name="limit" id='limit' onChange="value = this.options[this.selectedIndex].value; document.location.href = '<?= $full_url ?>?limit=' + value">
+		<option value="20">20 per page</option>
+		<option value="40">40 per page</option>
+		<option value="60">60 per page</option>
+		<option value="100">100 per page</option>
+	</select>
+	</td>
+</tr>
+</table>
+
+<? if (!isset($cols_per_row)) { $cols_per_row = 5; } ?>
+
+<table width="100%" id="stamp_browse_grid" cellpadding=0 border=0 cellspacing=10>
+<? for($i = 0; $i < count($galleryImages); $i++) { 
+	$image = $galleryImages[$i];
+	?>
+	<? if($i % $cols_per_row == 0 && $i > 0) { ?> </tr> <? } ?>
+	<? if($i % $cols_per_row == 0) { ?> <tr> <? } ?>
+	<td valign=top align=center class="stamp_browse_item" style="padding: 5px; ">
+		<?= $this->element("gallery/image_grid_item", array('image'=>$image)); ?>
+	</td>
+<? } ?>
+</table>
+
+<div align="right" class="">
+	<? echo $paginator->counter(array( 'format' => __('Items %start% - %end% of %count%', true))); ?>
+	<br/>
+	<?php echo $paginator->options(array('url' => $this->passedArgs)); ?>
+	<?php echo $paginator->prev('<< '.__('previous', true), array(), null, array('class'=>'disabled inline'));?>
+ | 	<?php echo $paginator->numbers();?>
+ |	<?php echo $paginator->next(__('next', true).' >>', array(), null, array('class'=>'disabled inline'));?>
+</div>

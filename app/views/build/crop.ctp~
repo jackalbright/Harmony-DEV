@@ -1,0 +1,301 @@
+<div style="width: 600px;">
+	<?= $ajax->form("crop_ajax/$template", "post", array('complete'=>"parent.showPleaseWait(); parent.location.reload(); parent.Shadowbox.close();")); ?>
+
+	<? list($w,$h) = $hd->getShrunkImageSize($build['CustomImage']['Image_Location'], 300,300); ?>
+
+
+	<div class="right half_width">
+		<h3>Preview Image:</h3>
+		<div style="height: 125px;">
+				<div>
+				Click 'Done' when you are finished.
+				<br/>
+		
+					<div class="<?= empty($malysoft) ? "hidden" : "" ?>">
+						<input type="text" id="x" name="data[x]" size=5/>
+						<input type="text" id="y" name="data[y]" size=5/>
+						<input type="text" id="width" name="data[w]" size=5/>
+						<input type="text" id="height" name="data[h]" size=5/>
+					</div>
+					<div class="">
+						<input type="image" onClick="return true;" src="/images/buttons/Done.gif"/>
+					</div>
+				</div>
+				<div id="test">
+				</div>
+				<br/>
+				<div class="clear"></div>
+		</div>
+	</div>
+	<div class="left half_width">
+		<h3>Adjust Image:</h3>
+		<div style="height: 125px;">
+			<div align="left" style="height: 75px;">
+			<a class="left" href="Javascript:void(0);" id="zoom_in" onClick="return zoomIn();"><img src="/images/icons/zoom_in.jpg"/></a>
+			<a class="left" href="Javascript:void(0);" id="zoom_out" onClick="return zoomOut();"><img src="/images/icons/zoom_out.jpg"/></a>
+			Drag inside the highlighted box below to move your image around.
+			</div>
+			<? if(false && !empty($malysoft)) { ?>
+			<label class="bold">Fit Image:</label>
+			<br/>
+			<div class='hidden'>
+			<a href="Javascript:void(0)" onClick="bestFit();">BEST FIT</a> |
+			<a href="Javascript:void(0)" onClick="fullFit();">FIT WHOLE IMAGE</a> |
+			</div>
+			<input id="" type="radio" name="data[bestfit]" value="1" checked='checked' onClick="bestFit();"/> Crop for best fit 
+			<input id="" type="radio" name="data[bestfit]" value="0" onClick="fullFit();"/> Fit whole image
+			<? } ?>
+			<div class="clear"></div>
+		</div>
+	</div>
+	<div class="clear"></div>
+
+	<div id="fullfit" class="relative">
+	&nbsp;
+		<div class="right" valign="top">
+			<div style="position: relative;">
+
+				<img src="/product_image/build_view/<?= $data['preview']['scaled_width'] ?>x<?= $data['preview']['scaled_height'] ?>.png?noimage=1&template=<?= $template ?>"/>
+				<div id="previewImg_fullfit" class="" style="position: absolute; z-index: 10; top: <?= $data['image']['scaled_full_y'] ?>px; left: <?= $data['image']['scaled_full_x'] ?>px; "></div>
+
+				<? if(!empty($data['image2'])) { ?>
+				<div id="previewImg_fullfit2" class="" style="position: absolute; z-index: 10; top: <?= $data['image2']['scaled_full_y'] ?>px; left: <?= $data['image2']['scaled_full_x'] ?>px; "></div>
+				<? } ?>
+				<? if(!empty($product_config['background'])) { ?>
+				<div id="previewImg" style="position: absolute; z-index: 20; top: 0px; left: 0px;">
+					<img src="/product_image/build_view/<?= $data['preview']['scaled_width'] ?>x<?= $data['preview']['scaled_height'] ?>.gif?noimage=1&template=<?= $template ?>&transbg=1"/>
+				</div>
+				<? } ?>
+
+				<? if(false && !empty($overlay_path)) { ?>
+				<div class="" style="position: absolute; z-index: 30; top: 0px; left: 0px;">
+					<img src="<?= $overlay_path ?>" height="<?= $data['preview']['scaled_height'] ?>" width="<?= $data['preview']['scaled_width'] ?>"/>
+				</div>
+				<? } ?>
+			</div>
+		</div>
+		<div class="left">
+			<div class="relative">
+			<img id="testImage_fullfit" class="" src="<?= $build['CustomImage']['display_location'] ?>" width="<?= $w ?>" height="<?= $h ?>"/>
+			</div>
+
+			<br/>
+			<br/>
+		</div>
+		<div class="clear"></div>
+	</div>
+
+	<div id="bestfit" class="relative">
+	&nbsp;
+		<div valign="top" class="right">
+			<div style="position: relative;">
+
+				<img src="/product_image/build_view/<?= $data['preview']['scaled_width'] ?>x<?= $data['preview']['scaled_height'] ?>.png?noimage=1&template=<?= $template ?>"/>
+				<div id="previewImg_bestfit" class="" style="position: absolute; z-index: 10; top: <?= $data['image']['scaled_y'] ?>px; left: <?= $data['image']['scaled_x'] ?>px; "></div>
+				<? if(!empty($data['image2'])) { ?>
+				<div id="previewImg_bestfit2" class="" style="position: absolute; z-index: 10; top: <?= $data['image2']['scaled_y'] ?>px; left: <?= $data['image2']['scaled_x'] ?>px; "></div>
+				<? } ?>
+				<? if(!empty($product_config['background'])) { ?>
+				<div id="" style="position: absolute; z-index: 20; top: 0px; left: 0px;">
+					<img src="/product_image/build_view/<?= $data['preview']['scaled_width'] ?>x<?= $data['preview']['scaled_height'] ?>.gif?noimage=1&template=<?= $template ?>&transbg=1"/>
+				</div>
+				<? } ?>
+
+				<? if(false && !empty($overlay_path)) { ?>
+				<div class="" style="position: absolute; z-index: 30; top: 0px; left: 0px;">
+					<img src="<?= $overlay_path ?>" height="<?= $data['preview']['scaled_height'] ?>" width="<?= $data['preview']['scaled_width'] ?>"/>
+				</div>
+				<? } ?>
+			</div>
+		</div>
+		<div valign="top" class="left">
+			<div>
+			<img id="testImage_bestfit" class="" src="<?= $build['CustomImage']['display_location'] ?>" width="<?= $w ?>" height="<?= $h ?>"/>
+			</div>
+
+			<br/>
+			<br/>
+		</div>
+		<div class="clear"></div>
+	</div>
+
+	</form>
+
+	<script>
+		showPleaseWait();
+		<?
+			#$start_width = $data['upload']['scaled_width']*0.5;
+			#$start_height = intval($start_width/$data['image']['w2h']);
+			$start_width = $data['upload']['scaled_start_width'];
+			$start_height = $data['upload']['scaled_start_height'];
+
+			#$min_width = intval($w*0.25);
+			#$min_height = intval($min_width/$data['image']['w2h']);
+
+			$min_width = intval($data['upload']['scaled_start_width']*0.25);
+			$min_height = intval($min_width/$data['image']['w2h']);
+
+
+			if ($start_height > $data['upload']['scaled_height'])
+			{
+				$start_height = $data['upload']['scaled_height'];
+				$start_width = intval($start_height*$data['image']['w2h']);
+			}
+			$preview_height = $data['image']['scaled_height'];
+			$preview_width = $data['image']['scaled_width'];
+
+			$coord_x1 = $data['upload']['scaled_start_x'];
+			$coord_y1 = $data['upload']['scaled_start_y'];
+			$coord_x2 = $coord_x1 + $data['upload']['scaled_start_width'];
+			$coord_y2 = $coord_y1 + $data['upload']['scaled_start_height'];
+		?>
+
+		var previewBestHeight = "<?= $data['image']['scaled_height'] ?>";
+		var previewBestWidth = "<?= $data['image']['scaled_width'] ?>";
+		var previewFullHeight = "<?= $data['image']['scaled_full_height'] ?>";
+		var previewFullWidth = "<?= $data['image']['scaled_full_width'] ?>";
+
+		var min_width = "<?= $min_width ?>";
+		var min_height = "<?= $min_height ?>";
+
+		var best_w = "<?= $data['upload']['scaled_start_width'] ?>";
+		var best_h = "<?= $data['upload']['scaled_start_height'] ?>";
+		var best_x = "<?= $data['upload']['scaled_start_x'] ?>";
+		var best_y = "<?= $data['upload']['scaled_start_y'] ?>";
+
+		var best_w = "<?= $data['crop']['best']['w'] ?>";
+		var best_h = "<?= $data['crop']['best']['h'] ?>";
+		var best_x = "<?= $data['crop']['best']['x'] ?>";
+		var best_y = "<?= $data['crop']['best']['y'] ?>";
+
+		var full_w = "<?= $data['crop']['full']['w'] ?>";
+		var full_h = "<?= $data['crop']['full']['h'] ?>";
+		var full_x = "<?= $data['crop']['full']['x'] ?>";
+		var full_y = "<?= $data['crop']['full']['y'] ?>";
+
+		var layout = "<?= $template ?>";
+
+
+		var fullfit_previewWrap = (layout != 'imageonly') ? ['previewImg_fullfit'] : ['previewImg_fullfit', 'previewImg_fullfit2'];
+		var bestfit_previewWrap = (layout != 'imageonly') ? ['previewImg_bestfit'] : ['previewImg_bestfit', 'previewImg_bestfit2'];
+
+
+		var cropper = null;
+		var full_cropper = null;
+		var best_cropper = null;
+
+		Event.observe( window, 'load', function() {
+			showPleaseWait();
+
+		        full_cropper = new Cropper.ImgWithPreview(
+		            'testImage_fullfit',
+		            { 
+			    	onEndCrop: onEndCrop,
+				minWidth: min_width,
+				minHeight: min_height,
+				noResize: true,
+				previewWidth: previewFullWidth,
+				previewHeight: previewFullHeight,
+				displayOnInit: true,
+				previewWrap: fullfit_previewWrap,
+				onloadCoords: {
+					x1: full_x,
+					y1: full_y,
+					x2: parseInt(full_x)+parseInt(full_w),
+					y2: parseInt(full_y)+parseInt(full_h)
+				},
+				ratioDim: {
+					x: full_w,
+					y: full_h
+				}
+			    }
+		        );
+
+		        best_cropper = new Cropper.ImgWithPreview(
+		            'testImage_bestfit',
+		            { 
+			    	onEndCrop: onEndCrop2,
+				minWidth: min_width,
+				minHeight: min_height,
+				noResize: true,
+				previewWidth: previewBestWidth,
+				previewHeight: previewBestHeight,
+				displayOnInit: true,
+				previewWrap: bestfit_previewWrap,
+				onloadCoords: {
+					x1: best_x,
+					y1: best_y,
+					x2: parseInt(best_x) + parseInt(best_w),
+					y2: parseInt(best_y) + parseInt(best_h)
+				},
+				ratioDim: {
+					x: best_w,
+					y: best_h
+				}
+			    }
+		        );
+
+
+			// LOAD!
+ 			if('<?= $build['fullbleed'] ?>')
+                        {
+                                bestFit();
+                        } else {
+                                fullFit();
+                        }
+			setTimeout("hidePleaseWait()", 2000);
+
+		    } );
+
+
+		function onEndCrop(coords, dimensions)
+		{
+			$('x').value = coords.x1;
+			$('y').value = coords.y1;
+			$('width').value = dimensions.width;
+			$('height').value = dimensions.height;
+		}
+
+		function onEndCrop2(coords, dimensions)
+		{
+			$('x').value = coords.x1;
+			$('y').value = coords.y1;
+			$('width').value = dimensions.width;
+			$('height').value = dimensions.height;
+		}
+
+		function zoomIn()
+		{
+			cropper.zoomIn();
+		}
+		function zoomOut()
+		{
+			cropper.zoomOut();
+		}
+
+		function bestFit()
+		{
+			// FOR THESE TO LOAD AT ALL, WE MUST DEFAULT TO VISIBLE THEN HIDE THE ONES WE DONT WANT!
+			$('fullfit').addClassName('hidden');
+			$('bestfit').removeClassName('hidden');
+			cropper = best_cropper;
+			cropper.endCrop();
+		}
+
+		function fullFit()
+		{
+			// FOR THESE TO LOAD AT ALL, WE MUST DEFAULT TO VISIBLE THEN HIDE THE ONES WE DONT WANT!
+			$('fullfit').removeClassName('hidden');
+			$('bestfit').addClassName('hidden');
+			cropper = full_cropper;
+			cropper.endCrop();
+		}
+
+	</script>
+
+	<pre>
+		<? 
+			#print_r($data); 
+		?>
+	</pre>
+</div>
