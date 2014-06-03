@@ -1,0 +1,31 @@
+table#pricing
+{
+	border-color: #FFF;
+	border-width: 3px;
+	border-style: groove;
+	margin: 6px auto 6px auto;
+	background-color: #FFFFD0;
+	font-size: 0.9em;
+}
+#price_compare th
+{
+	/*color: #FFE;
+	background-color: #060;*/
+	background-color: #09225B;
+	/*padding: 3px;*/
+	font-weight: bold;
+	font-family: serif;
+	color: white;
+}
+#pricing td
+{
+	/*padding: 2px;*/
+}
+#largerQty	
+{
+	border-color: gray;
+	border-width: 1px 0px 0px 0px;
+	border-style: solid;
+	text-align: right;
+}
+

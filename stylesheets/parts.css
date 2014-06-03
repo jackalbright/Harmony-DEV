@@ -1,0 +1,71 @@
+body
+{
+	background-color: #FFFFD0;
+	margin: 6px;
+	font-family: "Arial", sans-serif;
+	font-size: 10pt;
+	background-repeat: no-repeat;
+	width: 450px;
+}
+div.displayGrid
+{
+	width: 440px;
+	float: left;
+}
+.itemDisplay
+{
+	float: left;
+	margin: 1em;
+}
+/* begin hack for IE compatibility */
+* html .itemDisplay
+{
+	width: 80px;
+}
+/* end hack for IE compatibility */
+.itemDisplay img
+{
+	border-color: #FFFFD0;
+	border-width: 2px;
+	border-style: outset;
+}
+p { margin: 0 0 .5em 0; }
+
+h1,h2,h3,h4,h5,h6
+{
+	color: #060;
+	font-family: "Times", serif;
+	font-weight: bold;
+	margin: 0 0 5px 0;
+}
+
+h1 { font-size: 32px; }
+h2 { font-size: 21px; }
+h3 { font-size: 17px; }
+h4 { font-size: 15px; }
+h5 { font-size: 12px; }
+h6 { font-size: 11px; }
+
+a h1,a h2,a h3,a h4,a h5,a h6
+{
+	color: #039;
+	text-decoration: none;
+}
+
+a h1:hover,a h2:hover,a h3:hover,a h4:hover,a h5:hover,a h6:hover { color: #909; }
+
+.center { text-align: center; }
+
+.right { text-align: right; }
+
+a:link { color: #039; }
+
+a:visited { color: #903; }
+
+a:hover { color: #909; }
+
+div.divider { clear: both; }
+
+a:active { color: #309; }
+
+

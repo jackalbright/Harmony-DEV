@@ -1,0 +1,23 @@
+a, a:link {
+	/*text-decoration: none;*/
+	/*color: #004276;*/
+	color: #0369A7;
+}
+
+a:visited
+{
+/*	text-decoration: none;*/
+	color: #0B0080;
+}
+
+a:active { color: red; }
+
+a:hover
+{
+	text-decoration: underline;
+}
+
+.click, .pointer
+{
+	cursor: pointer;
+}

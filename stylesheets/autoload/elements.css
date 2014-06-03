@@ -1,0 +1,27 @@
+.ui-dialog.confirm .ui-dialog-titlebar
+{
+	display:none;
+}
+
+.ui-dialog.confirm .ui-button
+{
+	float: right;
+}
+
+#spin
+{
+	position: fixed;
+	top: 35%;
+	left: 50%;
+	background-color: #0369A7;
+	z-index: 500000;
+	border: solid #AAA 2px;
+	width: 150px;
+	height: 150px;
+	margin-left: -75px;
+}
+
+.ui-dialog
+{
+	position: fixed;
+}

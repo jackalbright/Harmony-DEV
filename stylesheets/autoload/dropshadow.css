@@ -1,0 +1,16 @@
+.dropshadow
+{
+	background-color: #CCC;
+}
+
+.inner_dropshadow
+{
+	background-color: #F00;
+}
+
+.inner_dropshadow img
+{
+	position: relative;
+	top: -3px;
+	left: -3px;
+}

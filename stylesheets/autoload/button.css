@@ -1,0 +1,51 @@
+.button
+{
+	height: 36px;
+	/*margin: 2px;*/
+	white-space: nowrap;
+}
+.button_main
+{
+	background-color: #ff9900;
+	height: 36px;
+}
+
+.button_main input
+{
+	background-color: #ff9900;
+	font-size: 1.1em;
+	font-weight: bold;
+}
+
+.button_main input
+{
+	background: none;
+	border: none;
+}
+
+.button_main a
+{
+	font-weight: bold;
+	text-decoration: none;
+}
+
+.button_main a:hover
+{
+	text-decoration: underline;
+}
+
+.button_left
+{
+	width: 18px !important;
+	height: 36px;
+	background-image: url("/images/button_left.gif");
+	background-repeat: no-repeat;
+}
+
+.button_right
+{
+	width: 18px !important;
+	height: 36px;
+	background-image: url("/images/button_right.gif");
+	background-repeat: no-repeat;
+}

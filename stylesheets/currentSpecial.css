@@ -1,0 +1,14 @@
+		#currentSpecial		
+		{
+			border-color: #FFE;
+			border-width: 3px;
+			border-style: ridge;
+			background-image: url(/new-images/snowflakes-sm.gif);
+			margin: .5em 0 .5em 0;
+			padding: 3px;
+		}
+		#specialDesc:first-letter		
+		{
+			font-family: serif;
+			font-size: 1.5em;
+		}

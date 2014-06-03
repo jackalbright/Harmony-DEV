@@ -1,0 +1,32 @@
+.testimonial
+{
+	text-align: left;
+	/*color: #060;*/
+	/*font-style: italic;*/
+	font-weight: bold;
+	margin: 0px;
+	margin-bottom: 0.25em;
+}
+
+.attribution
+{
+	text-align: right;
+	color: #09225B;
+	/*font-style: italic;*/
+	margin: 0.25em 0px 0.25em 0px;
+}
+
+#testimonials_sidebar
+{
+	border: solid #CCC 1px;
+	padding: 2px;
+	display: block;
+	clear: both;
+	/*width: 230px;*/
+}
+
+
+.testimonial_sidebar blockquote.testimonial
+{
+	font-weight: normal !important;
+}

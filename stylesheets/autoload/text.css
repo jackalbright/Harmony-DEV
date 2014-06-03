@@ -1,0 +1,20 @@
+.notice_header
+{
+	font-size: 22px;
+	font-weight: bold;
+}
+
+.notice_header_medium
+{
+	font-size: 18px;
+}
+
+.notice_header, .notice_header_medium
+{
+	color: #333399;
+}
+
+.larger
+{
+	font-size: 1.3em;
+}

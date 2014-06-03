@@ -1,0 +1,67 @@
+#steps_container
+{
+}
+#steps
+{
+	float: left;
+	/*width: 800px;*/
+	margin-bottom: 10px;
+	border: solid #ccc 1px;
+	padding: 2px;
+}
+
+
+#steps .step
+{
+	/*height: 75px;*/
+	width: 125px;
+	white-space: nowrap;
+	font-weight: bold;
+	padding-right: 0px;
+	padding-top: 05px;
+	padding-bottom: 2px;
+	margin: 0px;
+	/*text-transform: lowercase;*/
+}
+
+#steps .step *
+{
+	padding-left: 30px;
+}
+
+#steps .step_subtext
+{
+	border-top: solid #FF8C00 1px;
+	font-weight: normal;
+	/*white-space: nowrap;*/
+}
+
+#steps .step1
+{
+	background: url("/images/icons/step1.gif") no-repeat;
+}
+
+#steps .step2
+{
+	background: url("/images/icons/step2.gif") no-repeat;
+}
+
+#steps .step3
+{
+	background: url("/images/icons/step3.gif") no-repeat;
+}
+
+#steps .step4
+{
+	background: url("/images/icons/step4.gif") no-repeat;
+}
+
+#steps .step5
+{
+	background: url("/images/icons/step5.gif") no-repeat;
+}
+
+#steps .selected_step
+{
+	background-color: #eee;
+}

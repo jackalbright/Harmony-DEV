@@ -1,0 +1,39 @@
+#tassel_list
+{
+	text-align: left;
+}
+
+#tassel_list .tassel_category_header
+{
+	display: block;
+	background-color: #CCC;
+	padding: 5px;
+	font-weight: bold;
+	font-size: 1.2em;
+	margin-bottom: 2px;
+}
+
+#tassel_list .tassel
+{
+	border: solid #CCC 1px;
+	padding: 5px;
+	margin: 5px;
+	float: left;
+	text-align: center;
+}
+
+#tassel_list .tassel img
+{
+	height: 50px;
+}
+
+#tassel_list .tassel_selected
+{
+	background-color: #CCCCCC;
+}
+
+#tassel_name
+{
+	font-weight: bold;
+	font-size: 1.1em;
+}

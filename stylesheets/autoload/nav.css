@@ -1,0 +1,36 @@
+.subject_links ul, ul.product_links
+{
+	list-style-type: none;
+	margin: 0px;
+	padding: 0px;
+}
+
+.subject_links ul li, ul.product_links li
+{
+	margin: 0px;
+	border-top: solid #CCC 1px;
+	padding: 4px 5px 4px 5px;
+}
+
+.subject_links
+{
+	padding-left: 2px;
+}
+
+.subject_links ul li a, ul.product_links li a
+{
+	margin: 0px !important;
+	display: block;
+	
+	text-decoration: none;
+}
+
+.subject_links ul li a:hover, ul.product_links li a:hover
+{
+	background-color: #DEDEDE;
+	text-decoration: underline;
+}
+
+.subject_links .selected, .product_links .selected
+{
+}

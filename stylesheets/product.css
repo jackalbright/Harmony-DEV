@@ -1,0 +1,106 @@
+#main h2
+{
+	/*clear: left;*/
+	color: #FFF;
+	background-color: #060;
+	padding: 2px 3px 2px 3px;
+	margin: 1em 0 0.5em 0;
+}
+blockquote.quoteSelect
+{
+	text-indent: -1.5em;
+	margin: 0.5em 0px 0px 2em;
+}
+.quoteSelect *
+{
+	text-indent: 0;
+	margin: 0;
+}
+blockquote.attribution
+{
+	color: #000;
+	text-indent: -0.6em;
+	margin: 0.5em 1em 1em 10em;
+	text-align: left;
+}
+.borderSelect
+{
+	float: left;
+	text-indent: -1em;
+	margin: 0 0 0.5em 2em;
+}
+.borderSelect *
+{
+	margin: 0;
+	text-indent: 0;
+}
+.pinSelect		
+{
+	float: left;
+	text-indent: -1em;
+	margin: 0 0 6px 2em;
+}
+.pinSelect *
+{
+	margin: 0;
+	text-indent: 0;
+}
+.charmSelect		
+{
+	float: left;
+	text-indent: -1em;
+	margin: 0 0 6px 2em;
+}
+.charmSelect *
+{
+	margin: 0;
+	text-indent: 0;
+}
+.frameSelect		
+{
+	float: left;
+	text-indent: -1em;
+	margin: 0 0 6px 2em;
+}
+.frameSelect *
+{
+	margin: 0;
+	text-indent: 0;
+}
+.tasselSelect		
+{
+	float: left;
+	text-indent: -1em;
+	margin: 0 0 6px 2em;
+}
+.tasselSelect *
+{
+	margin: 0;
+	text-indent: 0;
+}
+img.border		
+{
+	border-color: #FFC;
+	border-width: 2px;
+	border-style: outset;
+}
+img.charm		
+{
+	border-color: #FFC;
+	border-width: 2px;
+	border-style: outset;
+}
+img.frame		
+{
+	border-color: #FFC;
+	border-width: 2px;
+	border-style: outset;
+}
+div.tassel		
+{
+	border-color: #FFC;
+	border-width: 2px;
+	border-style: outset;
+	height: 20px;
+	width: 60px;
+}

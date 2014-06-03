@@ -1,0 +1,74 @@
+.admin_specialtyInquiryTable{
+	border-collapse:collapse;
+	border: 1px solid #ccc;
+}
+.admin_specialtyInquiryTable td{
+	border: 1px solid #999;
+}
+.admin_specialtyInquiryTable td.created{
+	text-align:center;
+}
+.admin_specialtyInquiryTable td.inquiryType{
+	text-align:center;
+}
+.admin_specialtyInquiryTable td.checkmark{
+	text-align:center;
+}
+.admin_specialtyInquiryTable  tr.tableHeading{
+	border: 1px solid #999;
+}
+
+
+
+#navcontainer {
+	background:#09225B;
+	padding:0;
+	margin:0;
+	list-style-type:none;
+	height:30px;
+}
+#navcontainer li { float:left; }
+#navcontainer li a {
+	padding:9px 10px;
+	display:block;
+	color:#fff;
+	text-decoration:none;
+	font:12px arial, verdana, sans-serif;
+}
+#navcontainer li a:hover {
+	/*color:#000;*/
+}
+/* Submenu */
+#navcontainer ul {
+	position:absolute;
+	left:-9999px;
+	top:-9999px;
+	list-style-type:none;
+}
+#navcontainer li.firstLevel:hover { 
+position:relative; 
+background:#6D9ACF !important; 
+/*border-bottom:1px solid #fff;*/
+color:#fff !important;
+}
+#navcontainer li:hover ul {
+	left:-12px;
+	top:30px;
+	z-index:1;
+	background:#6D9ACF;
+	padding:0px;
+	color:#000;
+}
+
+#navcontainer li:hover ul li a {
+	padding:5px;
+	display:block;
+	width:168px;
+	/*text-indent:10px;*/
+	background-color:#6D9ACF;
+	color:#000;
+}
+#navcontainer li:hover ul li a:hover { 
+background:#6D9ACF; 
+color:#fff;
+}

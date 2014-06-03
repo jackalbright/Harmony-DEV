@@ -1,0 +1,70 @@
+#specialty_links
+{
+	border: solid #CCC 1px;
+}
+
+#specialty_links .inner
+{
+	padding: 5px;
+}
+
+#specialty_links li
+{
+	padding-top: 5px;
+	margin-left: 5px;
+}
+
+#specialties_nav_top 
+{
+}
+
+.specialties_tabs, #specialties_all
+{
+	background-color: #99CC99;
+}
+
+.specialties_tabs ul
+{
+	
+}
+
+.specialties_tabs li
+{
+	display: inline;
+	float: left;
+	margin: 0px;
+	padding: 0px;
+}
+.specialties_tabs a
+{
+	color: black !important;
+	padding: 3px 5px;
+	text-decoration: none;
+	/* border-right: solid black 1px; */
+}
+.specialties_tabs a.view_all, .specialties_tabs a.close
+{
+	font-weight: bold;
+	padding-left: 10px;
+	border: none;
+	float: right;
+}
+
+.specialties_tabs a:hover
+{
+	text-decoration: underline;
+}
+
+#specialties_all
+{
+	border: solid black 1px;
+	padding: 10px;
+	position: absolute;
+	z-index: 999;
+	right: 0px;
+}
+
+.specialtyPage_disabled, .specialtyPage_disabled a
+{
+	color: #BBB !important;
+}

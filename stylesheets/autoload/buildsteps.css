@@ -1,0 +1,101 @@
+#buildsteps
+{
+	position: relative;
+
+	/*
+	background-color: #CCC;
+	*/
+	font-size: 10px;
+	height: 30px;
+}
+
+#buildsteps .step
+{
+	/*
+	padding-left: 20px;
+	*/
+	position: relative;
+	width: 150px;
+	border-left: solid white 1px;
+	background-image: url("/images/banners/5step_grey.png") ;
+	background-repeat: repeat-x ;
+	background-position: 50% 0%;
+}
+
+#buildsteps .steptext
+{
+	position: relative;
+	text-align: left;
+}
+
+#buildsteps .stepnum
+{
+	/*float: left; */
+	float: left;
+	font-size: 1em; 
+	color: black; 
+	text-align: left;
+	height: 1.0em;
+	/*
+		position: absolute;
+	top:0px;
+	left: -20px;
+	*/
+	padding-left: 2px;
+}
+
+#buildsteps .step.currentstep, #buildsteps .step.currentstep .stepdetails_hover
+{
+	position: relative;
+	/*background-color: #65CCCB !important;*/
+	background-image: url("/images/banners/5step.png");
+	background-repeat: repeat-x;
+}
+
+#step1
+{
+	background-position: left top !important;
+}
+#step4
+{
+	background-position: right top !important;
+}
+
+#buildsteps .previousstep
+{
+	/*
+	background-color: #CCEEEE !important;
+	*/
+}
+
+
+#buildsteps a
+{
+	text-align: left;
+	color: black;
+	text-decoration: none;
+}
+
+#buildsteps a[href]:hover
+{
+	text-decoration: underline;
+}
+
+#buildsteps .stepdetails
+{
+	/*padding-top: 5px;*/
+	font-weight: normal;
+	height: 15px;
+	overflow: hidden;
+	text-align: center;
+	width: 150px;
+}
+
+#buildsteps .stepdetails_hover
+{
+	background-color: #CCC;
+	height: auto;
+	position: absolute;
+	z-index: 5;
+}
+

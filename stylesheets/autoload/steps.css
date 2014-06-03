@@ -1,0 +1,181 @@
+#steps_container
+{
+	padding-top: 4px;
+}
+#steps
+{
+	/*float: left;*/
+	/*width: 800px;*/
+	/*margin-bottom: 10px;
+	border: solid #ccc 1px;
+	padding: 2px;
+	*/
+}
+
+
+#steps .step
+{
+	/*height: 75px;*/
+	/*width: 125px;*/
+	white-space: nowrap;
+	font-weight: bold;
+	font-size: 9px;
+	/*padding-right: 0px;*/
+	/*padding-top: 05px;
+	padding-bottom: 2px;
+	*/
+	margin: 0px;
+	/*text-transform: lowercase;*/
+	/*
+	background: url("/images/icons/arrow-bg.png") bottom no-repeat;
+	height: 30px;
+	*/
+	padding: 1px !important;
+	height: 20px;
+	width: 129px;
+	border-right: solid 1px #FFFFEE;
+}
+
+#steps .arrow
+{
+	font-size: 0.9em;
+	color: #AAA;
+	padding-left: 5px;
+	padding-right: 10px;
+	display: none;
+}
+
+#steps .step *
+{
+	padding-left: 25px;
+}
+
+#steps .step_subtext
+{
+	display: none;
+	/*border-top: solid #FF8C00 1px;*/
+	font-weight: normal;
+	/*white-space: nowrap;*/
+}
+
+#steps .step1
+{
+	background: url("/images/five_step/next/1.jpg") no-repeat;
+}
+
+#steps .step2
+{
+	background: url("/images/five_step/next/2.jpg") no-repeat;
+}
+
+#steps .step3
+{
+	background: url("/images/five_step/next/3.jpg") no-repeat;
+}
+
+#steps .step4
+{
+	background: url("/images/five_step/next/4.jpg") no-repeat;
+}
+
+#steps .step5
+{
+	background: url("/images/five_step/next/5.jpg") no-repeat;
+	border-right: none;
+}
+
+#steps .step1.selected_step
+{
+	background: url("/images/five_step/active/1.jpg") no-repeat;
+}
+
+#steps .step2.selected_step
+{
+	background: url("/images/five_step/active/2.jpg") no-repeat;
+}
+
+#steps .step3.selected_step
+{
+	background: url("/images/five_step/active/3.jpg") no-repeat;
+}
+
+#steps .step4.selected_step
+{
+	background: url("/images/five_step/active/4.jpg") no-repeat;
+}
+
+#steps .step5.selected_step
+{
+	background: url("/images/five_step/active/5.jpg") no-repeat;
+	border-right: none;
+}
+
+#steps .step1.previous_step
+{
+	background: url("/images/five_step/visited/1.jpg") no-repeat;
+}
+
+#steps .step2.previous_step
+{
+	background: url("/images/five_step/visited/2.jpg") no-repeat;
+}
+
+#steps .step3.previous_step
+{
+	background: url("/images/five_step/visited/3.jpg") no-repeat;
+}
+
+#steps .step4.previous_step
+{
+	background: url("/images/five_step/visited/4.jpg") no-repeat;
+}
+
+#steps .step5.previous_step
+{
+	background: url("/images/five_step/visited/5.jpg") no-repeat;
+	border-right: none;
+}
+
+#steps .selected_step *, 
+#steps .selected_step a, 
+#steps .selected_step a:visited,
+#steps .selected_step a:link,
+#steps .selected_step a:active
+{
+	color: #000000 !important;
+}
+
+#steps .step *,
+#steps .step a,
+#steps .step a:visited,
+#steps .step a:link,
+#steps .step a:active
+{
+	text-decoration: none;
+	color: #999999;
+}
+
+#steps .previous_step *,
+#steps .previous_step a,
+#steps .previous_step a:visited,
+#steps .previous_step a:link,
+#steps .previous_step a:active
+{
+	text-decoration: none;
+	color: #000000;
+}
+
+/*
+ *
+ */
+
+#steps .selected_step
+{
+/*	background-color: #CCC;
+	font-size: 1.1em;*/
+}
+
+#steps .selected_step .arrow
+{
+	color: #FFF;
+}

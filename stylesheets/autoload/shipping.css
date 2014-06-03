@@ -1,0 +1,25 @@
+.shippingOptionContainer
+{
+	border: solid #CCC 1px;
+}
+
+.shippingOptionHeader
+{
+	padding: 5px;
+	background-color: #CCC;
+}
+
+.shippingOption
+{
+	text-align: center;
+}
+
+.shippingOptionEven
+{
+	background-color: #FFF;
+}
+
+.shippingOptionOdd
+{
+	background-color: #EEE;
+}

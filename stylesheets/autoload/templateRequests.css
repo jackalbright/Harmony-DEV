@@ -1,0 +1,7 @@
+.templateRequests .select select,
+.templateRequests .textarea textarea,
+.templateRequests .text input
+{
+	width: 200px;
+}
+

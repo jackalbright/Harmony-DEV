@@ -1,0 +1,33 @@
+.highlight_secondary
+{
+	color: #333399 !important;
+}
+
+.even, .even *
+{
+	background-color: #FFFFFF;
+}
+
+.odd, .odd *
+{
+	background-color: #CECECE;
+}
+
+.white_bg
+{
+	background-color: white;
+}
+.white_text, .white
+{
+	color: white !important;
+}
+
+.black_text, .black
+{
+	color: #000 !important;
+}
+
+.color_steps
+{
+	color: #09225B !important;
+}

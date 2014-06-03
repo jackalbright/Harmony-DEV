@@ -1,0 +1,195 @@
+div.warn
+{
+	background: #FFCCCC url('/images/warning.png') no-repeat;
+	padding-left: 40px;
+	border: #660000 solid 1px;
+	padding-bottom: 20px;
+	padding-top: 10px;
+}
+
+#main_column label {
+	color: #000;
+	display: block;
+	/*font-size: 110%;*/
+	font-size: 12px;
+	/*padding-right: 20px;*/
+}
+#main_column .input.radio label,
+#main_column .input.checkbox label
+{
+	display: inline;
+}
+
+/* Forms */
+#main_column form {
+	clear: both;
+	/*margin-right: 20px;
+	padding: 0;
+	width: 80%;*/
+}
+#main_column fieldset {
+	border: 1px solid #ccc;
+	margin-top: 30px;
+	padding: 16px 20px;
+}
+#main_column fieldset legend {
+	background:#fff;
+	color: #e32;
+	/*font-size: 160%;*/
+	font-weight: bold;
+}
+#main_column fieldset fieldset {
+	margin-top: 0px;
+	margin-bottom: 20px;
+	padding: 16px 10px;
+}
+#main_column fieldset fieldset legend {
+	/*font-size: 120%;*/
+	font-weight: normal;
+}
+#main_column fieldset fieldset div {
+	clear: left;
+	margin: 0 20px;
+}
+#main_column form div {
+	/*clear: both;*/
+	/*margin-bottom: 1em;
+	padding: .5em;*/
+	vertical-align: text-top;
+}
+#main_column form div.input {
+	color: #444;
+}
+#main_column form div.required {
+	color: #333;
+	font-weight: bold;
+}
+#main_column form div.submit {
+	border: 0;
+	clear: both;
+	margin-top: 10px;
+	/*margin-left: 140px;*/
+}
+.checkbox label, #main_column .checkbox label
+{
+	display: inline !important;
+	padding: 0px !important;
+}
+#main_column input, #main_column textarea {
+	clear: both;
+	/*font-size: 140%;*/
+	/*font-family: "frutiger linotype", "lucida grande", "verdana", sans-serif;*/
+	/*padding: 2px;*/
+	/*margin: 2px;*/
+	/*width: 100%;*/
+}
+div.text input
+{
+	/*width: 250px;*/
+}
+#ContactInfoForm div.text input, 
+#CustomerForm div.text input, 
+#CreditCardForm div.text input, 
+textarea.wide, select.wide, input.wide, #checkout_form div.text input, #account_form div.text input
+{
+	width: 250px;
+}
+
+#main_column select {
+	clear: both;
+	/*font-size: 120%;*/
+	vertical-align: text-bottom;
+}
+#main_column select[multiple=multiple] {
+	width: 100%;
+}
+#main_column option {
+	/*font-size: 120%;*/
+	padding: 0 3px;
+}
+#main_column input[type=checkbox] {
+	/*
+	clear: left;
+	float: left;
+	margin: 0px 6px 7px 2px;
+	width: auto;
+	*/
+}
+#main_column input[type=radio] {
+	/*float:left;
+	width:auto;
+	margin: 0 3px 7px 0;
+	*/
+}
+#main_column div.radio label {
+	/*
+	margin: 0 0 6px 20px;
+	*/
+}
+#main_column input[type=submit] {
+	/*
+	display: inline;
+	padding: 2px 5px;
+	width: auto;
+	vertical-align: bottom;
+	*/
+}
+
+.inline label
+{
+	display: inline;
+}
+
+input[type=submit], button
+{
+	font-size: 16px;
+	font-weight: bold;
+
+}
+
+/* Nicer inline label form */
+.inline_label label,
+.inline_label_form label
+{
+	float: left;
+	width: 125px;
+}
+
+.inline_label_form .checkbox
+{
+	margin-left: 150px;
+}
+
+.inline_label_form .checkbox label
+{
+	float: none;
+	width: auto;
+}
+
+.inline_label_form .text input, .inline_label_form .textarea textarea, .inline_label_form .select select
+{
+	width: 300px;
+}
+
+.fullwidth .text input, .fullwidth .textarea textarea, .fullwidth .select select
+{
+	width: 95%;
+}
+
+.error-message
+{
+	color: #B82A2A;
+	font-weight: bold;
+}
+.width95p
+{
+	width: 95%;
+}
+.width100p
+{
+	width: 100%;
+}
+.width98p
+{
+	width: 98%;
+}

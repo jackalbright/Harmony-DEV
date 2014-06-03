@@ -1,0 +1,39 @@
+#charm_list
+{
+	text-align: left;
+}
+
+#charm_list .charm_category_header
+{
+	display: block;
+	background-color: #CCC;
+	padding: 5px;
+	font-weight: bold;
+	font-size: 1.2em;
+	margin-bottom: 2px;
+}
+
+#charm_list .charm
+{
+	border: solid #CCC 1px;
+	padding: 5px;
+	margin: 5px;
+	float: left;
+	text-align: center;
+}
+
+#charm_list .charm img
+{
+	height: 50px;
+}
+
+#charm_list .charm_selected
+{
+	background-color: #CCCCCC;
+}
+
+#charm_name
+{
+	font-weight: bold;
+	font-size: 1.1em;
+}

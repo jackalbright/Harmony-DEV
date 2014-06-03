@@ -1,0 +1,45 @@
+
+.font8, .font_smallest
+{
+	font-size: 8px;
+}
+
+.font10, .font_small
+{
+	font-size: 10px;
+}
+
+.font12, .font_normal
+{
+	font-size: 12px;
+}
+
+.font14, .font_medium
+{
+	font-size: 14px;
+}
+
+.font16, .font_medium_large
+{
+	font-size: 16px;
+}
+
+.font18, .font_large
+{
+	font-size: 18px;
+}
+
+.font24, .font_larger
+{
+	font-size: 24px;
+}
+
+.font32, .font_largest
+{
+	font-size: 32px;
+}
+
+h6
+{
+	font-size: 10pt;
+}

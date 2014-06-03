@@ -1,0 +1,90 @@
+/* CSS Document */
+/*
+S I T E     T A B     M E N U
+*/
+
+ul#tabs
+{
+	list-style-type: none;
+	position: relative;
+	top: 1px;
+	margin: 0px;
+	padding: 0px;
+	margin-left: 20px;
+}
+ul#tabs .tab
+{
+	margin: 0px;
+	display: block;
+	float: left;
+	padding: 5px 10px;
+	/*background-color: #FFD46E;*/
+	background-color: #B8E8E7;
+	/*background-color:#62BBE9;*/
+	border: solid #666 1px;
+	margin-right: 2px;
+	/*border-radius: 5px;*/
+	border-top-left-radius:5px;
+	border-top-right-radius:5px;
+}
+ul#tabs .tab a
+{
+	color: #333;
+	font-size: 16px;
+	text-decoration:none;
+}
+ul#tabs .tab.selected
+{
+	border-bottom: solid white 1px;
+	background-color: white;
+}
+ul#tabs .tab.selected a,
+ul#tabs .tab a:hover
+{
+	/*font-weight: bold;*/
+	color: #0369A7;
+}
+#panes
+{
+	position:relative;
+	border: solid #666 1px;
+	min-height: 800px;
+	background-color: white;
+}
+.pane
+{
+	background-color: white;
+	display:none;
+	padding: 30px 10px 10px 10px;
+	min-height: 800px;
+}
+.pane.selected
+{
+	display: block;
+}
+#panes h3
+{
+	font-size: 1.3em;
+}
+#panes h4
+{
+	font-size: 1.1em;
+}
+
+#panes h5
+{
+	font-size: 1em;
+	color:#0369a7 !important;
+}
+#panes h3,#panes h4
+{
+	color:#b82a2a;
+	font-weight: bold;
+}
+
+#gallery_container h3
+{
+	color: white;
+}
+
+
