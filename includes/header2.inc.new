@@ -1,0 +1,240 @@
+<?
+include_once("database.inc");
+
+$customer_id = !empty($_SESSION['Auth']['Customer']['customer_id']) ? $_SESSION['Auth']['Customer']['customer_id'] : null;
+#echo "CID=$customer_id";
+$session_id = session_id();
+
+$saved_img_count = 0;
+
+if ($customer_id)
+{
+	$saved_images = get_db_record("custom_image", array(" customer_id = '$customer_id' "), null, array("COUNT(*) AS count"));
+	$saved_img_count = $saved_images['count'];
+}
+
+?>
+<div>
+<table id="" border=0 cellspacing=0 width="100%">
+<tr>
+	<td id="logo" rowspan=1 valign=top>
+		<a name="top" href="/index.php"><img class="logo" src="/images-shared/large-logo.gif" alt="harmony designs logo" border="0" /></a>
+	</td>
+	<td rowspan=1 valign="top">
+		<div id="since1992">Creating custom gifts since 1992</div>
+		<div style="font-size: 1.2em;">
+		Museum-store quality &bull; Low minimums &bull; Made in USA
+		</div>
+		<div class="hidden">Free sample with every order</div>
+	</td>
+	<td colspan=1 align=right valign=middle id="cart">
+		<? $this_customer = isset($_SESSION['Auth']['Customer']) ? $_SESSION['Auth']['Customer'] : null; ?>
+		<table>
+		<tr>
+			<td valign="top" align="right">
+	     			<a href="/account">My Account</a> |
+	     			<a href="/custom_images">My Images</a>
+				<? if($saved_img_count > 0) { ?><br/><b>(<?= $saved_img_count ?> saved images)</b><? } ?>
+				<br/>
+			     <? if (!empty($this_customer)) { ?>
+			     	<i>Hello, <?= $this_customer['First_Name'] != "" ? $this_customer['First_Name'] : ($this_customer['eMail_Address'] ? $this_customer['eMail_Address'] : "guest"); ?></i>
+			     	(<a href="/account/logout">Logout</a>)
+			     <? } else { ?>
+			     	<a href="/account/login"><img src="/images/buttons/small/Log-In.gif"/></a> 
+			     <? } ?>
+			</td>
+		<td rowspan="1">
+			<a href="/cart/display.php"><img src="/images/icons/shopping_cart.gif" height="40" alt="Shopping Cart" border="0" class="carticon"></a>
+		</td>
+		<td valign="top">
+			<a href="/cart/display.php" class="viewcart" style="font-weight: bold;">Cart</a>
+			<br/>
+		  	<?php
+				$subTotal = 0;
+				$subQuantity = 0;
+				#$cartItems = !empty($_SESSION['shoppingCart']) ? $_SESSION['shoppingCart'] : array();
+	
+				$session_id = session_id();
+				$customer_id = !empty($_SESSION['Auth']['Customer']['customer_id']) ? $_SESSION['Auth']['Customer']['customer_id'] : null;
+	
+				#echo "$session_id / $customer_id";
+	
+				$cartItems = get_db_records("cart_items", " customer_id = '$customer_id' OR session_id = '$session_id' ");
+	
+				foreach ($cartItems as $cartItem)
+				{
+					#echo "CI=".print_r($cartItem,true);
+					if (is_object($cartItem))
+					{
+						$subTotal += $cartItem->quantity * $cartItem->unitPrice;
+						$subQuantity += $cartItem->quantity;
+					} else if (is_array($cartItem)) {
+						$unitPrice = !empty($cartItem['unitPrice']) ? $cartItem['unitPrice'] : 0;
+						$subTotal += $cartItem['quantity'] * $unitPrice;
+						$subQuantity += $cartItem['quantity'];
+					}
+				}
+				if (false && $subTotal > 0) { 
+					printf("($%.02f Total)",  $subTotal);
+					echo " | ";
+					echo '<a href="/cart/checkout" class="viewcart">Checkout</a>';
+				}
+				echo "(".$subQuantity." items)";
+			?>
+				<?
+				if (count($cartItems)) { 
+					echo '<br/><br/><a href="/cart/checkout" class="viewcart">Checkout</a>';
+				}
+				?>
+				<a class="hidden" href="/includes/fakecc.php">_</a>
+	     	</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td colspan=1>
+		<div id="questions" class="center_align">Questions? 888.293.1109</div>
+	</td>
+	<td valign="bottom">
+		<table width="100%" border=0 style="margin: 10px 0px;">
+		<tr>
+			<td valign="bottom">
+				<div style="padding: 5px; background-color: #EEE; border: solid #CCC 1px; width: 350px;">
+					<div class="bold">Custom Products For:</div>
+					<div align="">
+		  				<a href="/specialties/museumstore.php?start_over=1">Museums</a> |
+		  				<a href="/specialties/educator.php?start_over=1">Education</a> |
+		  				<a href="/specialties/corporate.php?start_over=1">Corporate</a> |
+		  				<a href="/specialties/weddingfavors.php?start_over=1">Weddings</a>
+					</div>
+				</div>
+			</td>
+			<td valign="bottom">
+				<a href="/custom_images/add">Upload Your Art</a>
+			</td>
+		</tr>
+		</table>
+	</td>
+	<td align="right">
+		<div style="width: 250px; text-align: left;" valign="top">
+		<img valign="top" class="left" style="border: solid #CCC 1px !important;" src="/images/icons/pancreatic_awareness_ribbon.jpg" height="50"/>
+		Harmony Designs donates<br/>a percentage of its annual<br/>profits to cancer research
+		</div>
+	</td>
+</tr>
+</table>
+
+<form action="/product/search.php" method="get"  id="" name="searchform" onsubmit="return preflightSearch();">
+<table width="100%" cellspacing=0 border=0>
+<tr id="prinav_row">
+<!--
+</td>
+-->
+<td id="prinav_bar" colspan=1 align=left>
+	<? include("dropdown_primary.inc"); ?>
+</td>
+<td style="width: 400px;" align="right" colspan=1>
+	<table cellpadding=0 cellspacing=0>
+	<tr>
+		<td style="width: 210px;">
+          		<input type="text" id="" name="q" style="width: 200px; " value="<?= !empty($searchString) ? $searchString : "" ?>"/>
+		</td>
+		<td style="padding-left: 5px; width: 35px;">
+			<input type="image" value="Search" src="/images/buttons/small/Search-grey.gif"/>
+		</td>
+		<td class="hidden">
+			<div class='hidden'>
+				<div onMouseOver="$('i_would_like_to').removeClassName('hidden');" onMouseOut="$('i_would_like_to').addClassName('hidden');" class="relative">
+					<a class="bold" href="javascript:void(0);">I would like to:</a>
+					<div id="i_would_like_to" class="hidden">
+						<a class="padded block" href="">Upload my photo</a>
+						<a class="padded block" href="">Upload my photo</a>
+						<a class="padded block" href="">Upload my photo</a>
+					</div>
+				
+				</div>
+			</div>
+		</td>
+	</tr>
+	</table>
+</td>
+</tr>
+<tr id="crumbs_bar">
+<td colspan=2>
+	<table width="100%" cellpadding=0 cellspacing=0>
+	<tr>
+		<td id="crumbs_col" colspan=1>
+			<? if(isset($breadcrumbs) && is_array($breadcrumbs)) { ?>
+				<div class='breadcrumbs'>
+				<?
+				        $i = 0;
+				        foreach($breadcrumbs as $url => $name)
+				        {
+				                if ($i++ > 0) { echo " &raquo; "; }
+						if (!preg_match("/^\//", $url)) { $url = "/$url"; }
+				                if ($url) { echo "<a href='$url'>$name</a>"; }
+				                else { echo "$name"; }
+				        }
+				?>
+				&nbsp;
+				</div>
+			<? } else { ?>&nbsp;<? } ?>
+		</td>
+		<td align="right" style="vertical-align: middle; ">
+			<!--
+			<a href="/custom_images"><img style="vertical-align: middle;" height="30" src="/images/icons/arrow.gif"/> Upload your art</a> OR
+			<a href="/gallery/browse"><img style="vertical-align: middle;" height="30" src="/images/icons/stamp.jpg"/> Browse our stamp images</a><? if(!empty($malysoft) || !empty($hdtest)) { ?> OR
+			<a href="/gallery/clipart"><img style="vertical-align: middle;" height="30" src="/images/icons/Mona-lisa-clipart.jpg"/> Browse Clipart.com&trade;</a> <? } ?>
+			-->
+			<div class="currently_building">
+			<? if (empty($in_build) && !empty($_SESSION['Build']['Product']) && (!empty($_SESSION['Build']['CustomImage']) || !empty($_SESSION['Build']['GalleryImage']))) { ?>
+			<?
+				$name = "Your custom";
+				$imgtype = "_";
+				$imgid = "_";
+				if (!empty($_SESSION['Build']['CustomImage']))
+				{
+					if (!empty($_SESSION['Build']['CustomImage']['Title'])) { $name = "&quot;".$_SESSION['Build']['CustomImage']['Title']."&quot;"; }
+					$imgtype = "Custom";
+					$imgid = $_SESSION['Build']['CustomImage']['Image_ID'];
+				} else if (!empty($_SESSION['Build']['GalleryImage'])) { 
+					if (!empty($_SESSION['Build']['GalleryImage']['stamp_name'])) { $name = "&quot;".$_SESSION['Build']['GalleryImage']['stamp_name']."&quot;"; }
+					$imgtype = "Gallery";
+					$imgid = $_SESSION['Build']['GalleryImage']['catalog_number'];
+				}
+			?>
+			Currently building: <a href="/build/step"><?= $name ?> <?= $_SESSION['Build']['Product']['name'] ?></a>
+			<? } ?>
+			</div>
+		</td>
+	</tr>
+	</table>
+</td>
+</tr>
+<tr>
+<td colspan="<?= empty($exclude_leftbar) ? 2 : 3 ?>" valign=top>
+	<table width="100%" cellpadding=0 cellspacing=0>
+	<? if(!empty($status_bar)) { ?>
+	<tr>
+		<td valign="bottom" colspan=2>
+			<?= $status_bar ?>
+		</td>
+	</tr>
+	<? } ?>
+	<tr>
+	<td valign="middle">
+	<? if(isset($body_title)) { ?>
+	<h1 id="title"><?= $body_title ?></h1>
+	<? } ?>
+	</td>
+	</tr>
+	</table>
+
+</form>
+
+</td>
+</tr>
+</table>
+
+</div>

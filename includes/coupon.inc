@@ -1,0 +1,6 @@
+<?
+
+
+$advertisedCoupon = array();
+
+

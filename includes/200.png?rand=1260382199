@@ -1,0 +1,485 @@
+
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace1").style.display = (document.getElementById("CakeStackTrace1").style.display == "none" ? "" : "none")'><b>Notice</b> (8)</a>: Undefined index:  Product [<b>APP/controllers/product_image_controller.php</b>, line <b>64</b>]
+</pre>
+<div id="CakeStackTrace1" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode1").style.display = (document.getElementById("CakeErrorCode1").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext1").style.display = (document.getElementById("CakeErrorContext1").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext1" class="cake-context" style="display: none;">$scale	=	"200.png"</pre><div id="CakeErrorCode1" class="cake-code-dump" style="display: none;"><pre><code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;function&nbsp;build_view($scale&nbsp;=&nbsp;'')</span></code>
+<code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;{</span></code>
+<span class="code-highlight"><code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$prod&nbsp;=&nbsp;$this-&gt;build['Product']['code'];</span></code></span>
+</pre></div><pre>ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 64
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div>
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace2").style.display = (document.getElementById("CakeStackTrace2").style.display == "none" ? "" : "none")'><b>Warning</b> (2)</a>: imagesx(): supplied argument is not a valid Image resource [<b>APP/controllers/product_image_controller.php</b>, line <b>147</b>]
+</pre>
+<div id="CakeStackTrace2" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode2").style.display = (document.getElementById("CakeErrorCode2").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext2").style.display = (document.getElementById("CakeErrorContext2").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext2" class="cake-context" style="display: none;">$prod	=	""
+$imgtype	=	""
+$imgid	=	""
+$scale	=	"200"
+$build	=	array()
+$do_cache	=	false
+$urlparts	=	array(
+	"images",
+	"preview",
+	"200"
+)
+$ext	=	"png"
+$cache_file	=	"/local/sites/harmonydesigns/app//webroot/images/preview/200.png"
+$image_path	=	""
+$orient	=	null
+$product_image_path	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/.png"
+$overlay_path	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/-overlay.gif"</pre><pre>imagesx - [internal], line ??
+ProductImageController::_display_image() - APP/controllers/product_image_controller.php, line 147
+ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 79
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div>
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace3").style.display = (document.getElementById("CakeStackTrace3").style.display == "none" ? "" : "none")'><b>Warning</b> (2)</a>: imagesy(): supplied argument is not a valid Image resource [<b>APP/controllers/product_image_controller.php</b>, line <b>148</b>]
+</pre>
+<div id="CakeStackTrace3" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode3").style.display = (document.getElementById("CakeErrorCode3").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext3").style.display = (document.getElementById("CakeErrorContext3").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext3" class="cake-context" style="display: none;">$prod	=	""
+$imgtype	=	""
+$imgid	=	""
+$scale	=	"200"
+$build	=	array()
+$do_cache	=	false
+$urlparts	=	array(
+	"images",
+	"preview",
+	"200"
+)
+$ext	=	"png"
+$cache_file	=	"/local/sites/harmonydesigns/app//webroot/images/preview/200.png"
+$image_path	=	""
+$orient	=	null
+$product_image_path	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/.png"
+$overlay_path	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/-overlay.gif"
+$proof_x	=	false
+$proof_w	=	false</pre><pre>imagesy - [internal], line ??
+ProductImageController::_display_image() - APP/controllers/product_image_controller.php, line 148
+ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 79
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div>
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace4").style.display = (document.getElementById("CakeStackTrace4").style.display == "none" ? "" : "none")'><b>Warning</b> (2)</a>: Division by zero [<b>APP/controllers/product_image_controller.php</b>, line <b>149</b>]
+</pre>
+<div id="CakeStackTrace4" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode4").style.display = (document.getElementById("CakeErrorCode4").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext4").style.display = (document.getElementById("CakeErrorContext4").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext4" class="cake-context" style="display: none;">$prod	=	""
+$imgtype	=	""
+$imgid	=	""
+$scale	=	"200"
+$build	=	array()
+$do_cache	=	false
+$urlparts	=	array(
+	"images",
+	"preview",
+	"200"
+)
+$ext	=	"png"
+$cache_file	=	"/local/sites/harmonydesigns/app//webroot/images/preview/200.png"
+$image_path	=	""
+$orient	=	null
+$product_image_path	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/.png"
+$overlay_path	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/-overlay.gif"
+$proof_x	=	false
+$proof_w	=	false
+$proof_y	=	false
+$proof_h	=	false</pre><div id="CakeErrorCode4" class="cake-code-dump" style="display: none;"><pre><code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$proof_w&nbsp;=&nbsp;$proof_x&nbsp;=&nbsp;imagesx($this-&gt;canvas);</span></code>
+<code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$proof_h&nbsp;=&nbsp;$proof_y&nbsp;=&nbsp;imagesy($this-&gt;canvas);</span></code>
+<span class="code-highlight"><code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$proof_w2h&nbsp;=&nbsp;$proof_w/$proof_h;</span></code></span>
+</pre></div><pre>ProductImageController::_display_image() - APP/controllers/product_image_controller.php, line 149
+ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 79
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div>
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace5").style.display = (document.getElementById("CakeStackTrace5").style.display == "none" ? "" : "none")'><b>Warning</b> (2)</a>: include(/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/.inc) [<a href='http://php.net/function.include'>function.include</a>]: failed to open stream: No such file or directory [<b>APP/controllers/product_image_controller.php</b>, line <b>696</b>]
+</pre>
+<div id="CakeStackTrace5" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode5").style.display = (document.getElementById("CakeErrorCode5").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext5").style.display = (document.getElementById("CakeErrorContext5").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext5" class="cake-context" style="display: none;">$code	=	""
+$orient	=	null
+$dir	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal"
+$configfile	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/.inc"</pre><div id="CakeErrorCode5" class="cake-code-dump" style="display: none;"><pre><code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$dir&nbsp;=&nbsp;$this-&gt;get_product_image_dir($code,&nbsp;$orient);</span></code>
+<code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$configfile&nbsp;=&nbsp;"$dir/original/$code.inc";</span></code>
+<span class="code-highlight"><code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$config&nbsp;=&nbsp;include($configfile);</span></code></span>
+</pre></div><pre>ProductImageController::get_product_config() - APP/controllers/product_image_controller.php, line 696
+ProductImageController::get_product_config() - APP/controllers/product_image_controller.php, line 696
+ProductImageController::_display_image() - APP/controllers/product_image_controller.php, line 152
+ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 79
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div>
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace6").style.display = (document.getElementById("CakeStackTrace6").style.display == "none" ? "" : "none")'><b>Warning</b> (2)</a>: include() [<a href='http://php.net/function.include'>function.include</a>]: Failed opening '/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/.inc' for inclusion (include_path='/local/sites/harmonydesigns:/local/sites/harmonydesigns/app/:.:/usr/share/pear:/usr/share/php:/usr/share/pear:/local/sites/harmonydesigns/app/config/../../') [<b>APP/controllers/product_image_controller.php</b>, line <b>696</b>]
+</pre>
+<div id="CakeStackTrace6" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode6").style.display = (document.getElementById("CakeErrorCode6").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext6").style.display = (document.getElementById("CakeErrorContext6").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext6" class="cake-context" style="display: none;">$code	=	""
+$orient	=	null
+$dir	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal"
+$configfile	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/.inc"</pre><div id="CakeErrorCode6" class="cake-code-dump" style="display: none;"><pre><code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$dir&nbsp;=&nbsp;$this-&gt;get_product_image_dir($code,&nbsp;$orient);</span></code>
+<code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$configfile&nbsp;=&nbsp;"$dir/original/$code.inc";</span></code>
+<span class="code-highlight"><code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$config&nbsp;=&nbsp;include($configfile);</span></code></span>
+</pre></div><pre>ProductImageController::get_product_config() - APP/controllers/product_image_controller.php, line 696
+ProductImageController::get_product_config() - APP/controllers/product_image_controller.php, line 696
+ProductImageController::_display_image() - APP/controllers/product_image_controller.php, line 152
+ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 79
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div>
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace7").style.display = (document.getElementById("CakeStackTrace7").style.display == "none" ? "" : "none")'><b>Warning</b> (2)</a>: imagecolorallocate(): supplied argument is not a valid Image resource [<b>APP/controllers/product_image_controller.php</b>, line <b>158</b>]
+</pre>
+<div id="CakeStackTrace7" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode7").style.display = (document.getElementById("CakeErrorCode7").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext7").style.display = (document.getElementById("CakeErrorContext7").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext7" class="cake-context" style="display: none;">$prod	=	""
+$imgtype	=	""
+$imgid	=	""
+$scale	=	"200"
+$build	=	array()
+$do_cache	=	false
+$urlparts	=	array(
+	"images",
+	"preview",
+	"200"
+)
+$ext	=	"png"
+$cache_file	=	"/local/sites/harmonydesigns/app//webroot/images/preview/200.png"
+$image_path	=	""
+$orient	=	null
+$product_image_path	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/.png"
+$overlay_path	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/-overlay.gif"
+$proof_x	=	false
+$proof_w	=	false
+$proof_y	=	false
+$proof_h	=	false
+$proof_w2h	=	false
+$product_config	=	false
+$proof_image_h	=	null
+$proof_image_w	=	null
+$proof_image_y	=	null
+$proof_image_x	=	null
+$text_h	=	null
+$text_w	=	null
+$text_y	=	null
+$text_x	=	null
+$pers_h	=	null
+$pers_w	=	null
+$pers_y	=	null
+$pers_x	=	null</pre><pre>imagecolorallocate - [internal], line ??
+ProductImageController::_display_image() - APP/controllers/product_image_controller.php, line 158
+ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 79
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div>
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace8").style.display = (document.getElementById("CakeStackTrace8").style.display == "none" ? "" : "none")'><b>Warning</b> (2)</a>: imagecolorallocate(): supplied argument is not a valid Image resource [<b>APP/controllers/product_image_controller.php</b>, line <b>159</b>]
+</pre>
+<div id="CakeStackTrace8" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode8").style.display = (document.getElementById("CakeErrorCode8").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext8").style.display = (document.getElementById("CakeErrorContext8").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext8" class="cake-context" style="display: none;">$prod	=	""
+$imgtype	=	""
+$imgid	=	""
+$scale	=	"200"
+$build	=	array()
+$do_cache	=	false
+$urlparts	=	array(
+	"images",
+	"preview",
+	"200"
+)
+$ext	=	"png"
+$cache_file	=	"/local/sites/harmonydesigns/app//webroot/images/preview/200.png"
+$image_path	=	""
+$orient	=	null
+$product_image_path	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/.png"
+$overlay_path	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/-overlay.gif"
+$proof_x	=	false
+$proof_w	=	false
+$proof_y	=	false
+$proof_h	=	false
+$proof_w2h	=	false
+$product_config	=	false
+$proof_image_h	=	null
+$proof_image_w	=	null
+$proof_image_y	=	null
+$proof_image_x	=	null
+$text_h	=	null
+$text_w	=	null
+$text_y	=	null
+$text_x	=	null
+$pers_h	=	null
+$pers_w	=	null
+$pers_y	=	null
+$pers_x	=	null</pre><pre>imagecolorallocate - [internal], line ??
+ProductImageController::_display_image() - APP/controllers/product_image_controller.php, line 159
+ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 79
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div>
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace9").style.display = (document.getElementById("CakeStackTrace9").style.display == "none" ? "" : "none")'><b>Warning</b> (2)</a>: imagecolorallocate(): supplied argument is not a valid Image resource [<b>APP/controllers/product_image_controller.php</b>, line <b>160</b>]
+</pre>
+<div id="CakeStackTrace9" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode9").style.display = (document.getElementById("CakeErrorCode9").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext9").style.display = (document.getElementById("CakeErrorContext9").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext9" class="cake-context" style="display: none;">$prod	=	""
+$imgtype	=	""
+$imgid	=	""
+$scale	=	"200"
+$build	=	array()
+$do_cache	=	false
+$urlparts	=	array(
+	"images",
+	"preview",
+	"200"
+)
+$ext	=	"png"
+$cache_file	=	"/local/sites/harmonydesigns/app//webroot/images/preview/200.png"
+$image_path	=	""
+$orient	=	null
+$product_image_path	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/.png"
+$overlay_path	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/-overlay.gif"
+$proof_x	=	false
+$proof_w	=	false
+$proof_y	=	false
+$proof_h	=	false
+$proof_w2h	=	false
+$product_config	=	false
+$proof_image_h	=	null
+$proof_image_w	=	null
+$proof_image_y	=	null
+$proof_image_x	=	null
+$text_h	=	null
+$text_w	=	null
+$text_y	=	null
+$text_x	=	null
+$pers_h	=	null
+$pers_w	=	null
+$pers_y	=	null
+$pers_x	=	null</pre><pre>imagecolorallocate - [internal], line ??
+ProductImageController::_display_image() - APP/controllers/product_image_controller.php, line 160
+ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 79
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div>
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace10").style.display = (document.getElementById("CakeStackTrace10").style.display == "none" ? "" : "none")'><b>Warning</b> (2)</a>: imagesx(): supplied argument is not a valid Image resource [<b>APP/controllers/product_image_controller.php</b>, line <b>658</b>]
+</pre>
+<div id="CakeStackTrace10" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode10").style.display = (document.getElementById("CakeErrorCode10").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext10").style.display = (document.getElementById("CakeErrorContext10").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext10" class="cake-context" style="display: none;">$img	=	null
+$w	=	"200"
+$h	=	null
+$make_trans	=	false</pre><pre>imagesx - [internal], line ??
+ProductImageController::_gd_scale_image() - APP/controllers/product_image_controller.php, line 658
+ProductImageController::_display_image() - APP/controllers/product_image_controller.php, line 325
+ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 79
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div>
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace11").style.display = (document.getElementById("CakeStackTrace11").style.display == "none" ? "" : "none")'><b>Warning</b> (2)</a>: imagesy(): supplied argument is not a valid Image resource [<b>APP/controllers/product_image_controller.php</b>, line <b>659</b>]
+</pre>
+<div id="CakeStackTrace11" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode11").style.display = (document.getElementById("CakeErrorCode11").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext11").style.display = (document.getElementById("CakeErrorContext11").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext11" class="cake-context" style="display: none;">$img	=	null
+$w	=	"200"
+$h	=	null
+$make_trans	=	false
+$origw	=	false</pre><pre>imagesy - [internal], line ??
+ProductImageController::_gd_scale_image() - APP/controllers/product_image_controller.php, line 659
+ProductImageController::_display_image() - APP/controllers/product_image_controller.php, line 325
+ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 79
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div>
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace12").style.display = (document.getElementById("CakeStackTrace12").style.display == "none" ? "" : "none")'><b>Warning</b> (2)</a>: Division by zero [<b>APP/controllers/product_image_controller.php</b>, line <b>661</b>]
+</pre>
+<div id="CakeStackTrace12" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode12").style.display = (document.getElementById("CakeErrorCode12").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext12").style.display = (document.getElementById("CakeErrorContext12").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext12" class="cake-context" style="display: none;">$img	=	null
+$w	=	"200"
+$h	=	null
+$make_trans	=	false
+$origw	=	false
+$origh	=	false</pre><div id="CakeErrorCode12" class="cake-code-dump" style="display: none;"><pre><code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$origh&nbsp;=&nbsp;imagesy($img);</span></code>
+<code><span style="color: #000000"></span></code>
+<span class="code-highlight"><code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$w2h&nbsp;=&nbsp;$origw&nbsp;/&nbsp;$origh;</span></code></span>
+</pre></div><pre>ProductImageController::_gd_scale_image() - APP/controllers/product_image_controller.php, line 661
+ProductImageController::_display_image() - APP/controllers/product_image_controller.php, line 325
+ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 79
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div>
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace13").style.display = (document.getElementById("CakeStackTrace13").style.display == "none" ? "" : "none")'><b>Warning</b> (2)</a>: Division by zero [<b>APP/controllers/product_image_controller.php</b>, line <b>670</b>]
+</pre>
+<div id="CakeStackTrace13" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode13").style.display = (document.getElementById("CakeErrorCode13").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext13").style.display = (document.getElementById("CakeErrorContext13").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext13" class="cake-context" style="display: none;">$img	=	null
+$w	=	"200"
+$h	=	null
+$make_trans	=	false
+$origw	=	false
+$origh	=	false
+$w2h	=	false</pre><div id="CakeErrorCode13" class="cake-code-dump" style="display: none;"><pre><code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$w&nbsp;=&nbsp;$w2h&nbsp;*&nbsp;$h;</span></code>
+<code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;if&nbsp;(!$h)&nbsp;{</span></code>
+<span class="code-highlight"><code><span style="color: #000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$h&nbsp;=&nbsp;$w&nbsp;/&nbsp;$w2h;</span></code></span>
+</pre></div><pre>ProductImageController::_gd_scale_image() - APP/controllers/product_image_controller.php, line 670
+ProductImageController::_display_image() - APP/controllers/product_image_controller.php, line 325
+ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 79
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div>
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace14").style.display = (document.getElementById("CakeStackTrace14").style.display == "none" ? "" : "none")'><b>Warning</b> (2)</a>: imagecreatetruecolor() [<a href='http://php.net/function.imagecreatetruecolor'>function.imagecreatetruecolor</a>]: Invalid image dimensions [<b>APP/controllers/product_image_controller.php</b>, line <b>675</b>]
+</pre>
+<div id="CakeStackTrace14" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode14").style.display = (document.getElementById("CakeErrorCode14").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext14").style.display = (document.getElementById("CakeErrorContext14").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext14" class="cake-context" style="display: none;">$img	=	null
+$w	=	"200"
+$h	=	false
+$make_trans	=	false
+$origw	=	false
+$origh	=	false
+$w2h	=	false</pre><pre>imagecreatetruecolor - [internal], line ??
+ProductImageController::_gd_scale_image() - APP/controllers/product_image_controller.php, line 675
+ProductImageController::_display_image() - APP/controllers/product_image_controller.php, line 325
+ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 79
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div>
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace15").style.display = (document.getElementById("CakeStackTrace15").style.display == "none" ? "" : "none")'><b>Warning</b> (2)</a>: imagecopyresampled(): supplied argument is not a valid Image resource [<b>APP/controllers/product_image_controller.php</b>, line <b>688</b>]
+</pre>
+<div id="CakeStackTrace15" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode15").style.display = (document.getElementById("CakeErrorCode15").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext15").style.display = (document.getElementById("CakeErrorContext15").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext15" class="cake-context" style="display: none;">$img	=	null
+$w	=	"200"
+$h	=	false
+$make_trans	=	false
+$origw	=	false
+$origh	=	false
+$w2h	=	false
+$newimg	=	false</pre><pre>imagecopyresampled - [internal], line ??
+ProductImageController::_gd_scale_image() - APP/controllers/product_image_controller.php, line 688
+ProductImageController::_display_image() - APP/controllers/product_image_controller.php, line 325
+ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 79
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div>
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace16").style.display = (document.getElementById("CakeStackTrace16").style.display == "none" ? "" : "none")'><b>Warning</b> (2)</a>: Cannot modify header information - headers already sent by (output started at /local/sites/harmonydesigns/cake/libs/debugger.php:500) [<b>APP/controllers/product_image_controller.php</b>, line <b>333</b>]
+</pre>
+<div id="CakeStackTrace16" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode16").style.display = (document.getElementById("CakeErrorCode16").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext16").style.display = (document.getElementById("CakeErrorContext16").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext16" class="cake-context" style="display: none;">$prod	=	""
+$imgtype	=	""
+$imgid	=	""
+$scale	=	"200"
+$build	=	array()
+$do_cache	=	false
+$urlparts	=	array(
+	"images",
+	"preview",
+	"200"
+)
+$ext	=	"png"
+$cache_file	=	"/local/sites/harmonydesigns/app//webroot/images/preview/200.png"
+$image_path	=	""
+$orient	=	null
+$product_image_path	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/.png"
+$overlay_path	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/-overlay.gif"
+$proof_x	=	false
+$proof_w	=	false
+$proof_y	=	false
+$proof_h	=	false
+$proof_w2h	=	false
+$product_config	=	false
+$proof_image_h	=	null
+$proof_image_w	=	null
+$proof_image_y	=	null
+$proof_image_x	=	null
+$text_h	=	null
+$text_w	=	null
+$text_y	=	null
+$text_x	=	null
+$pers_h	=	null
+$pers_w	=	null
+$pers_y	=	null
+$pers_x	=	null
+$product	=	false
+$quote_limit	=	null
+$matches	=	array()
+$scalewh	=	array(
+	"200"
+)
+$scale_w	=	"200"
+$scale_h	=	null
+$final_img	=	false</pre><pre>header - [internal], line ??
+ProductImageController::_display_image() - APP/controllers/product_image_controller.php, line 333
+ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 79
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div>
+<pre class="cake-debug">
+<a href='javascript:void(0);' onclick='document.getElementById("CakeStackTrace17").style.display = (document.getElementById("CakeStackTrace17").style.display == "none" ? "" : "none")'><b>Warning</b> (2)</a>: imagepng(): supplied argument is not a valid Image resource [<b>APP/controllers/product_image_controller.php</b>, line <b>353</b>]
+</pre>
+<div id="CakeStackTrace17" class="cake-stack-trace" style="display: none;"><a href='javascript:void(0);' onclick='document.getElementById("CakeErrorCode17").style.display = (document.getElementById("CakeErrorCode17").style.display == "none" ? "" : "none")'>Code</a> | <a href='javascript:void(0);' onclick='document.getElementById("CakeErrorContext17").style.display = (document.getElementById("CakeErrorContext17").style.display == "none" ? "" : "none")'>Context</a><pre id="CakeErrorContext17" class="cake-context" style="display: none;">$prod	=	""
+$imgtype	=	""
+$imgid	=	""
+$scale	=	"200"
+$build	=	array()
+$do_cache	=	false
+$urlparts	=	array(
+	"images",
+	"preview",
+	"200"
+)
+$ext	=	"png"
+$cache_file	=	"/local/sites/harmonydesigns/app//webroot/images/preview/200.png"
+$image_path	=	""
+$orient	=	null
+$product_image_path	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/.png"
+$overlay_path	=	"/local/sites/harmonydesigns/app/controllers/../../images/products/blanks//horizontal/original/-overlay.gif"
+$proof_x	=	false
+$proof_w	=	false
+$proof_y	=	false
+$proof_h	=	false
+$proof_w2h	=	false
+$product_config	=	false
+$proof_image_h	=	null
+$proof_image_w	=	null
+$proof_image_y	=	null
+$proof_image_x	=	null
+$text_h	=	null
+$text_w	=	null
+$text_y	=	null
+$text_x	=	null
+$pers_h	=	null
+$pers_w	=	null
+$pers_y	=	null
+$pers_x	=	null
+$product	=	false
+$quote_limit	=	null
+$matches	=	array()
+$scalewh	=	array(
+	"200"
+)
+$scale_w	=	"200"
+$scale_h	=	null
+$final_img	=	false</pre><pre>imagepng - [internal], line ??
+ProductImageController::_display_image() - APP/controllers/product_image_controller.php, line 353
+ProductImageController::build_view() - APP/controllers/product_image_controller.php, line 79
+Object::dispatchMethod() - CORE/cake/libs/object.php, line 117
+Dispatcher::_invoke() - CORE/cake/dispatcher.php, line 245
+Dispatcher::dispatch() - CORE/cake/dispatcher.php, line 211
+[main] - APP/webroot/index.php, line 88</pre></div><table class="cake-sql-log" id="cakeSqlLog_12603906964b2009286ce538_00100401" summary="Cake SQL Log" cellspacing="0" border = "0">
+<caption>(default_legacy) 1 query took 2 ms</caption>
+<thead>
+<tr><th>Nr</th><th>Query</th><th>Error</th><th>Affected</th><th>Num. rows</th><th>Took (ms)</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>SELECT `Product`.`product_type_id`, `Product`.`name`, `Product`.`description`, `Product`.`weight`, `Product`.`shipWeight`, `Product`.`height`, `Product`.`width`, `Product`.`depth`, `Product`.`code`, `Product`.`sort_index`, `Product`.`quote_limit`, `Product`.`personalizationLimit`, `Product`.`stamp`, `Product`.`available`, `Product`.`buildable`, `Product`.`income_acct`, `Product`.`cust_invoice_acct`, `Product`.`address_length`, `Product`.`is_popular`, `Product`.`popularity`, `Product`.`prod`, `Product`.`main_intro`, `Product`.`main_desc`, `Product`.`secondary_desc`, `Product`.`meta_keywords`, `Product`.`meta_desc`, `Product`.`page_title`, `Product`.`body_title`, `Product`.`is_stock_item`, `Product`.`minimum`, `Product`.`normal_ship_time_days`, `Product`.`max_per_10_days`, `Product`.`pricing_name`, `Product`.`parent_product_type_id`, `Product`.`made_in_usa`, `Product`.`main_desc_new`, `Product`.`short_name`, `Product`.`image_type`, `Product`.`wholesale_minimum`, `Product`.`quality_desc`, `Product`.`base_price`, `Product`.`production_quantity_per_day`, `Product`.`product_category_id` FROM `product_type` AS `Product`   WHERE  code = &#039;&#039;     LIMIT 1</td><td></td><td style = "text-align: right">0</td><td style = "text-align: right">0</td><td style = "text-align: right">2</td></tr>
+</tbody></table>
+<table class="cake-sql-log" id="cakeSqlLog_12603906964b2009286d1e66_01812605" summary="Cake SQL Log" cellspacing="0" border = "0">
+<caption>(default) 0 query took  ms</caption>
+<thead>
+<tr><th>Nr</th><th>Query</th><th>Error</th><th>Affected</th><th>Num. rows</th><th>Took (ms)</th></tr>
+</thead>
+<tbody>
+</tbody></table>

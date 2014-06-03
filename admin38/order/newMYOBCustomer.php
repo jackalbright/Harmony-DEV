@@ -1,0 +1,237 @@
+<?php
+session_start();
+  if (!array_key_exists('UName', $_SESSION)){
+    header ('Location: /admin38/index.php');
+    exit (0);
+  } else {
+    $manageOrders=$_SESSION['canManageOrders'];
+    $manageParts=$_SESSION['canManageParts'];
+    $manageUsers=$_SESSION['canManageUsers'];
+    $manageItems=$_SESSION['canManageItems'];
+    $manageEvents=$_SESSION['canManageEvents'];
+    $manageDatabase=$_SESSION['canManageDatabase'];
+    $manageTestimonials=$_SESSION['canManageTestimonials'];
+  };
+  if ($_SESSION['canManageOrders']!="Yes"){
+    header ('Location: ../menu.php');
+    exit (0);
+  };
+
+	include ('../../includes/admin.inc');
+	$array = explode(" ", $_REQUEST['txtInvoice']);
+	$txtPurchaseID = $array;
+	#header("Content-type: text/plain");
+	header("Content-type: application/txt");
+	header("Content-Disposition: attachment; filename=customer.txt");
+	include ('../../includes/database.inc');
+	echo "Co./Last Name\tFirst Name\tCard ID\tCard Status\tCurrency Code\tAddr 1 - Line 1\t           - Line 2\t           - Line 3\t           - Line 4\t           - City\t           - State\t           - ZIP Code\t           - Country\t           - Phone # 1\t           - Phone # 2\t           - Phone # 3\t           - Fax #\t           - Email\t           - WWW\t           - Contact Name\t           - Salutation\tAddr 2 - Line 1\t           - Line 2\t           - Line 3\t           - Line 4\t           - City\t           - State\t           - ZIP Code\t           - Country\t           - Phone # 1\t           - Phone # 2\t           - Phone # 3\t           - Fax #\t           - Email\t           - WWW\t           - Contact Name\t           - Salutation\tAddr 3 - Line 1\t           - Line 2\t           - Line 3\t           - Line 4\t           - City\t           - State\t           - ZIP Code\t           - Country\t           - Phone # 1\t           - Phone # 2\t           - Phone # 3\t           - Fax #\t           - Email\t           - WWW\t           - Contact Name\t           - Salutation\tAddr 4 - Line 1\t           - Line 2\t           - Line 3\t           - Line 4\t           - City\t           - State\t           - ZIP Code\t           - Country\t           - Phone # 1\t           - Phone # 2\t           - Phone # 3\t           - Fax #\t           - Email\t           - WWW\t           - Contact Name\t           - Salutation\tAddr 5 - Line 1\t           - Line 2\t           - Line 3\t           - Line 4\t           - City\t           - State\t           - ZIP Code\t           - Country\t           - Phone # 1\t           - Phone # 2\t           - Phone # 3\t           - Fax #\t           - Email\t           - WWW\t           - Contact Name\t           - Salutation\tPicture\tNotes\tIdentifiers\tCustom List 1\tCustom List 2\tCustom List 3\tCustom Field 1\tCustom Field 2\tCustom Field 3\tBilling Rate\tTerms - Payment is Due\t           - Discount Days\t           - Balance Due Days\t           - % Discount\t           - % Monthly Charge\tTax Code\tCredit Limit\tTax ID No.\tVolume Discount %\tSales/Purchase Layout\tPrice Level\tPayment Method\tPayment Notes\tName on Card\tCard Number\tExpiration Date\tAddress (AVS)\tZIP (AVS)\tCard Verification (CVV2)\tAccount\tSalesperson\tSalesperson Card ID\tComment\tShipping Method\tPrinted Form\tFreight Tax Code\tReceipt Memo\tInvoice/Purchase Order Delivery\r";
+	
+foreach ($txtPurchaseID as $purchaseID) {	
+	$q="SELECT c.first_name, c.last_name, ba.Company, c.phone, ba.in_care_of, ba.address_1, ba.address_2, ba.city, ba.state, ba.zip_code, ba.country, sa.in_care_of, sa.address_1, sa.address_2, sa.city, sa.state, sa.zip_code, sa.country, cc.card_type, cc.cardholder, cc.expiration, cc.number, p.shipping_method, MONTH(cc.expiration) as expMonth, YEAR(cc.expiration) as expYear, c.eMail_Address, p.shipping_cost, sm.name, c.customer_id FROM purchase p LEFT JOIN credit_card cc ON p.credit_card_id = cc.credit_card_id, customer c, contact_info ba, contact_info sa, shippingMethod sm WHERE p.purchase_id='$purchaseID' AND p.customer_id = c.customer_id AND p.billing_id=ba.contact_id AND p.shipping_id=sa.contact_id AND p.shipping_method=sm.shippingMethodID";
+	$result = mysql_query ($q , $database); 
+	#$result = mysql_query ("SELECT c.first_name, c.last_name, c.company, c.phone, ba.in_care_of, ba.address_1, ba.address_2, ba.city, ba.state, ba.zip_code, ba.country, sa.in_care_of, sa.address_1, sa.address_2, sa.city, sa.state, sa.zip_code, sa.country, cc.card_type, cc.cardholder, cc.expiration, cc.number, p.shipping_method, MONTH(cc.expiration) as expMonth, YEAR(cc.expiration) as expYear, c.eMail_Address, p.shipping_cost, sm.name FROM purchase p, customer c, contact_info ba, contact_info sa, credit_card cc, shippingMethod sm WHERE p.purchase_id='$purchaseID' AND p.customer_id = c.customer_id AND p.billing_id=ba.contact_id AND p.shipping_id=sa.contact_id AND p.credit_card_id=cc.credit_card_id AND p.shipping_method=sm.shippingMethodID", $database); 
+
+
+while ($row = mysql_fetch_row($result)) {
+  if ($row[2] != "") {
+// if there's a company, use that here
+$companyOrLastName         = $row[2];
+  } else {
+// otherwise, use the last name
+$companyOrLastName         = $row[1];
+};
+  if ($row[2] != "") {
+// if there's a company, don't use the first name
+$firstName                 = "";
+  } else {
+// otherwise, better show it
+$firstName                 = $row[0];
+};
+$cardID                    = $row[28];#"*None";
+$cardStatus                = "";
+$currencyCode              = "";
+  if ($row[2] != "") {
+// if there's a company, show name in address field
+$addr1Line1                = $row[0]." ".$row[1];
+  } else {
+// otherwise, this can stay blank
+$addr1Line1                = "";
+};
+// this is the first line of the billing address
+$addr1Line2                = $row[5];
+// this the second line of the billing address
+$addr1Line3                = $row[6];
+$addr1Line4                = "";
+// city from billing address
+$addr1City                 = $row[7];
+// state from billing address
+$addr1State                = $row[8];
+// zip from billing address
+$addr1ZIP                  = $row[9];
+// country from billing address
+$addr1Country              = $row[10];
+// phone from billing address
+$addr1Phone1               = $row[3];
+$addr1Phone2               = "";
+$addr1Phone3               = "";
+$addr1Fax                  = "";
+$addr1Email                = $row[25];
+$addr1WWW                  = "";
+// name from the billing info
+$addr1ContactName          = $row[0]." ".$row[1];
+$addr1Salutation           = "";
+// everything is addr2 is for shipping
+// it is only used when shipping info exists
+// otherwise, it is left blank
+  if ($row[11] != "") {
+$addr2Line1                = $row[11];
+  } else {
+$addr2Line1                = "";
+};
+  if ($row[12] != "") {
+$addr2Line2                = $row[12];
+  } else {
+$addr2Line2                = "";
+};
+  if ($row[13] != "") {
+$addr2Line3                = $row[13];
+  } else {
+$addr2Line3                = "";
+};
+$addr2Line4                = "";
+  if ($row[14] != "") {
+$addr2City                 = $row[14];
+  } else {
+$addr2City                 = $row[14];
+};
+  if ($row[15] != "") {
+$addr2State                = $row[15];
+  } else {
+$addr2State                = $row[15];
+};
+  if ($row[16] != "") {
+$addr2ZIP                  = $row[16];
+  } else {
+$addr2ZIP                  = $row[16];
+};
+  if ($row[17] != "") {
+$addr2Country              = $row[17];
+  } else {
+$addr2Country              = $row[17];
+};
+  if ($row[11] != "") {
+$addr2Phone1               = $row[3];
+  } else {
+$addr2Phone1               = $row[3];
+};
+$addr2Phone2               = "";
+$addr2Phone3               = "";
+$addr2Fax                  = "";
+$addr2Email                = "";
+$addr2WWW                  = "";
+  if ($row[11] != "") {
+// if there's an in care of, use that
+$addr2ContactName          = $row[11];
+  } else {
+// otherwise, use the name from the billing info
+$addr2ContactName          = $row[0]." ".$row[1];
+  };
+$addr2Salutation           = "";
+$addr3Line1                = "";
+$addr3Line2                = "";
+$addr3Line3                = "";
+$addr3Line4                = "";
+$addr3City                 = "";
+$addr3State                = "";
+$addr3ZIP                  = "";
+$addr3Country              = "";
+$addr3Phone1               = "";
+$addr3Phone2               = "";
+$addr3Phone3               = "";
+$addr3Fax                  = "";
+$addr3Email                = "";
+$addr3WWW                  = "";
+$addr3ContactName          = "";
+$addr3Salutation           = "";
+$addr4Line1                = "";
+$addr4Line2                = "";
+$addr4Line3                = "";
+$addr4Line4                = "";
+$addr4City                 = "";
+$addr4State                = "";
+$addr4ZIP                  = "";
+$addr4Country              = "";
+$addr4Phone1               = "";
+$addr4Phone2               = "";
+$addr4Phone3               = "";
+$addr4Fax                  = "";
+$addr4Email                = "";
+$addr4WWW                  = "";
+$addr4ContactName          = "";
+$addr4Salutation           = "";
+$addr5Line1                = "";
+$addr5Line2                = "";
+$addr5Line3                = "";
+$addr5Line4                = "";
+$addr5City                 = "";
+$addr5State                = "";
+$addr5ZIP                  = "";
+$addr5Country              = "";
+$addr5Phone1               = "";
+$addr5Phone2               = "";
+$addr5Phone3               = "";
+$addr5Fax                  = "";
+$addr5Email                = "";
+$addr5WWW                  = "";
+$addr5ContactName          = "";
+$addr5Salutation           = "";
+$picture                   = "";
+$notes                     = "";
+$identifiers               = "I";
+$customList1               = "";
+$customList2               = "";
+$customList3               = "";
+$customField1              = "";
+$customField2              = "";
+$customField3              = "";
+$billingRate               = "0";
+$termsPaymentIsDue         = "1";
+$termsDiscountDays         = "0";
+$termsBalanceDueDays       = "0";
+$termsPercentDiscount      = "0";
+$termsPercentMonthlyCharge = "0";
+$taxCode                   = "X";
+$creditLimit               = "0";
+$taxIDNo                   = "";
+$volumeDiscountPercent     = "0";
+$salesPurchaseLayout       = "N";
+$priceLevel                = "3";
+  if ($row[18] == "Mastercard") {
+$paymentMethod             = "MasterCard";
+  } else {
+$paymentMethod             = $row[18];
+  };
+$paymentNotes              = "";
+$nameOnCard                = $row[19];
+$cardNumber                = $row[21];
+$expirationDate            = sprintf("%02s",$row[23])."/".substr($row[24],2,2);
+$addressAVS                = $row[5];
+$ZIPAVS                    = $row[9];
+$cardVerificationCVV2      = "";
+$account                   = "";
+$salesperson               = "Franklin, Sherrill";
+$salespersonCardID         = "*None";
+$comment                   = "We look forward to serving you again.";
+$shippingMethod            = $row[27];
+$printedForm               = "";
+$freightTaxCode            = "-";
+$receiptMemo               = "";
+$invoiceDelivery               = "P";
+}
+
+echo "$companyOrLastName\t$firstName\t$cardID\t$cardStatus\t$currencyCode\t$addr1Line1\t$addr1Line2\t$addr1Line3\t$addr1Line4\t$addr1City\t$addr1State\t$addr1ZIP\t$addr1Country\t$addr1Phone1\t$addr1Phone2\t$addr1Phone3\t$addr1Fax\t$addr1Email\t$addr1WWW\t$addr1ContactName\t$addr1Salutation\t$addr2Line1\t$addr2Line2\t$addr2Line3\t$addr2Line4\t$addr2City\t$addr2State\t$addr2ZIP\t$addr2Country\t$addr2Phone1\t$addr2Phone2\t$addr2Phone3\t$addr2Fax\t$addr2Email\t$addr2WWW\t$addr2ContactName\t$addr2Salutation\t$addr3Line1\t$addr3Line2\t$addr3Line3\t$addr3Line4\t$addr3City\t$addr3State\t$addr3ZIP\t$addr3Country\t$addr3Phone1\t$addr3Phone2\t$addr3Phone3\t$addr3Fax\t$addr3Email\t$addr3WWW\t$addr3ContactName\t$addr3Salutation\t$addr4Line1\t$addr4Line2\t$addr4Line3\t$addr4Line4\t$addr4City\t$addr4State\t$addr4ZIP\t$addr4Country\t$addr4Phone1\t$addr4Phone2\t$addr4Phone3\t$addr4Fax\t$addr4Email\t$addr4WWW\t$addr4ContactName\t$addr4Salutation\t$addr5Line1\t$addr5Line2\t$addr5Line3\t$addr5Line4\t$addr5City\t$addr5State\t$addr5ZIP\t$addr5Country\t$addr5Phone1\t$addr5Phone2\t$addr5Phone3\t$addr5Fax\t$addr5Email\t$addr5WWW\t$addr5ContactName\t$addr5Salutation\t$picture\t$notes\t$identifiers\t$customList1\t$customList2\t$customList3\t$customField1\t$customField2\t$customField3\t$billingRate\t$termsPaymentIsDue\t$termsDiscountDays\t$termsBalanceDueDays\t$termsPercentDiscount\t$termsPercentMonthlyCharge\t$taxCode\t$creditLimit\t$taxIDNo\t$volumeDiscountPercent\t$salesPurchaseLayout\t$priceLevel\t$paymentMethod\t$paymentNotes\t$nameOnCard\t$cardNumber\t$expirationDate\t$addressAVS\t$ZIPAVS\t$cardVerificationCVV2\t$account\t$salesperson\t$salespersonCardID\t$comment\t$shippingMethod\t$printedForm\t$freightTaxCode\t$receiptMemo\t$invoiceDelivery\r";
+
+} // Close foreach loop
+
+mysql_close($database);
+?>

@@ -1,0 +1,75 @@
+<?
+# .46 factor
+# BUT! images aren't scaled.... we gotta change '$path' so it's appropriate to 'small' sized version.
+$imgw = $large ? 264 : 132;
+$imgh = $large ? 280 : 140;
+$textw = $large ? 264 : 132;
+$texth = $large ? 284 : 136;
+$perh = $large ? 84 : 42;
+$perw = $large ? 258 : 126;
+$borderw = $large ? 264 : 132;
+
+?>
+<tr>
+	<td valign=top colspan=3>
+		<img src="<?= $path ?>/top.png"/>
+	</td>
+</tr>
+<tr>
+	<td valign=top colspan=1 rowspan=1>
+		<img src="<?= $path ?>/border_left.png"/>
+	</td>
+	<td valign=top colspan=1 style="width: <?=$borderw?>px;">
+		<img width="<?=$borderw?>" src="<?= $path ?>/border.png"/>
+	</td>
+	<td valign=top colspan=1 rowspan=2>
+		<img src="<?= $path ?>/tassel.png"/>
+	</td>
+</tr>
+<tr>
+	<td valign=top colspan=1 rowspan=1>
+		<img src="<?= $path ?>/image_left.png"/>
+	</td>
+	<td valign=top colspan=1 style="background-color: white; height: <?=$imgh?>px; width: <?=$imgw-20?>px; vertical-align: top; text-align: center; background-image: url('<?= $path ?>/image.png'); ">
+		<? product_preview_image($image, null, $imgw-20, $imgh); ?>
+	</td>
+</tr>
+<tr>
+	<td valign=top colspan=1 rowspan=1>
+		<img src="<?= $path ?>/text_left.png"/>
+	</td>
+	<td valign=top colspan=1 style="background-color: white; vertical-align: top; text-align: center; background-image: url('<?= $path ?>/text.png'); ">
+		<div style="padding: 3px; height: <?=$texth-6?>px; width: <?=$textw-6?>px; overflow: hidden;">
+		<? product_preview_text(); ?>
+		</div>
+	</td>
+	<td valign=top colspan=1 rowspan=1>
+		<img src="<?= $path ?>/text_right.png"/>
+	</td>
+</tr>
+<tr>
+	<td valign=top colspan=1>
+		<img src="<?= $path ?>/bottom_border_left.png"/>
+	</td>
+	<td valign=top colspan=1 style="width: <?=$borderw?>px;">
+		<img width="<?=$borderw?>" src="<?= $path ?>/bottom_border.png"/>
+	</td>
+	<td valign=top colspan=1>
+		<img src="<?= $path ?>/bottom_border_right.png"/>
+	</td>
+</tr>
+
+<tr>
+	<td valign=top colspan=1>
+		<img src="<?= $path ?>/bottom_left.png"/>
+	</td>
+	<td valign=top colspan=1 style="padding: 3px; height: <?=$perh?>px; width: <?=$perw?>px; vertical-align: top; text-align: center; background-image: url('<?= $path ?>/bottom.png'); ">
+		<div style="height: <?=$perh?>px; width: <?=$perw?>px; overflow: hidden;">
+		<? product_preview_personalization(); ?>
+		</div>
+		
+	</td>
+	<td valign=top colspan=1>
+		<img src="<?= $path ?>/bottom_right.png"/>
+	</td>
+</tr>

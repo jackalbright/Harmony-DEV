@@ -1,0 +1,137 @@
+<? 
+$addClass = "addClassName";
+$rmClass = "removeClassName";
+
+if (empty($prototype_js)) { 
+	#<script src="/javascript/mootools.js" type="text/javascript"></script> 
+	?> <script src="/js/scriptaculous/prototype.js" type="text/javascript"></script> <?
+} ?>
+
+
+			<table width="" id="prinav_wrapper" cellspacing=0 cellpadding=0 style=""> <tr><td style="">
+			<div class="">
+				<table class="dropdown_nav" id="prinav" cellpadding="0" cellspacing="0" border="0">
+				<tr>
+					<td class="dropdown_nav_button_left"><a href="/">Home</a></td>
+					<td class="dropdown_nav_button" onMouseOver="$('dropdown_nav_submenu_products').<?=$rmClass?>('dropdown_nav_submenu_hidden');" onMouseOut="$('dropdown_nav_submenu_products').<?=$addClass?>('dropdown_nav_submenu_hidden');">
+						<a href="/details/?start_over=1">Products</a>
+						<table id="dropdown_nav_submenu_products" class="dropdown_nav_submenu dropdown_nav_submenu_hiddenX" border=0>
+						<tr>
+							<td class="dropdown_nav_subbutton_left"><a href="/details/bookmark.php?start_over=1">Bookmarks</a></td>
+							<td class="dropdown_nav_subbutton"><a href="/details/postcard.php?start_over=1">Postcards</a></td>
+						</tr>
+						<tr>
+							<td class="dropdown_nav_subbutton_left"><a href="/details/paperweight.php?start_over=1">Glass Paperweights</a></td>
+							<td class="dropdown_nav_subbutton"><a href="/details/puzzle.php?start_over=1">Puzzles</a></td>
+						</tr>
+						<tr>
+							<td class="dropdown_nav_subbutton_left"><a href="/details/magnet.php?start_over=1">Magnets</a></td>
+							<td class="dropdown_nav_subbutton"><a href="/details/customruler.php?start_over=1">Rulers (Custom)</a></td>
+						</tr>
+						<tr>
+							<td class="dropdown_nav_subbutton_left"><a href="/details/mug.php?start_over=1">Mugs</a></td>
+							<td class="dropdown_nav_subbutton"><a href="/details/stamp-on-card.php?start_over=1">Stamps on Cards</a></td>
+						</tr>
+						<tr>
+							<td class="dropdown_nav_subbutton_left"><a href="/details/keychain.php?start_over=1">Keychains</a></td>
+							<td class="dropdown_nav_subbutton"><a href="/details/t-shirt.php?start_over=1">T-Shirts</a></td>
+						</tr>
+						<tr>
+							<td class="dropdown_nav_subbutton_left"><a href="/details/framedstamp.php?start_over=1">Framed Stamps</a></td>
+							<td class="dropdown_nav_subbutton"><a href="/details/totebag.php?start_over=1">Tote Bags</a></td>
+						</tr>
+						<tr>
+							<td class="dropdown_nav_subbutton_left"><a href="/details/bagtag.php?start_over=1">Luggage Tags</a></td>
+							<td class="dropdown_nav_subbutton"><b style="color: black !important;">Stock Items:</b></td>
+						</tr>
+						<tr>
+							<td class="dropdown_nav_subbutton_left"><a href="/details/mousepad.php?start_over=1">MousePads</a></td>
+							<td class="dropdown_nav_subbutton"><a href="/details/ruler.php?start_over=1">Presidents Rulers</a></td>
+						</tr>
+						<tr>
+							<td class="dropdown_nav_subbutton_left"><a href="/details/ornament.php?start_over=1">Ornaments</a></td>
+							<td class="dropdown_nav_subbutton"><a href="/details/paperweightkit.php?start_over=1">Blank Paperweight Kits</a></td>
+						</tr>
+						<tr>
+							<td class="dropdown_nav_subbutton_left"><a href="/details/pin.php?start_over=1">Pins and Tie Tacks</a></td>
+							<td class="dropdown_nav_subbutton"><a href="/details/tassel.php?start_over=1">Bookmark Tassels</a></td>
+						</tr>
+						<tr>
+							<td class="dropdown_nav_subbutton_left"><a href="/details/poster.php?start_over=1">Posters</a></td>
+							<td class="dropdown_nav_subbutton"><a href="/details/charm.php?start_over=1">Charms</a></td>
+						</tr>
+						</table>
+						<div class="clear"></div>
+
+
+
+		
+					</td>
+					<td class="dropdown_nav_button" onMouseOver="$('dropdown_nav_submenu_subjects').<?=$rmClass?>('dropdown_nav_submenu_hidden');" onMouseOut="$('dropdown_nav_submenu_subjects').<?=$addClass?>('dropdown_nav_submenu_hidden');">
+						<?
+							$subjects = get_db_records("browse_node", " parent_node = 1 ", "browse_name");
+						?>
+						<a href="/gallery/browse">Image Subjects</a>
+						<table id="dropdown_nav_submenu_subjects" class="dropdown_nav_submenu dropdown_nav_submenu_hidden" border=0>
+						<? foreach($subjects as $subject) { ?>
+						<tr>
+							<td class="dropdown_nav_subbutton">
+								<a href="/gallery/browse/<?= preg_replace("/ /", "_", $subject['browse_name']); ?>"><?= $subject['browse_name'] ?></a>
+							</td>
+						</tr>
+						<? } ?>
+						</table>
+					</td>
+					<td class="dropdown_nav_button"> <a href="/info/testimonials.php">Reviews</a> </td>
+					<td class="dropdown_nav_button"> <a href="/info/quantityPricing.php">Pricing</a> </td>
+					<td class="dropdown_nav_button" onMouseOver="$('dropdown_nav_submenu_faq').<?=$rmClass?>('dropdown_nav_submenu_hidden');" onMouseOut="$('dropdown_nav_submenu_faq').<?=$addClass?>('dropdown_nav_submenu_hidden');">
+						<a href="/info/faq.php">FAQ</a>
+						<table id="dropdown_nav_submenu_faq" class="dropdown_nav_submenu dropdown_nav_submenu_hidden" border=0>
+						<tr>
+							<td class="dropdown_nav_subbutton_top">
+								<a href="/info/faq.php">General</a>
+							</td>
+						</tr>
+						<tr>
+							<td class="dropdown_nav_subbutton">
+								<a href="/info/shippingCalculator.php">Shipping Calculator</a>
+							</td>
+						</tr>
+						<tr>
+							<td class="dropdown_nav_subbutton">
+								<a href="/custom/designServices.php">Design Services</a>
+							</td>
+						</tr>
+						<tr>
+							<td class="dropdown_nav_subbutton">
+								<a href="/info/faq.php#production">Production Time</a>
+							</td>
+						</tr>
+						<tr>
+							<td class="dropdown_nav_subbutton">
+								<a href="/info/guarantee.php">Guarantee</a>
+							</td>
+						</tr>
+						<tr>
+							<td class="dropdown_nav_subbutton">
+								<a href="/info/security.php">Security</a>
+							</td>
+						</tr>
+						<tr>
+							<td class="dropdown_nav_subbutton">
+								<a href="/info/privacy.php">Privacy Policy</a>
+							</td>
+						</tr>
+						</table>
+					</td>
+					<!--
+					<td class="dropdown_nav_button"><a href="/info/testimonials.php">Testimonials</a></td>
+					-->
+					<td class="dropdown_nav_button"><a href="/info/contact_us.php">Contact Us</a></td>
+					<td class="dropdown_nav_button"><a href="/info/about.php">About Us</a></td>
+				</tr>
+				</table>
+			</div>
+			</td>
+			<td style="white-space: nowrap;">
+			</td></tr></table>

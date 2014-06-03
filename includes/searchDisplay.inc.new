@@ -1,0 +1,70 @@
+<?php
+	include_once ('database.inc');
+
+// Create Product arrays for reproducible and non-reproducible items
+	$result = mysql_query ("Select product_type.* from product_type, product_part, part_type where part_type.part_name='image' and part_type.part_id = product_part.part_id and product_part.product_type_id = product_type.product_type_id and product_type.buildable='yes' and product_type.available='yes' and product_type.stamp != 'custom' order by product_type.name", $database);
+	$allProducts = array();
+	while ($temp = mysql_fetch_object($result) ) {
+		$allProducts[] = $temp;
+	}
+
+	$reproProducts = array();
+	$result = mysql_query ("Select product_type.* from part_type, product_part, product_type where part_type.part_name = 'image' and part_type.part_id = product_part.part_id and product_part.product_type_id = product_type.product_type_id and product_type.available = 'yes' and product_type.buildable = 'yes' and product_type.stamp != 'real' and product_type.stamp != 'custom' order by product_type.name", $database);
+	while ($temp = mysql_fetch_object($result)) {
+		$reproProducts[] = $temp;
+	}
+
+	$result = mysql_query ("Select product_type.* from product_type, product_part, part_type where part_type.part_name='image' and part_type.part_id = product_part.part_id and product_part.product_type_id = product_type.product_type_id and product_type.buildable='yes' and product_type.available='yes' and not (product_type.stamp='repro') and not (product_type.stamp='custom') order by product_type.name", $database);
+	$stampProducts = array();
+	while ($temp = mysql_fetch_object($result) ) {
+		$stampProducts[] = $temp;
+	}
+	
+	function listStamp ($stamp, $prod = '') {
+		global $allProducts, $stampProducts, $reproProducts;
+
+		$products = $allProducts;
+		if($stamp->reproducible == 'Only') { $products = $reproProducts; }
+		if($stamp->reproducible == 'No') { $products = $stampProducts; }
+
+		?>
+		<div>
+		<form method="GET" action="/build/customize" onSubmit="if($('prod').value == '') { this.action = '/gallery/view/<?= $stamp->catalog_number; ?>'; } else { this.action = '/build/customize'; }">
+		<input type="hidden" name="catalog_number" value="<?= $stamp->catalog_number ?>"/>
+		<input type="hidden" name="new" value="1"/>
+		<table width="100%" cellspacing=5>
+		<tr>
+			<td style="width: 100px;" valign="top" align="center">
+				<img class="stamp_thumbnail" src="<?= $stamp->thumbnail_location ?>"/>
+				<div class="link"><a rel="shadowbox" href="/gallery_image/view/<?= $stamp->catalog_number ?>.gif">+ Larger</a></div>
+			</td>
+			<td valign="top">
+				<div class="clear"></div>
+				<? if($stamp->reproducible == 'No') { ?>
+					<p class="note">Due to copyright, this stamp is not available on <a style='text-decoration: underline;' href="/info/reproduction.php">items requiring reproductions</a>.</p>
+				<? } else if ($stamp->reproducible == 'Only') { ?>
+					<p class="note">This stamp is only available as a licensed reproduction.  Because of this, we cannot create <a href="/details/stamp-on-card.php">stamps-on-cards</a> or <a href="/details/pin.php">pins/tie-tacks</a> with this image.</p>
+				<? } ?>
+				<div class="" style="">
+					<h3 class=""><?= $stamp->stamp_name ?>
+					 	<span style="font-size: 10px;" class="catNum">Catalog # <?= $stamp->catalog_number ?></span>
+					</h3>
+					<select id="prod" name="prod" style="width: 200px;" onChange="">
+						<option value="">All Products</option>
+						<? foreach($products as $p) { ?>
+						<option value="<?= $p->code ?>" <?= (!empty($_SESSION['Build']['Product']['code']) && $_SESSION['Build']['Product']['code'] == $p->code) ? "selected='selected'" : "" ?> >
+							<?= preg_replace("/s$/","", $p->name).'s'; ?></option>
+						<? } ?>
+					</select>
+				</div>
+				<div align="center">
+				<input type="image" src="/images/buttons/Select-grey.gif"/>
+				</div>
+			</td>
+		</tr>
+		</table>
+		</form>
+		</div>
+	<?
+	}
+?>

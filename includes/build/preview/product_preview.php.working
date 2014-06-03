@@ -1,0 +1,307 @@
+<?
+
+# If /images/blanks/$name dir exists....
+
+# IF NO PRODUCT, JUST SHOW IMG....
+
+function product_preview($build)
+# Can pass array('Product'=>$product, 'CustomImage'=>..., 'GalleryImage'=>...)
+# Or just do 'code'=>..., catalog_number=>..., image_id=>...
+{
+
+	$image = null;
+	if (isset($build['CustomImage']))
+	{
+		$image = $build['CustomImage'];
+	} else if (isset($build['GalleryImage'])) {
+		$image = $build['GalleryImage'];
+	} else if (isset($build['catalog_number'])) {
+		$image = get_db_record('stamp', array('catalog_number'=>$build['catalog_number']));
+	}
+
+	$product = null;
+	if (isset($build['Product']))
+	{
+		$product = $build['Product'];
+	} else if (isset($build['code'])) {
+		$product = get_db_record('product_type', array('code'=>$build['code']));
+	}
+
+	ob_start();
+	$img_size = img_content($image);
+	ob_flush();
+	$img_content = ob_get_clean();
+	ob_start();
+
+	ob_start();
+	text_content();
+	ob_flush();
+	$text_content = ob_get_clean();
+	ob_start();
+
+	# So our 'build' can affect the content, etc, we should assign id attributes to div tags of our custom content....
+	# For now, we just need a default content, image ,etc...
+	# WE WILL ASSIGN ID TAGS BASED ON NAMING IF AN IMAGE, ETC....
+	
+	if (isset($product))
+	{
+		?><div class="center"><?
+		change_links($product, $image);
+		$top_wh = product_header($product, $image);
+		image_content($image);
+		product_footer($product, $image);
+		?><a class="hover_underline" rel="shadowbox[width=<?=$top_wh[0]?>;height=<?=$top_wh[1]?>]" href="/build/product_view_large.php"><?
+		view_larger($product, $image);
+		?></a></div><?
+	} else if ($image) {
+		?><div class="center"><?
+		change_links(null, $image);
+		$top_wh = image_content($image);
+		?><a class="hover_underline" rel="shadowbox[width=<?=$top_wh[0]?>;height=<?=$top_wh[1]?>]" href="/build/product_view_large.php"><?
+		view_larger(null, $image);
+		?></a></div><?
+		
+	} else { # Nothing specified...
+		change_links(null, null);
+	}
+
+}
+
+function text_content()
+{
+?>
+<p><span>Y</span>our quotation, wording, or other text here.</p>
+
+<p>We can also center your text like this if you prefer.</p>
+<?
+}
+
+
+function product_view_large($build)
+# Can pass array('Product'=>$product, 'CustomImage'=>..., 'GalleryImage'=>...)
+# Or just do 'code'=>..., catalog_number=>..., image_id=>...
+{
+
+	$image = null;
+	if (isset($build['CustomImage']))
+	{
+		$image = $build['CustomImage'];
+	} else if (isset($build['GalleryImage'])) {
+		$image = $build['GalleryImage'];
+	} else if (isset($build['catalog_number'])) {
+		$image = get_db_record('stamp', array('catalog_number'=>$build['catalog_number']));
+	}
+
+	$product = null;
+	if (isset($build['Product']))
+	{
+		$product = $build['Product'];
+	} else if (isset($build['code'])) {
+		$product = get_db_record('product_type', array('code'=>$build['code']));
+	}
+	
+	
+	if (isset($product))
+	{
+		?><div class="center"><?
+		product_header($product, $image, true);
+		image_content($image, true);
+		product_footer($product, $image, true);
+		?></div><?
+	} else if ($image) {
+		?><div class="center"><?
+		image_content($image, true);
+		?></div><?
+		
+	} else { # Nothing specified...
+		?> Please select an image and a product to view. <?
+	}
+}
+
+
+function change_links($prod, $img)
+{
+?>
+<div class="right_align">
+[ <a href="/products/select?new=1"><? echo ($prod ? "Change" : "Select"); ?> Product</a> ]<br/>
+[ <a href="/gallery?new=1"><? echo ($img ? "Change" : "Select"); ?> Image</a> ]
+</div>
+<br/>
+<?
+}
+
+function view_larger($prod, $img)
+{
+?>
+<br/>
+<div>
++ View Larger
+</div>
+<?
+}
+
+function get_image_orientation($image)
+{
+	if (isset($image['Image_ID'])) # Custom image
+	{
+		$path = dirname(__FILE__) . "/../../../app/webroot/".$image['thumbnail_location'];
+	} else {
+		$path = dirname(__FILE__) . "/../../../".$image['thumbnail_location'];
+	}
+	$orient = 'vertical';
+	list($w, $h) = getimagesize($path);
+	if ($w > $h) { $orient = 'horizontal'; }
+	return $orient;
+}
+
+function product_header($product, $image = null, $large = false)
+{
+	$orientation = get_image_orientation($image);
+	
+	$code = $product['code'];
+	$core_base_path = $base_path = dirname(__FILE__)."/../../../images/products/blanks/$code/$orientation";
+	if (!is_dir($base_path))
+	{
+		$other_orientation = ($orientation == 'vertical' ? 'horizontal' : 'vertical');
+		$orientation = $other_orientation;
+		$core_base_path = $base_path = dirname(__FILE__)."/../../../images/products/blanks/$code/$other_orientation";
+	} # Default to other orientation
+
+	$path = "/images/products/blanks/$code/$orientation";
+	if ($large) { $base_path = "$base_path/large/"; $path = "$path/large/"; }
+
+	if (($code && is_dir($base_path)))
+	{
+	?>
+			<? if (!$large) { ?><h3><?php echo $product['name']; ?> Preview</h3><? } ?>
+
+				<div class="center" style="margin: 0px auto 0px auto;">
+					<table border=0 cellpadding=0 cellspacing=0 style="border: solid black 1px; background-color: #FFFFFF;">
+					<? foreach($preview_row as $row) { ?>
+					<tr>
+						<td colspan=3>
+							<img src="<?= $path ?>/top.gif">
+						</td>
+					</tr>
+					<tr>
+						<td colspan=1>
+							<img src="<?= $path ?>/left.gif">
+						</td>
+						<td colspan=1 style="background-color: white; height: 100px; vertical-align: middle; text-align: center; background-image: url('<?= $path ?>/center.gif'); ">
+		<?
+	
+	}
+
+	$top_size = getimagesize("$core_base_path/large/top.gif");
+	$left_size = getimagesize("$core_base_path/large/left.gif");
+	$bottom_size = getimagesize("$core_base_path/large/bottom.gif");
+	#echo "B=($core_base_path)".print_r($top_size,true);
+	#echo "B=".print_r($left_size,true);
+	#echo "B=".print_r($bottom_size,true);
+	return array($top_size[0]+5, $top_size[1]+$left_size[1]+$bottom_size[1]+5);
+	# So can do proper shadowbox sizing...
+}
+
+function product_footer($product, $image = null, $large = false)
+{
+
+	$orientation = get_image_orientation($image);
+	
+	$code = $product['code'];
+	$base_path = dirname(__FILE__)."/../../../images/products/blanks/$code/$orientation";
+	if (!is_dir($base_path))
+	{
+		$other_orientation = ($orientation == 'vertical' ? 'horizontal' : 'vertical');
+		$orientation = $other_orientation;
+		$base_path = dirname(__FILE__)."/../../../images/products/blanks/$code/$other_orientation";
+	} # Default to other orientation
+
+	$path = "/images/products/blanks/$code/$orientation";
+	if ($large) { $base_path = "$base_path/large/"; $path = "$path/large/"; }
+
+	if (($code && is_dir($base_path)))
+	{
+	?>
+					</td>
+					<td colspan=1>
+						<img src="<?= $path ?>/right.gif">
+					</td>
+				</tr>
+				<tr>
+					<td colspan=3>
+						<img src="<?= $path ?>/bottom.gif">
+					</td>
+				</tr>
+				</table>
+			</div>
+	<?
+	}
+}
+
+function image_content($image, $large = false)
+{
+	$name = "";
+	$img_url = "";
+	$width = $large ? 200 : 100;
+	$border = $large ? 8 : 4;
+	$base_path = "";
+
+	if (isset($image['Image_ID'])) # Custom image.
+	{
+		$base_path = dirname(__FILE__)."/../../../app/webroot/";
+		$name = $image['Title'];
+		$large_img_url = $image['display_location'];
+		$thumb_img_url = $image['thumbnail_location'];
+	} else { # Stamp
+		$base_path = dirname(__FILE__)."/../../../";
+		$name = $image['stamp_name'];
+		$large_img_url = $image['image_location'];
+		$thumb_img_url = $image['thumbnail_location'];
+	}
+
+	if ($large)
+	{
+		$img_url = $large_img_url;
+	} else {
+		$img_url = $thumb_img_url;
+	}
+	$orientation = get_image_orientation($image);
+	$size = ($width - $border*2);
+	$orientation_size = $orientation == 'horizontal' ? "width: $size"."px;" : "height: $size"."px;"; 
+	$container_size = $orientation == 'horizontal' ? "width: $width"."px;" : "height: $width"."px;"; 
+
+	# minus 2 pixes on each side for border
+
+	$bgcolor = "#AAA";
+
+	?>
+	<div style="overflow: hidden; <?=$container_size?>;">
+	<table style="width: 100%; height: 100%;" border=0 cellpadding=0 cellspacing=0>
+		<tr>
+		<td valign=middle align=center>
+			<div style="width: <?= $width ?>px;">
+				<img style="padding: <?= $border ?>px; background-color: <?= $bgcolor ?>; <?=$orientation_size?>" id="thumbnail" src="<?= $img_url ?>" alt="<?= $name ?>" />
+			</div>
+		</td>
+		</tr>
+	</table>
+	</div>
+	<?
+	$img_size = getimagesize("$base_path/$large_img_url");
+	return array($img_size[0]+25, $img_size[1]+25);
+}
+
+function get_db_record($table, $params)
+{
+	global $database;
+
+	$param_query = "";
+	foreach ($params as $k=>$v) { $param_query .= ($param_query != "" ? " AND " : "") . "$k = '$v' "; }
+
+	$query = "SELECT * FROM $table WHERE $param_query LIMIT 1";
+	$result = mysql_query($query, $database);
+	$record = mysql_fetch_assoc($result);
+	return $record;
+}
+
+?>

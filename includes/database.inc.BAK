@@ -1,0 +1,9 @@
+<?php
+	if ( $_SERVER['SERVER_NAME'] == 'www.hdtest.com' ) {
+		$database = mysql_connect ("localhost", "hdadmin_hdadmin", 	"sf6554") or die ('I cannot connect to the database because: ' . mysql_error());
+		mysql_select_db( "hdadmin_hdTestMain", $database );
+	} else {
+		$database = mysql_connect ("cannon.safesecureweb.com", "harmony_main", "idk2Xbbq") or die ('I cannot connect to the database because: ' . mysql_error());
+		mysql_select_db( "harmony_main", $database );	
+	}
+?>

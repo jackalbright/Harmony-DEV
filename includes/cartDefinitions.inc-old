@@ -1,0 +1,26 @@
+<?php
+	class CartItem {
+		var
+			$type,
+			$quantity,
+			$unitPrice,
+			$parts;
+			
+		function CartItem () {
+			$this->parts = new ItemParts;
+		}
+	}
+	
+	class ItemParts {
+		var
+			$ribbonID,
+			$tasselID,
+			$charmID,
+			$quoteID,
+			$borderID,
+			$personalization,
+			$customQuote,
+			$customImage;
+			
+	}
+?>

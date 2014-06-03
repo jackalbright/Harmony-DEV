@@ -1,0 +1,2 @@
+[10-Nov-2006 01:48:45] PHP Notice:  Undefined index:  SERVER_NAME in /home/harmonyd/public_html/includes/database.inc on line 4
+[10-Nov-2006 02:04:22] PHP Parse error:  syntax error, unexpected T_CONSTANT_ENCAPSED_STRING in Command line code on line 1

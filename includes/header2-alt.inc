@@ -1,0 +1,379 @@
+<?
+include_once("database.inc");
+
+$customer_id = !empty($_SESSION['Auth']['Customer']['customer_id']) ? $_SESSION['Auth']['Customer']['customer_id'] : null;
+#echo "CID=$customer_id";
+$session_id = session_id();
+
+$saved_img_count = 0;
+
+if ($customer_id)
+{
+	$saved_images = get_db_record("custom_image", array(" customer_id = '$customer_id' "), null, array("COUNT(*) AS count"));
+	$saved_img_count = $saved_images['count'];
+}
+
+$unsaved_img_count = 0;
+$session_id = session_id();
+$unsaved_images = get_db_record("custom_image", array(" customer_id IS NULL AND session_id = '$session_id' "), null, array("COUNT(*) AS count"));
+$unsaved_img_count = $unsaved_images['count'];
+
+$img_count = $saved_img_count + $unsaved_img_count;
+
+?>
+<div>
+
+<div>
+<table id="" border=0 cellspacing=1 cellpadding=0 width="100%">
+<tr>
+	<td id="logo" rowspan=2 valign=top align="center">
+		<a name="top" href="/index.php"><img class="logo" src="/images-shared/small-logo.gif" alt="harmony designs logo" border="0" /></a>
+		<div class="bold nobr" align="center">Questions? 888.293.1109</div>
+	</td>
+	<td rowspan=1 colspan=1 valign="top" align="left">
+		<div id="since1992">Creating custom gifts since 1992</div>
+	</td>
+	<td colspan=2 align="right" valign="top">
+	<? if(!empty($special_offer)) { ?>
+		<div id="special_offer" class="alert2" style="white-space: nowrap;">
+			<?= $special_offer ?>
+		</div>
+	<? } ?>
+	</td>
+</tr>
+<tr>
+	<td valign="top">
+		<div align="center" style="font-size: 1.2em; width: 325px;">
+		Museum-store quality &bull; Low minimums 
+		<br/>
+		Preview online
+		&bull; 
+		Made in USA
+		</div>
+		<div class="hidden">Free sample with every order</div>
+	</td>
+	<td valign="top" style="width: 250px;" align="left">
+		<div class="clear"></div>
+		<div style="width: 250px; position: relative;">
+			<img valign="top" class="left" style="border: solid #CCC 1px !important;" src="/images/icons/pancreatic_awareness_ribbon.jpg" height="50" onMouseOver="$('cancer_research').removeClassName('hidden');" onMouseOut="$('cancer_research').addClassName('hidden');"/>
+			<div id="cancer_research" style="">
+			Harmony Designs donates<br/>a percentage of its annual<br/>profits to cancer research
+			</div>
+		</div>
+		<div class="clear"></div>
+	</td>
+	<td colspan=1 rowspan=2 align=right valign=top id="">
+		<? $this_customer = isset($_SESSION['Auth']['Customer']) ? $_SESSION['Auth']['Customer'] : null; ?>
+		<table border=0 width="250" cellpadding=0 style="z-index: 10;">
+		<tr>
+			<td colspan=1 valign="top">
+				<div>
+					<? if($unsaved_img_count > 0) { ?><a href="/custom_images/signup" class="bold alert">(<?= $unsaved_img_count ?> unsaved <?= $unsaved_img_count > 1 ? "images" : "image" ?>)</a><br/><? } ?>
+				</div>
+				<div class="hidden">
+					<? if($saved_img_count > 0) { ?><a href="/custom_images" class="bold" style="color: #009900;">(<?= $saved_img_count ?> saved images)</a><br/><? } ?>
+				</div>
+			</td>
+			<td valign="top" align="right">
+					<a style="color: #009900; font-weight: bold;" href="/custom_images?new=1">Upload Images <?= !empty($img_count) ? "($img_count)" : "" ?></a>
+
+				<? if(false && !empty($unsaved_img_count)) { ?>
+				<div class="relative">
+					<div style="position: absolute; z-index: 5; left: 135px; top: -50px;">
+						<a href="/custom_images/signup">
+							<img src="/images/icons/unsaved-images.gif"/>
+						</a>
+					</div>
+				</div>
+				<? } ?>
+			</td>
+		</tr>
+		<tr>
+			<td colspan=2 align="right" valign="bottom">
+				<? if (empty($this_customer)) { ?>
+				<a href="?login=1"><img align="middle" src="/images/buttons/small/Log-In.gif"/></a>
+				<? } else { ?>
+			     	<i>Hello, <?= $this_customer['First_Name'] != "" ? $this_customer['First_Name'] : ($this_customer['eMail_Address'] ? $this_customer['eMail_Address'] : "guest"); ?></i> | 
+					<a href="/account">My Account</a> | 
+					<a href="/account/logout">Logout</a>
+				<? } ?>
+			</td>
+		</tr>
+
+		<tr>
+			<td valign="bottom" align="center">
+				<img src="/images/icons/paypal-cc.png" width="100"/>
+			</td>
+		 <td valign="top" align="right" style="">
+		  	<?php
+				$subTotal = 0;
+				$subQuantity = 0;
+				#$cartItems = !empty($_SESSION['shoppingCart']) ? $_SESSION['shoppingCart'] : array();
+	
+				$session_id = session_id();
+				$customer_id = !empty($_SESSION['Auth']['Customer']['customer_id']) ? $_SESSION['Auth']['Customer']['customer_id'] : null;
+	
+				#echo "$session_id / $customer_id";
+	
+				$cartItems = get_db_records("cart_items", " customer_id = '$customer_id' OR session_id = '$session_id' ");
+	
+				foreach ($cartItems as $cartItem)
+				{
+					#echo "CI=".print_r($cartItem,true);
+					if (is_object($cartItem))
+					{
+						$subTotal += $cartItem->quantity * $cartItem->unitPrice;
+						$subQuantity += $cartItem->quantity;
+					} else if (is_array($cartItem)) {
+						$unitPrice = !empty($cartItem['unitPrice']) ? $cartItem['unitPrice'] : 0;
+						$subTotal += $cartItem['quantity'] * $unitPrice;
+						$subQuantity += $cartItem['quantity'];
+					}
+				}
+				if (false && $subTotal > 0) { 
+					printf("($%.02f Total)",  $subTotal);
+					echo " | ";
+					echo '<a href="/cart/checkout" class="viewcart">Checkout</a>';
+				}
+				#echo "(<a href='/cart'>".$subQuantity." items</a>)";
+			?>
+			<table width="100%" cellpadding=0 cellspacing=0>
+			<tr>
+			<td>
+		 	<div class="relative right" style="padding-left: 3px; width: 40px; height: 35px; background-image: url('/images/icons/shopping_cart.png'); background-repeat: no-repeat; margin: 0 auto; text-align: center;">
+				<a href="/cart/display.php" class="block nounderline" style="position: relative; left: 0px; width: 35px; color: #009900; font-weight: bold; font-size: 16px;"><?= $subQuantity ?></a>
+			</div>
+			</td>
+			<td>
+				<a class="underline_hover" href="/cart/display.php" class="block" style="color: #009900; font-weight: bold; font-size: 16px;">Cart</a>
+			</td>
+			</tr>
+			</table>
+	     	</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td colspan=3 valign="bottom">
+	<div style="" class="relative <?= (empty($malysoft) && empty($hdtest)) ? "hidden" : "" ?>">
+		<? $specialties = get_db_records("specialty_pages", "enabled = 1", "sort_index ASC, link_name ASC, page_title ASC"); ?>
+		<div id="specialties_all" class="hidden">
+
+			<div class="specialties_tabs">
+			<a class="close" href="Javascript:void(0);" onClick="$('specialties_all').addClassName('hidden');">[CLOSE]</a>
+			<div class="clear"></div>
+
+			<? for($i = 0; $i < count($specialties); $i++) { $spec = $specialties[$i]; ?>
+				<? if($i > 0) { ?><a>&bull;</a><? } ?>
+				<a href="/specialty_pages/view/<?= $spec['page_url'] ?>"><?= !empty($spec['link_name']) ? $spec['link_name'] : $spec['page_title'] ?></a>
+			<? } ?>
+			<div class="clear"></div>
+			</div>
+		</div>
+		<div id="specialties_nav_top" class="specialties_nav">
+			<div class="specialties_tabs">
+			<a class='bold black nounderline' style="color: black !important;">Specialties:</a>
+			<a class="view_all" href="Javascript:void(0);" onClick="$('specialties_all').removeClassName('hidden');">View All &raquo;</a>
+
+			<? for($i = 0; $i < 5 && $i < count($specialties); $i++) { $spec = $specialties[$i]; ?>
+				<? if($i > 0) { ?><a>&bull;</a><? } ?>
+				<a href="/specialty_pages/view/<?= $spec['page_url'] ?>"><?= !empty($spec['link_name']) ? $spec['link_name'] : $spec['page_title'] ?></a>
+			<? } ?>
+			<div class="clear"></div>
+			</div>
+		</div>
+	</div>
+	</td>
+</tr>
+<tr id="prinav_row">
+	<td colspan=3 id="">
+		<? include("dropdown_primary.inc"); ?>
+	</td>
+	<td style="width: 400px;" align="left" colspan=1 valign="bottom">
+		<form action="/product/search.php" method="get"  id="" name="searchform" onsubmit="return preflightSearch();">
+		        <input type="text" id="" name="q" style="width: 160px; " value="<?= !empty($searchString) ? $searchString : "" ?>"/>
+			<input type="image" value="Search" align="top" src="/images/buttons/small/Search-grey.gif"/>
+		</form>
+	</td>
+</tr>
+<? if (empty($in_build) && !empty($_SESSION['Build']['Product']) && (!empty($_SESSION['Build']['CustomImage']) || !empty($_SESSION['Build']['GalleryImage']))) { ?>
+<tr id="crumbs_bar">
+		<td colspan=4>
+			<table width="100%" cellpadding=0 cellspacing=0 id="crumbs_row">
+			<tr>
+				<td id="crumbs_col" colspan=1>
+					<?
+						if (!empty($stepname)) { $step = $stepname; }
+						if (empty($step)) { $step = ''; } # Show 5 steps without any highlighting...
+		
+						$steps = get_db_records("purchase_steps",null,'purchase_step_id ASC');
+						$purchase_steps = array();
+						foreach($steps as $stepitem)
+						{
+							$purchase_steps[$stepitem['name']] = $stepitem;
+						}
+					?>
+					<div id="steps_container" align="" class="">
+					<? if(!empty($checkout_step)) { ?>
+						<table border=0 id="steps" cellpadding=0 cellspacing=0 border=1>
+						<tr>
+							<td class="step1 step <?= $checkout_step == 1 ? 'selected_step' : 'previous_step' ?>" valign="top">
+								<a href="/checkout/shipping_select">Address</a>
+							</td>
+							<td class="step2 step <?= $checkout_step == 2 ? 'selected_step' : ($checkout_step > 2 ? 'previous_step' : "") ?>" valign="top">
+								<a href="/checkout/shipping_method">Shipping</a>
+							</td>
+							<td class="step3 step <?= $checkout_step == 3 ? 'selected_step' : ($checkout_step > 3 ? 'previous_step' : "") ?>" valign="top">
+								<a href="/checkout/payment_select">Payment</a>
+							</td>
+							<td class="step4 step <?= $checkout_step == 4 ? 'selected_step' : "" ?>" valign="top">
+								<a href="/checkout/review">Review</a>
+							</td>
+						</tr>
+						</table>
+					<? } else if (false) { ?>
+						<table border=0 id="steps" cellpadding=0 cellspacing=0 border=1>
+						<tr>
+							<? if (!empty($stock) || (!empty($build['Product']) && $build['Product']['is_stock_item']) || (!empty($product['Product']) && $product['Product']['is_stock_item'])) { ?>
+								<td id="" class="step1 step <?= $step == 'product' ? 'step1_selected_step selected_step' : 'step1_previous_step previous_step'; ?>" valign="top">
+									<a href="<? !empty($build['CustomImage']) || !empty($build['GalleryImage']) ? "/products/select" : "/products" ?>"><?= $purchase_steps['product']['title'] ?></a> <span class="arrow"></span>
+									<div class="step_subtext"><?= strip_tags($purchase_steps['product']['text']); ?></div>
+								</td>
+								<td id="" class="step2 step <?= $step == 'cart' ? 'step2_selected_step selected_step' : ''; ?>" valign="top">
+									<nobr><?= $purchase_steps['cart']['title'] ?></nobr>
+									<div class="step_subtext"><?= strip_tags($purchase_steps['cart']['text']); ?></div>
+								</td>
+					
+							<? } else { ?>
+					
+								<? if(empty($build['image_first'])) { ?>
+								<td id="" class="step1 step <?= $step == 'product' ? 'step1_selected_step selected_step' : 'step1_previous_step previous_step'; ?>" valign="top">
+									<a href="<? (!empty($build['CustomImage']) || !empty($build['GalleryImage'])) ? "/products/select" : "/products" ?>"><?= $purchase_steps['product']['title'] ?></a> <span class="arrow"></span>
+									<div class="step_subtext"><?= strip_tags($purchase_steps['product']['text']); ?></div>
+								</td>
+								<td id="" class="step2 step <?= $step == 'image' ? 'step2_selected_step selected_step' : (!empty($build['CustomImage']) || !empty($build['GalleryImage']) ? "step2_previous_step previous_step" : "") ?>" valign="top">
+									<? if($step == 'image' || !empty($build['CustomImage']) || !empty($build['GalleryImage'])) { ?>
+										<a href="/gallery"><?= $purchase_steps['image']['title'] ?></a> <span class="arrow"></span>
+									<? } else { ?>
+										<nobr><?= $purchase_steps['image']['title'] ?></nobr> <span class="arrow"></span>
+									<? } ?>
+									<div class="step_subtext"><?= strip_tags($purchase_steps['image']['text']); ?></div>
+								</td>
+								<? } else { ?>
+								<td id="" class="step1 step <?= $step == 'image' ? 'step1_selected_step selected_step' : 'step1_previous_step previous_step'; ?>" valign="top">
+									<? if($step == 'image' || !empty($build['CustomImage']) || !empty($build['GalleryImage'])) { ?>
+										<a href="/gallery"><?= $purchase_steps['image']['title'] ?></a> <span class="arrow"></span>
+									<? } else { ?>
+										<nobr><?= $purchase_steps['image']['title'] ?></nobr> <span class="arrow"></span>
+									<? } ?>
+									<div class="step_subtext"><?= strip_tags($purchase_steps['image']['text']); ?></div>
+								</td>
+								<td id="" class="step2 step <?= $step == 'product' ? 'step2_selected_step selected_step' : ( (!empty($build['CustomImage']) || !empty($build['GalleryImage'])) ? "step2_previous_step previous_step" : ""); ?>" valign="top">
+									<? if ($step == 'product' || !empty($product) || !empty($build['Product'])) { ?>
+										<a href="/products/select"><?= $purchase_steps['product']['title'] ?></a> <span class="arrow"></span>
+									<? } else { ?>
+										<nobr><?= $purchase_steps['product']['title'] ?></nobr> <span class="arrow"></span>
+									<? } ?>
+									<div class="step_subtext"><?= strip_tags($purchase_steps['product']['text']); ?></div>
+								</td>
+								<? } ?>
+						
+								<? if (empty($build['GalleryImage']) && empty($gallery)) { ?>
+								<td id="" class="step3 step <?= $step == 'layout' ? 'step3_selected_step selected_step' : (!empty($build['template']) ? "step3_previous_step previous_step" : ""); ?>" valign="top">
+									<? if (!empty($build['Product']) && (!empty($build['CustomImage']) || !empty($build['GalleryImage']))) { ?>
+										<a href="/build/create"><?= $purchase_steps['layout']['title'] ?></a> <span class="arrow"></span>
+									<? } else { ?>
+										<nobr><?= $purchase_steps['layout']['title'] ?></nobr> <span class="arrow"></span>
+									<? } ?>
+									<div class="step_subtext"><?= strip_tags($purchase_steps['layout']['text']); ?></div>
+								</td>
+						
+								<td id="" class="step4 step <?= $step == 'options' ? 'step4_selected_step selected_step' : ''; ?>" valign="top">
+									<? if ($step == 'options' || $step == 'cart' || !empty($build['template'])) { ?>
+										<a href="/build/customize"><?= $purchase_steps['options']['title'] ?></a> <span class="arrow"></span>
+									<? } else { ?>
+										<nobr><?= $purchase_steps['options']['title'] ?></nobr> <span class="arrow"></span>
+									<? } ?>
+									<div class="step_subtext"><?= strip_tags($purchase_steps['options']['text']); ?></div>
+								</td>
+								<td id="" class="step5 step <?= $step == 'cart' ? 'step5_selected_step selected_step' : ''; ?>" valign="top">
+									<nobr><?= $purchase_steps['cart']['title'] ?></nobr> 
+									<div class="step_subtext"><?= strip_tags($purchase_steps['cart']['text']); ?></div>
+								</td>
+								<? } else { ?>
+								<td id="" class="step3 step <?= $step == 'options' ? 'selected_step' : ''; ?>" valign="top">
+									<? if ($step == 'options' || $step == 'cart') { ?>
+										<a href="/build/customize"><?= $purchase_steps['options']['title'] ?></a> <span class="arrow"></span>
+									<? } else { ?>
+										<nobr><?= $purchase_steps['options']['title'] ?></nobr> <span class="arrow"></span>
+									<? } ?>
+									<div class="step_subtext"><?= strip_tags($purchase_steps['options']['text']); ?></div>
+								</td>
+								<td id="" class="step4 step <?= $step == 'cart' ? 'step4_selected_step selected_step' : ''; ?>" valign="top">
+									<nobr><?= $purchase_steps['cart']['title'] ?></nobr>
+									<div class="step_subtext"><?= strip_tags($purchase_steps['cart']['text']); ?></div>
+								</td>
+								<? } ?>
+							<? } ?>
+						</tr>
+						</table>
+					<? } ?>
+						<div class="clear"></div>
+					</div>
+				</td>
+				<td align="right" style="vertical-align: middle; ">
+					<!--
+					<a href="/custom_images"><img style="vertical-align: middle;" height="30" src="/images/icons/arrow.gif"/> Upload your art</a> OR
+					<a href="/gallery/browse"><img style="vertical-align: middle;" height="30" src="/images/icons/stamp.jpg"/> Browse our stamp images</a><? if(!empty($malysoft) || !empty($hdtest)) { ?> OR
+					<a href="/gallery/clipart"><img style="vertical-align: middle;" height="30" src="/images/icons/Mona-lisa-clipart.jpg"/> Browse Clipart.com&trade;</a> <? } ?>
+					-->
+					<div class="currently_building">
+					<? if (empty($in_build) && !empty($_SESSION['Build']['Product']) && (!empty($_SESSION['Build']['CustomImage']) || !empty($_SESSION['Build']['GalleryImage']))) { ?>
+					<?
+						$name = "Your custom";
+						$imgtype = "_";
+						$imgid = "_";
+						if (!empty($_SESSION['Build']['CustomImage']))
+						{
+							if (!empty($_SESSION['Build']['CustomImage']['Title'])) { $name = "&quot;".$_SESSION['Build']['CustomImage']['Title']."&quot;"; }
+							$imgtype = "Custom";
+							$imgid = $_SESSION['Build']['CustomImage']['Image_ID'];
+						} else if (!empty($_SESSION['Build']['GalleryImage'])) { 
+							if (!empty($_SESSION['Build']['GalleryImage']['stamp_name'])) { $name = "&quot;".$_SESSION['Build']['GalleryImage']['stamp_name']."&quot;"; }
+							$imgtype = "Gallery";
+							$imgid = $_SESSION['Build']['GalleryImage']['catalog_number'];
+						}
+					?>
+					Currently building: <a href="/build/customize"><?= $name ?> <?= $_SESSION['Build']['Product']['name'] ?></a>
+					<? } ?>
+					</div>
+				</td>
+			</tr>
+			</table>
+		</td>
+</tr>
+<? } ?>
+<tr>
+	<td colspan="4" valign="top">
+			<table width="100%" cellpadding=0 cellspacing=0 border=0>
+			<tr>
+			<td valign="top">
+			<? if(isset($body_title)) { ?>
+			<h1 id="title"><?= $body_title ?></h1>
+			<? } ?>
+			</td>
+			</tr>
+			<tr>
+			<? if(!empty($status_bar)) { ?>
+			<td valign="top">
+				<?= $status_bar ?>
+			</td>
+			<? } ?>
+			</tr>
+			</table>
+	</td>
+</tr>
+</table>
+
+</div>

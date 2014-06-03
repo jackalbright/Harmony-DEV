@@ -1,0 +1,51 @@
+[01-Dec-2005 12:19:10] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 63
+[01-Dec-2005 12:19:10] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 116
+[01-Dec-2005 15:58:15] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders2.php on line 158
+[01-Dec-2005 15:58:15] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders2.php on line 528
+[01-Dec-2005 15:58:15] PHP Warning:  array_sum(): The argument should be an array in /home/harmony/public_html/admin38/order/vieworders2.php on line 608
+[01-Dec-2005 15:58:15] PHP Warning:  array_sum(): The argument should be an array in /home/harmony/public_html/admin38/order/vieworders2.php on line 638
+[03-Dec-2005 07:47:07] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 63
+[03-Dec-2005 07:47:07] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 116
+[03-Dec-2005 07:47:08] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 63
+[03-Dec-2005 07:47:08] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 116
+[06-Dec-2005 10:12:48] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 63
+[06-Dec-2005 10:12:48] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 116
+[11-Dec-2005 07:09:57] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 63
+[11-Dec-2005 07:09:57] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 116
+[13-Dec-2005 15:59:44] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders2.php on line 158
+[13-Dec-2005 15:59:44] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders2.php on line 528
+[13-Dec-2005 15:59:44] PHP Warning:  array_sum(): The argument should be an array in /home/harmony/public_html/admin38/order/vieworders2.php on line 608
+[13-Dec-2005 15:59:44] PHP Warning:  array_sum(): The argument should be an array in /home/harmony/public_html/admin38/order/vieworders2.php on line 638
+[14-Dec-2005 06:29:58] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 63
+[14-Dec-2005 06:29:58] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 116
+[02-Jan-2006 08:10:05] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 63
+[02-Jan-2006 08:10:05] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 116
+[07-Jan-2006 07:48:55] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 63
+[07-Jan-2006 07:48:55] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 116
+[13-Jan-2006 15:16:02] PHP Parse error:  parse error, unexpected '}' in /home/harmony/public_html/admin38/order/MYOBCustomer.php on line 59
+[13-Jan-2006 15:16:32] PHP Parse error:  parse error, unexpected '}' in /home/harmony/public_html/admin38/order/MYOBCustomer.php on line 59
+[13-Jan-2006 15:20:43] PHP Parse error:  parse error, unexpected T_ELSE in /home/harmony/public_html/admin38/order/MYOBCustomer.php on line 45
+[13-Jan-2006 15:23:14] PHP Parse error:  parse error, unexpected $ in /home/harmony/public_html/admin38/order/MYOBCustomer.php on line 61
+[13-Jan-2006 15:29:43] PHP Parse error:  parse error, unexpected '}' in /home/harmony/public_html/admin38/order/MYOBCustomer.php on line 59
+[13-Jan-2006 15:53:58] PHP Fatal error:  Cannot redeclare stripmagicquotes() (previously declared in /home/harmony/public_html/includes/stripMagicQuotes.inc:10) in /home/harmony/public_html/includes/stripMagicQuotes.inc on line 10
+[13-Jan-2006 15:54:26] PHP Fatal error:  Cannot redeclare stripmagicquotes() (previously declared in /home/harmony/public_html/includes/stripMagicQuotes.inc:10) in /home/harmony/public_html/includes/stripMagicQuotes.inc on line 10
+[13-Jan-2006 15:55:28] PHP Fatal error:  Cannot redeclare stripmagicquotes() (previously declared in /home/harmony/public_html/includes/stripMagicQuotes.inc:10) in /home/harmony/public_html/includes/stripMagicQuotes.inc on line 10
+[20-Jan-2006 14:05:12] PHP Parse error:  parse error, unexpected '\"' in /home/harmony/public_html/admin38/order/newMYOBCustomer.php on line 100
+[20-Jan-2006 14:07:25] PHP Parse error:  parse error, unexpected '\"' in /home/harmony/public_html/admin38/order/newMYOBCustomer.php on line 100
+[20-Jan-2006 14:07:49] PHP Parse error:  parse error, unexpected '\"' in /home/harmony/public_html/admin38/order/newMYOBCustomer.php on line 100
+[20-Jan-2006 14:12:51] PHP Parse error:  parse error, unexpected '\"' in /home/harmony/public_html/admin38/order/newMYOBCustomer.php on line 100
+[20-Jan-2006 14:21:52] PHP Parse error:  parse error, unexpected '\"' in /home/harmony/public_html/admin38/order/newMYOBCustomer.php on line 100
+[20-Jan-2006 14:23:37] PHP Parse error:  parse error, unexpected '\"' in /home/harmony/public_html/admin38/order/newMYOBCustomer.php on line 100
+[20-Jan-2006 14:27:46] PHP Parse error:  parse error, unexpected '\"' in /home/harmony/public_html/admin38/order/newMYOBCustomer.php on line 100
+[20-Jan-2006 14:35:44] PHP Parse error:  parse error, unexpected '\"' in /home/harmony/public_html/admin38/order/newMYOBCustomer.php on line 100
+[20-Jan-2006 14:35:51] PHP Parse error:  parse error, unexpected '\"' in /home/harmony/public_html/admin38/order/newMYOBCustomer.php on line 100
+[20-Jan-2006 14:39:05] PHP Parse error:  parse error, unexpected '\"' in /home/harmony/public_html/admin38/order/newMYOBCustomer.php on line 100
+[20-Jan-2006 14:41:53] PHP Parse error:  parse error, unexpected '\"' in /home/harmony/public_html/admin38/order/newMYOBCustomer.php on line 100
+[20-Jan-2006 14:43:00] PHP Parse error:  parse error, unexpected '\"' in /home/harmony/public_html/admin38/order/newMYOBCustomer.php on line 100
+[20-Jan-2006 15:56:54] PHP Parse error:  parse error, unexpected '\"' in /home/harmony/public_html/admin38/order/newMYOBCustomer.php on line 100
+[21-Jan-2006 11:49:18] PHP Parse error:  parse error, unexpected '{' in /home/harmony/public_html/admin38/order/newMYOBCustomer.php on line 48
+[21-Jan-2006 13:10:17] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 63
+[21-Jan-2006 13:10:17] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 116
+[25-Jan-2006 14:17:21] PHP Warning:  mysql_fetch_object(): supplied argument is not a valid MySQL result resource in /home/harmony/public_html/admin38/order/MYOBItem.php on line 53
+[06-Feb-2006 08:16:57] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 63
+[06-Feb-2006 08:16:57] PHP Warning:  Invalid argument supplied for foreach() in /home/harmony/public_html/admin38/order/vieworders1.php on line 116
